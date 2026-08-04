@@ -57,6 +57,9 @@ export function AuthProvider({ children }) {
     try {
       const res = await api.verifyOTP({ email, otp });
       if (res.success && res.user) {
+        if (res.token) {
+          localStorage.setItem('pmt_token', res.token);
+        }
         setUser(res.user);
       }
       return res;
@@ -82,6 +85,9 @@ export function AuthProvider({ children }) {
     try {
       const res = await api.login({ email, password });
       if (res.success && res.user) {
+        if (res.token) {
+          localStorage.setItem('pmt_token', res.token);
+        }
         setUser(res.user);
       }
       return res;
@@ -97,6 +103,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
+      localStorage.removeItem('pmt_token');
       setUser(null);
     }
   };

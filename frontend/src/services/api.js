@@ -7,12 +7,19 @@ const API_BASE_URL = cleanApiUrl.endsWith('/api') ? cleanApiUrl : `${cleanApiUrl
  * Custom fetch wrapper handling credentials (HTTP-only cookies) and JSON payloads
  */
 async function request(endpoint, options = {}) {
+  const token = localStorage.getItem('pmt_token');
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers
-    },
-    credentials: 'include', // Ensures HTTP-only cookies are sent & received
+    headers,
+    credentials: 'include', // Ensures HTTP-only cookies are sent & received when supported
     ...options
   };
 
