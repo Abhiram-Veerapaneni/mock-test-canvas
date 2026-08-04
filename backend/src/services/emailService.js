@@ -1,16 +1,20 @@
 import nodemailer from 'nodemailer';
 
 /**
- * Creates Nodemailer transporter using built-in Gmail service configuration
+ * Creates Nodemailer transporter using SMTP configuration with IPv4 family enforced
+ * to prevent ENETUNREACH errors on IPv6-restricted platforms like Render.
  */
 const createTransporter = () => {
   if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
     return nodemailer.createTransport({
-      service: 'gmail',
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT, 10) : 465,
+      secure: process.env.EMAIL_SECURE !== undefined ? String(process.env.EMAIL_SECURE).toLowerCase() === 'true' : true,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-      }
+      },
+      family: 4 // Force IPv4 connection to prevent ENETUNREACH on cloud hosts like Render
     });
   }
   return null;

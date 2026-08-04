@@ -7,16 +7,16 @@ import { User } from '../models/User.js';
 export const protect = async (req, res, next) => {
   let token;
 
-  // 1. Check HTTP-only cookie
-  if (req.cookies && req.cookies.token) {
-    token = req.cookies.token;
-  }
-  // 2. Fallback to Authorization header if provided
-  else if (
+  // 1. Check Authorization header first (preferred for SPAs using Bearer tokens)
+  if (
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  }
+  // 2. Fallback to HTTP-only cookie if header is not present
+  else if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
   }
 
   if (!token) {
