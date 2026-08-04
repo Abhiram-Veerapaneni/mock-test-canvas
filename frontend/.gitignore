@@ -8,8 +8,9 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Environment variables
-.env
 .env.local
+*.local
+!.env.example
 
 node_modules
 dist

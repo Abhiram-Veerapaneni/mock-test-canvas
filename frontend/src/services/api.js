@@ -1,5 +1,7 @@
 // API Base URL for Express Backend
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const rawApiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const cleanApiUrl = rawApiUrl.replace(/\/$/, '');
+const API_BASE_URL = cleanApiUrl.endsWith('/api') ? cleanApiUrl : `${cleanApiUrl}/api`;
 
 /**
  * Custom fetch wrapper handling credentials (HTTP-only cookies) and JSON payloads

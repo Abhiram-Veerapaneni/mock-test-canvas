@@ -333,8 +333,11 @@ export const loginUser = async (req, res) => {
  */
 export const logoutUser = async (req, res) => {
   try {
+    const isProduction = process.env.NODE_ENV === 'production';
     res.cookie('token', '', {
       httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       expires: new Date(0)
     });
 
