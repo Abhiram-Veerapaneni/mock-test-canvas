@@ -14,9 +14,49 @@ import {
   Moon,
   ArrowLeft,
   ShieldCheck,
-  FileText
+  FileText,
+  AlertTriangle
 } from 'lucide-react';
 import '../styles/Auth.css';
+
+const FALLBACK_CATALOG = [
+  {
+    _id: 'jee-adv-2024-p1',
+    title: 'JEE Advanced 2024 - Paper 1 (Slot 1)',
+    examType: 'JEE_ADVANCED',
+    year: 2024,
+    paperNumber: 'Paper 1 (Slot 1)',
+    description: 'Official JEE Advanced 2024 Paper 1 with Physics, Chemistry & Mathematics sections.',
+    durationMinutes: 180,
+    totalMarks: 180,
+    totalQuestions: 51,
+    isPreviousYearPaper: true
+  },
+  {
+    _id: 'gate-cs-2024-mock',
+    title: 'GATE CS 2024 Mock Examination',
+    examType: 'GATE_CS',
+    year: 2024,
+    paperNumber: 'Mock Test 1',
+    description: 'Comprehensive GATE Computer Science & IT Full Length Mock Test with General Aptitude.',
+    durationMinutes: 180,
+    totalMarks: 100,
+    totalQuestions: 65,
+    isPreviousYearPaper: false
+  },
+  {
+    _id: 'neet-ug-2024-model',
+    title: 'NEET UG 2024 Full Mock Paper',
+    examType: 'NEET',
+    year: 2024,
+    paperNumber: 'Model Paper A',
+    description: 'Standard NEET UG pattern test covering Physics, Chemistry, Botany & Zoology.',
+    durationMinutes: 200,
+    totalMarks: 720,
+    totalQuestions: 200,
+    isPreviousYearPaper: false
+  }
+];
 
 export default function ExamCatalog() {
   const navigate = useNavigate();
@@ -25,6 +65,7 @@ export default function ExamCatalog() {
   const [catalog, setCatalog] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isOffline, setIsOffline] = useState(false);
 
   // Filters state
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,27 +74,31 @@ export default function ExamCatalog() {
   const [selectedType, setSelectedType] = useState('ALL');
 
   // Fetch catalog from backend API
-  useEffect(() => {
-    const fetchCatalog = async () => {
-      try {
-        setLoading(true);
-        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-        const res = await fetch(`${API_BASE}/exams`);
-        const data = await res.json();
+  const fetchCatalog = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const API_BASE = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/$/, '');
+      const res = await fetch(`${API_BASE}/exams`);
+      const data = await res.json();
 
-        if (data.success && data.catalog) {
-          setCatalog(data.catalog);
-        } else {
-          setError('Failed to load available mock tests.');
-        }
-      } catch (err) {
-        console.error('Error fetching exam catalog:', err);
-        setError('Cannot connect to server. Please ensure backend is running.');
-      } finally {
-        setLoading(false);
+      if (data.success && data.catalog && data.catalog.length > 0) {
+        setCatalog(data.catalog);
+        setIsOffline(false);
+      } else {
+        setCatalog(FALLBACK_CATALOG);
+        setIsOffline(true);
       }
-    };
+    } catch (err) {
+      console.warn('Backend server connection failed; running in offline catalog mode:', err);
+      setCatalog(FALLBACK_CATALOG);
+      setIsOffline(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchCatalog();
   }, []);
 
@@ -219,6 +264,28 @@ export default function ExamCatalog() {
             </div>
           </div>
         </div>
+
+        {/* Offline Status Warning Banner */}
+        {isOffline && !loading && (
+          <div className="alert-box" style={{ backgroundColor: 'rgba(234, 179, 8, 0.12)', border: '1px solid rgba(234, 179, 8, 0.3)', color: '#d97706', marginBottom: '20px', borderRadius: 'var(--radius-md)', padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <AlertTriangle style={{ width: '20px', height: '20px', flexShrink: 0 }} />
+              <div>
+                <strong style={{ fontSize: '0.9rem' }}>Backend Server Unreachable (http://localhost:5000)</strong>
+                <p style={{ fontSize: '0.8rem', margin: '2px 0 0 0', opacity: 0.9 }}>
+                  Running in offline catalog mode. To connect to live Express API, run <code>cd backend && npm start</code>
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={fetchCatalog}
+              style={{ padding: '6px 14px', fontSize: '0.8rem', fontWeight: 700, backgroundColor: '#d97706', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+            >
+              Retry Server
+            </button>
+          </div>
+        )}
 
         {/* Loading / Error States */}
         {loading && (

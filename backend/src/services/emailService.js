@@ -5,21 +5,47 @@ import nodemailer from 'nodemailer';
 dns.setDefaultResultOrder('ipv4first');
 
 /**
- * Creates Nodemailer transporter using SMTP configuration with IPv4 family enforced
- * to prevent ENETUNREACH errors on IPv6-restricted platforms like Render.
+ * Custom DNS lookup to strictly enforce IPv4 (A records) resolution.
+ * Prevents Nodemailer from falling back to IPv6 (AAAA records like 2607:f8b0:...)
+ * which cause ENETUNREACH errors on networks/hosts without IPv6 routing.
  */
-const createTransporter = () => {
+const customIPv4Lookup = (hostname, options, callback) => {
+  dns.lookup(hostname, { family: 4, all: false }, (err, address, family) => {
+    if (err) return callback(err);
+    callback(null, address, family);
+  });
+};
+
+/**
+ * Creates Nodemailer transporter using SMTP configuration with strict IPv4 lookup
+ */
+const createTransporter = (portOverride = null, secureOverride = null) => {
   if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+    const envPort = process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT, 10) : 465;
+    const port = portOverride !== null ? portOverride : envPort;
+
+    const envSecure = process.env.EMAIL_SECURE !== undefined
+      ? String(process.env.EMAIL_SECURE).toLowerCase() === 'true'
+      : port === 465;
+    const secure = secureOverride !== null ? secureOverride : envSecure;
+
     return nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT, 10) : 465,
-      secure: process.env.EMAIL_SECURE !== undefined ? String(process.env.EMAIL_SECURE).toLowerCase() === 'true' : true,
+      host,
+      port,
+      secure,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       },
-      family: 4, // Force IPv4 connection to prevent ENETUNREACH on cloud hosts like Render
-      autoSelectFamily: false // Disable Happy Eyeballs auto-selection of IPv6 in Node 18+
+      family: 4,
+      lookup: customIPv4Lookup,
+      tls: {
+        rejectUnauthorized: false
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000
     });
   }
   return null;
@@ -35,9 +61,7 @@ export const sendOTPEmail = async (toEmail, otpCode, candidateName = 'Candidate'
   // Log OTP to server console as backup
   logOTPToConsole(toEmail, otpCode);
 
-  const transporter = createTransporter();
-
-  if (!transporter) {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     return { success: true, simulated: true };
   }
 
@@ -66,20 +90,32 @@ export const sendOTPEmail = async (toEmail, otpCode, candidateName = 'Candidate'
     </div>
   `;
 
-  try {
-    const mailOptions = {
-      from: process.env.EMAIL_FROM || `"AI-Proctored Mock Tests" <${process.env.EMAIL_USER}>`,
-      to: toEmail,
-      subject: `${otpCode} is your AI-Proctored Mock Tests Verification OTP`,
-      html: htmlContent
-    };
+  const mailOptions = {
+    from: process.env.EMAIL_FROM || `"AI-Proctored Mock Tests" <${process.env.EMAIL_USER}>`,
+    to: toEmail,
+    subject: `${otpCode} is your AI-Proctored Mock Tests Verification OTP`,
+    html: htmlContent
+  };
 
+  // Primary Attempt (Default Port 465 / Configured Port)
+  try {
+    const transporter = createTransporter();
     const info = await transporter.sendMail(mailOptions);
     console.log(`✉️ REAL EMAIL DELIVERED TO: ${toEmail} (Message ID: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error(`⚠️ Email Dispatch Error (${error.message}). Backup OTP logged above.`);
-    return { success: false, fallback: true, error: error.message };
+  } catch (primaryError) {
+    console.warn(`⚠️ Primary Email Dispatch attempt failed (${primaryError.message}). Retrying over Port 587 (TLS/STARTTLS)...`);
+
+    // Fallback Attempt (Port 587 STARTTLS)
+    try {
+      const fallbackTransporter = createTransporter(587, false);
+      const fallbackInfo = await fallbackTransporter.sendMail(mailOptions);
+      console.log(`✉️ REAL EMAIL DELIVERED via Fallback Port 587 TO: ${toEmail} (Message ID: ${fallbackInfo.messageId})`);
+      return { success: true, messageId: fallbackInfo.messageId };
+    } catch (fallbackError) {
+      console.error(`⚠️ Email Dispatch Error (${fallbackError.message}). Backup OTP logged above.`);
+      return { success: false, fallback: true, error: fallbackError.message };
+    }
   }
 };
 
