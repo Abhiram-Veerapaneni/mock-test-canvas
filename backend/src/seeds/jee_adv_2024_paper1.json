@@ -1,0 +1,572 @@
+[
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Differential Calculus",
+    "difficulty": "HARD",
+    "questionType": "MCQ",
+    "contentLaTeX": "Let $f(x)$ be a continuously differentiable function on the interval $(0, \\infty)$ such that $f(1) = 2$ and $\\lim_{t \\to x} \\frac{t^{10} f(x) - x^{10} f(t)}{t^9 - x^9} = 1$ for each $x > 0$. Then, for all $x > 0$, $f(x)$ is equal to",
+    "options": [
+      { "id": "A", "textLaTeX": "$\\frac{31}{11x} - \\frac{9}{11}x^{10}$" },
+      { "id": "B", "textLaTeX": "$\\frac{9}{11x} + \\frac{13}{11}x^{10}$" },
+      { "id": "C", "textLaTeX": "$-\\frac{9}{11x} + \\frac{31}{11}x^{10}$" },
+      { "id": "D", "textLaTeX": "$\\frac{13}{11x} + \\frac{9}{11}x^{10}$" }
+    ],
+    "correctAnswer": "B",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Probability",
+    "difficulty": "MEDIUM",
+    "questionType": "MCQ",
+    "contentLaTeX": "A student appears for a quiz consisting of only true-false type questions and answers all the questions. The student knows the answers of some questions and guesses the answers for the remaining questions. Whenever the student knows the answer of a question, he gives the correct answer. Assume that the probability of the student giving the correct answer for a question, given that he has guessed it, is $\\frac{1}{2}$. Also assume that the probability of the answer for a question being guessed, given that the student's answer is correct, is $\\frac{1}{6}$. Then the probability that the student knows the answer of a randomly chosen question is",
+    "options": [
+      { "id": "A", "textLaTeX": "$\\frac{1}{12}$" },
+      { "id": "B", "textLaTeX": "$\\frac{1}{7}$" },
+      { "id": "C", "textLaTeX": "$\\frac{5}{7}$" },
+      { "id": "D", "textLaTeX": "$\\frac{5}{12}$" }
+    ],
+    "correctAnswer": "C",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Trigonometry",
+    "difficulty": "MEDIUM",
+    "questionType": "MCQ",
+    "contentLaTeX": "Let $\\frac{\\pi}{2} < x < \\pi$ be such that $\\cot x = -\\frac{5}{\\sqrt{11}}$. Then $$\\left( \\sin \\frac{11x}{2} \\right) (\\sin 6x - \\cos 6x) + \\left( \\cos \\frac{11x}{2} \\right) (\\sin 6x + \\cos 6x)$$ is equal to",
+    "options": [
+      { "id": "A", "textLaTeX": "$\\frac{\\sqrt{11} - 1}{2\\sqrt{3}}$" },
+      { "id": "B", "textLaTeX": "$\\frac{\\sqrt{11} + 1}{2\\sqrt{3}}$" },
+      { "id": "C", "textLaTeX": "$\\frac{\\sqrt{11} + 1}{3\\sqrt{2}}$" },
+      { "id": "D", "textLaTeX": "$\\frac{\\sqrt{11} - 1}{3\\sqrt{2}}$" }
+    ],
+    "correctAnswer": "B",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Coordinate Geometry",
+    "difficulty": "HARD",
+    "questionType": "MCQ",
+    "contentLaTeX": "Consider the ellipse $\\frac{x^2}{9} + \\frac{y^2}{4} = 1$. Let $S(p, q)$ be a point in the first quadrant such that $\\frac{p^2}{9} + \\frac{q^2}{4} > 1$. Two tangents are drawn from $S$ to the ellipse, of which one meets the ellipse at one end point of the minor axis and the other meets the ellipse at a point $T$ in the fourth quadrant. Let $R$ be the vertex of the ellipse with positive $x$-coordinate and $O$ be the center of the ellipse. If the area of the triangle $\\Delta ORT$ is $\\frac{3}{2}$, then which of the following options is correct?",
+    "options": [
+      { "id": "A", "textLaTeX": "$q = 2, p = 3\\sqrt{3}$" },
+      { "id": "B", "textLaTeX": "$q = 2, p = 4\\sqrt{3}$" },
+      { "id": "C", "textLaTeX": "$q = 1, p = 5\\sqrt{3}$" },
+      { "id": "D", "textLaTeX": "$q = 1, p = 6\\sqrt{3}$" }
+    ],
+    "correctAnswer": "A",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Set Theory",
+    "difficulty": "HARD",
+    "questionType": "MSQ",
+    "contentLaTeX": "Let $S = \\{a + b\\sqrt{2} : a, b \\in \\mathbb{Z}\\}$, $T_1 = \\{(-1 + \\sqrt{2})^n : n \\in \\mathbb{N}\\}$, and $T_2 = \\{(1 + \\sqrt{2})^n : n \\in \\mathbb{N}\\}$. Then which of the following statements is (are) TRUE?",
+    "options": [
+      { "id": "A", "textLaTeX": "$T_1 \\cup T_2 \\subset S$" },
+      { "id": "B", "textLaTeX": "$T_1 \\cap \\left(0, \\frac{1}{2024}\\right) = \\emptyset$, where $\\emptyset$ denotes the empty set." },
+      { "id": "C", "textLaTeX": "$T_2 \\cap (2024, \\infty) \\neq \\emptyset$" },
+      { "id": "D", "textLaTeX": "For any given $a, b \\in \\mathbb{Z}$, $\\cos(\\pi(a + b\\sqrt{2})) + i \\sin(\\pi(a + b\\sqrt{2})) \\in \\mathbb{Z}$ if and only if $b = 0$, where $i = \\sqrt{-1}$." }
+    ],
+    "correctAnswer": ["A", "C", "D"],
+    "positiveMarks": 4,
+    "negativeMarks": 2,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Algebra",
+    "difficulty": "HARD",
+    "questionType": "MSQ",
+    "contentLaTeX": "Let $\\mathbb{R}^2$ denote $\\mathbb{R} \\times \\mathbb{R}$. Let $$S = \\{(a, b, c) : a, b, c \\in \\mathbb{R} \\text{ and } ax^2 + 2bxy + cy^2 > 0 \\text{ for all } (x,y) \\in \\mathbb{R}^2 \\setminus \\{(0,0)\\}\\}$$ Then which of the following statements is (are) TRUE?",
+    "options": [
+      { "id": "A", "textLaTeX": "$\\left(2, \\frac{7}{2}, 6\\right) \\in S$" },
+      { "id": "B", "textLaTeX": "If $\\left(3, b, \\frac{1}{12}\\right) \\in S$, then $|2b| < 1$." },
+      { "id": "C", "textLaTeX": "For any given $(a,b,c) \\in S$, the system of linear equations $$ax + by = 1$$ $$bx + cy = -1$$ has a unique solution." },
+      { "id": "D", "textLaTeX": "For any given $(a,b,c) \\in S$, the system of linear equations $$(a+1)x + by = 0$$ $$bx + (c+1)y = 0$$ has a unique solution." }
+    ],
+    "correctAnswer": ["B", "C", "D"],
+    "positiveMarks": 4,
+    "negativeMarks": 2,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "3D Geometry",
+    "difficulty": "HARD",
+    "questionType": "MSQ",
+    "contentLaTeX": "Let $\\mathbb{R}^3$ denote the three-dimensional space. Take two points $P = (1, 2, 3)$ and $Q = (4, 2, 7)$. Let $dist(X, Y)$ denote the distance between two points $X$ and $Y$ in $\\mathbb{R}^3$. Let $$S = \\{X \\in \\mathbb{R}^3 : (dist(X, P))^2 - (dist(X, Q))^2 = 50\\}$$ and $$T = \\{Y \\in \\mathbb{R}^3 : (dist(Y, Q))^2 - (dist(Y, P))^2 = 50\\}$$ Then which of the following statements is (are) TRUE?",
+    "options": [
+      { "id": "A", "textLaTeX": "There is a triangle whose area is 1 and all of whose vertices are from $S$." },
+      { "id": "B", "textLaTeX": "There are two distinct points $L$ and $M$ in $T$ such that each point on the line segment $LM$ is also in $T$." },
+      { "id": "C", "textLaTeX": "There are infinitely many rectangles of perimeter 48, two of whose vertices are from $S$ and the other two vertices are from $T$." },
+      { "id": "D", "textLaTeX": "There is a square of perimeter 48, two of whose vertices are from $S$ and the other two vertices are from $T$." }
+    ],
+    "correctAnswer": ["A", "B", "C", "D"],
+    "positiveMarks": 4,
+    "negativeMarks": 2,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Logarithms",
+    "difficulty": "MEDIUM",
+    "questionType": "NUMERICAL",
+    "contentLaTeX": "Let $a = 3\\sqrt{2}$ and $b = \\frac{1}{5^{1/6}\\sqrt{6}}$. If $x, y \\in \\mathbb{R}$ are such that $$3x + 2y = \\log_a(18)^{5/4} \\quad \\text{and} \\quad 2x - y = \\log_b(\\sqrt{1080})$$ then $4x + 5y$ is equal to",
+    "options": [],
+    "correctAnswer": 8,
+    "positiveMarks": 4,
+    "negativeMarks": 0,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Polynomials",
+    "difficulty": "HARD",
+    "questionType": "NUMERICAL",
+    "contentLaTeX": "Let $f(x) = x^4 + ax^3 + bx^2 + c$ be a polynomial with real coefficients such that $f(1) = -9$. Suppose that $i\\sqrt{3}$ is a root of the equation $4x^3 + 3ax^2 + 2bx = 0$, where $i = \\sqrt{-1}$. If $\\alpha_1, \\alpha_2, \\alpha_3, \\alpha_4$ are all the roots of the equation $f(x) = 0$, then $|\\alpha_1|^2 + |\\alpha_2|^2 + |\\alpha_3|^2 + |\\alpha_4|^2$ is equal to",
+    "options": [],
+    "correctAnswer": 20,
+    "positiveMarks": 4,
+    "negativeMarks": 0,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Matrices",
+    "difficulty": "HARD",
+    "questionType": "NUMERICAL",
+    "contentLaTeX": "Let $$S = \\left\\{ A = \\begin{pmatrix} 0 & 1 & c \\\\ 1 & a & d \\\\ 1 & b & e \\end{pmatrix} : a, b, c, d, e \\in \\{0, 1\\} \\text{ and } |A| \\in \\{-1, 1\\} \\right\\}$$ where $|A|$ denotes the determinant of $A$. Then the number of elements in $S$ is",
+    "options": [],
+    "correctAnswer": 16,
+    "positiveMarks": 4,
+    "negativeMarks": 0,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Permutations and Combinations",
+    "difficulty": "MEDIUM",
+    "questionType": "NUMERICAL",
+    "contentLaTeX": "A group of 9 students, $s_1, s_2, \\dots, s_9$, is to be divided to form three teams $X, Y,$ and $Z$ of sizes 2, 3, and 4, respectively. Suppose that $s_1$ cannot be selected for the team $X$, and $s_2$ cannot be selected for the team $Y$. Then the number of ways to form such teams is",
+    "options": [],
+    "correctAnswer": 665,
+    "positiveMarks": 4,
+    "negativeMarks": 0,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Vector Algebra",
+    "difficulty": "MEDIUM",
+    "questionType": "NUMERICAL",
+    "contentLaTeX": "Let $\\vec{OP} = \\frac{\\alpha-1}{\\alpha}\\hat{i} + \\hat{j} + \\hat{k}$, $\\vec{OQ} = \\hat{i} + \\frac{\\beta-1}{\\beta}\\hat{j} + \\hat{k}$, and $\\vec{OR} = \\hat{i} + \\hat{j} + \\frac{1}{2}\\hat{k}$ be three vectors, where $\\alpha, \\beta \\in \\mathbb{R} \\setminus \\{0\\}$ and $O$ denotes the origin. If $(\\vec{OP} \\times \\vec{OQ}) \\cdot \\vec{OR} = 0$ and the point $(\\alpha, \\beta, 2)$ lies on the plane $3x + 3y - z + l = 0$, then the value of $l$ is",
+    "options": [],
+    "correctAnswer": 5,
+    "positiveMarks": 4,
+    "negativeMarks": 0,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Probability",
+    "difficulty": "HARD",
+    "questionType": "NUMERICAL",
+    "contentLaTeX": "Let $X$ be a random variable, and let $P(X = x)$ denote the probability that $X$ takes the value $x$. Suppose that the points $(x, P(X = x))$, $x = 0, 1, 2, 3, 4$, lie on a fixed straight line in the $xy$-plane, and $P(X = x) = 0$ for all $x \\in \\mathbb{R} \\setminus \\{0, 1, 2, 3, 4\\}$. If the mean of $X$ is $\\frac{5}{2}$, and the variance of $X$ is $\\alpha$, then the value of $24\\alpha$ is",
+    "options": [],
+    "correctAnswer": 42,
+    "positiveMarks": 4,
+    "negativeMarks": 0,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Matrices",
+    "difficulty": "HARD",
+    "questionType": "MCQ",
+    "contentLaTeX": "Let $\\alpha$ and $\\beta$ be the distinct roots of the equation $x^2 + x - 1 = 0$. Consider the set $T = \\{1, \\alpha, \\beta\\}$. For a $3 \\times 3$ matrix $M = (a_{ij})_{3 \\times 3}$, define $R_i = a_{i1} + a_{i2} + a_{i3}$ and $C_j = a_{1j} + a_{2j} + a_{3j}$ for $i = 1, 2, 3$ and $j = 1, 2, 3$.\n\nMatch each entry in List-I to the correct entry in List-II.\n\n**List-I:**\n(P) The number of matrices $M = (a_{ij})_{3 \\times 3}$ with all entries in $T$ such that $R_i = C_j = 0$ for all $i, j$, is\n(Q) The number of symmetric matrices $M = (a_{ij})_{3 \\times 3}$ with all entries in $T$ such that $C_j = 0$ for all $j$, is\n(R) Let $M = (a_{ij})_{3 \\times 3}$ be a skew symmetric matrix such that $a_{ij} \\in T$ for $i > j$. Then the number of elements in the set $\\left\\{ \\begin{pmatrix} x \\\\ y \\\\ z \\end{pmatrix} : x, y, z \\in \\mathbb{R}, M \\begin{pmatrix} x \\\\ y \\\\ z \\end{pmatrix} = \\begin{pmatrix} a_{12} \\\\ 0 \\\\ -a_{23} \\end{pmatrix} \\right\\}$ is\n(S) Let $M = (a_{ij})_{3 \\times 3}$ be a matrix with all entries in $T$ such that $R_i = 0$ for all $i$. Then the absolute value of the determinant of $M$ is\n\n**List-II:**\n(1) 1\n(2) 12\n(3) infinite\n(4) 6\n(5) 0",
+    "options": [
+      { "id": "A", "textLaTeX": "(P) $\\to$ (4), (Q) $\\to$ (2), (R) $\\to$ (5), (S) $\\to$ (1)" },
+      { "id": "B", "textLaTeX": "(P) $\\to$ (2), (Q) $\\to$ (4), (R) $\\to$ (1), (S) $\\to$ (5)" },
+      { "id": "C", "textLaTeX": "(P) $\\to$ (2), (Q) $\\to$ (4), (R) $\\to$ (3), (S) $\\to$ (5)" },
+      { "id": "D", "textLaTeX": "(P) $\\to$ (1), (Q) $\\to$ (5), (R) $\\to$ (3), (S) $\\to$ (4)" }
+    ],
+    "correctAnswer": "C",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Coordinate Geometry",
+    "difficulty": "MEDIUM",
+    "questionType": "MCQ",
+    "contentLaTeX": "Let the straight line $y = 2x$ touch a circle with center $(0, \\alpha)$, $\\alpha > 0$, and radius $r$ at a point $A_1$. Let $B_1$ be the point on the circle such that the line segment $A_1 B_1$ is a diameter of the circle. Let $\\alpha + r = 5 + \\sqrt{5}$.\n\nMatch each entry in List-I to the correct entry in List-II.\n\n**List-I:**\n(P) $\\alpha$ equals\n(Q) $r$ equals\n(R) $A_1$ equals\n(S) $B_1$ equals\n\n**List-II:**\n(1) $(-2, 4)$\n(2) $\\sqrt{5}$\n(3) $(-2, 6)$\n(4) 5\n(5) $(2, 4)$",
+    "options": [
+      { "id": "A", "textLaTeX": "(P) $\\to$ (4), (Q) $\\to$ (2), (R) $\\to$ (1), (S) $\\to$ (3)" },
+      { "id": "B", "textLaTeX": "(P) $\\to$ (2), (Q) $\\to$ (4), (R) $\\to$ (1), (S) $\\to$ (3)" },
+      { "id": "C", "textLaTeX": "(P) $\\to$ (4), (Q) $\\to$ (2), (R) $\\to$ (5), (S) $\\to$ (3)" },
+      { "id": "D", "textLaTeX": "(P) $\\to$ (2), (Q) $\\to$ (4), (R) $\\to$ (3), (S) $\\to$ (5)" }
+    ],
+    "correctAnswer": "C",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "3D Geometry",
+    "difficulty": "HARD",
+    "questionType": "MCQ",
+    "contentLaTeX": "Let $\\gamma \\in \\mathbb{R}$ be such that the lines $$L_1 : \\frac{x+11}{1} = \\frac{y+21}{2} = \\frac{z+29}{3} \\quad \\text{and} \\quad L_2 : \\frac{x+16}{3} = \\frac{y+11}{2} = \\frac{z+4}{\\gamma}$$ intersect. Let $R_1$ be the point of intersection of $L_1$ and $L_2$. Let $O = (0,0,0)$, and $\\hat{n}$ denote a unit normal vector to the plane containing both the lines $L_1$ and $L_2$.\n\nMatch each entry in List-I to the correct entry in List-II.\n\n**List-I:**\n(P) $\\gamma$ equals\n(Q) A possible choice for $\\hat{n}$ is\n(R) $\\overrightarrow{OR_1}$ equals\n(S) A possible value of $\\overrightarrow{OR_1} \\cdot \\hat{n}$ is\n\n**List-II:**\n(1) $-\\hat{i} - \\hat{j} + \\hat{k}$\n(2) $\\sqrt{\\frac{3}{2}}$\n(3) 1\n(4) $\\frac{1}{\\sqrt{6}}\\hat{i} - \\frac{2}{\\sqrt{6}}\\hat{j} + \\frac{1}{\\sqrt{6}}\\hat{k}$\n(5) $\\sqrt{\\frac{2}{3}}$",
+    "options": [
+      { "id": "A", "textLaTeX": "(P) $\\to$ (3), (Q) $\\to$ (4), (R) $\\to$ (1), (S) $\\to$ (2)" },
+      { "id": "B", "textLaTeX": "(P) $\\to$ (5), (Q) $\\to$ (4), (R) $\\to$ (1), (S) $\\to$ (2)" },
+      { "id": "C", "textLaTeX": "(P) $\\to$ (3), (Q) $\\to$ (4), (R) $\\to$ (1), (S) $\\to$ (5)" },
+      { "id": "D", "textLaTeX": "(P) $\\to$ (3), (Q) $\\to$ (1), (R) $\\to$ (4), (S) $\\to$ (5)" }
+    ],
+    "correctAnswer": "C",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Mathematics",
+    "topic": "Functions",
+    "difficulty": "HARD",
+    "questionType": "MCQ",
+    "contentLaTeX": "Let $f : \\mathbb{R} \\to \\mathbb{R}$ and $g : \\mathbb{R} \\to \\mathbb{R}$ be functions defined by $$f(x) = \\begin{cases} x |x| \\sin\\left(\\frac{1}{x}\\right), & x \\neq 0 \\\\ 0, & x = 0 \\end{cases} \\quad \\text{and} \\quad g(x) = \\begin{cases} 1 - 2x, & 0 \\le x \\le \\frac{1}{2} \\\\ 0, & \\text{otherwise} \\end{cases}$$ Let $a, b, c, d \\in \\mathbb{R}$. Define the function $h : \\mathbb{R} \\to \\mathbb{R}$ by $$h(x) = a f(x) + b \\left( g(x) + g\\left(\\frac{1}{2}-x\\right) \\right) + c (x - g(x)) + d g(x), \\quad x \\in \\mathbb{R}$$\n\nMatch each entry in List-I to the correct entry in List-II.\n\n**List-I:**\n(P) If $a = 0, b = 1, c = 0,$ and $d = 0$, then\n(Q) If $a = 1, b = 0, c = 0,$ and $d = 0$, then\n(R) If $a = 0, b = 0, c = 1,$ and $d = 0$, then\n(S) If $a = 0, b = 0, c = 0,$ and $d = 1$, then\n\n**List-II:**\n(1) $h$ is one-one\n(2) $h$ is onto\n(3) $h$ is differentiable on $\\mathbb{R}$\n(4) the range of $h$ is $[0,1]$\n(5) the range of $h$ is $\\{0,1\\}$",
+    "options": [
+      { "id": "A", "textLaTeX": "(P) $\\to$ (4), (Q) $\\to$ (3), (R) $\\to$ (1), (S) $\\to$ (2)" },
+      { "id": "B", "textLaTeX": "(P) $\\to$ (5), (Q) $\\to$ (2), (R) $\\to$ (4), (S) $\\to$ (3)" },
+      { "id": "C", "textLaTeX": "(P) $\\to$ (5), (Q) $\\to$ (3), (R) $\\to$ (2), (S) $\\to$ (4)" },
+      { "id": "D", "textLaTeX": "(P) $\\to$ (4), (Q) $\\to$ (2), (R) $\\to$ (1), (S) $\\to$ (3)" }
+    ],
+    "correctAnswer": "C",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Physics",
+    "topic": "Units and Measurements",
+    "difficulty": "EASY",
+    "questionType": "MCQ",
+    "contentLaTeX": "A dimensionless quantity is constructed in terms of electronic charge $e$, permittivity of free space $\\varepsilon_0$, Planck's constant $h$, and speed of light $c$. If the dimensionless quantity is written as $e^\\alpha \\varepsilon_0^\\beta h^\\gamma c^\\delta$ and $n$ is a non-zero integer, then $(\\alpha, \\beta, \\gamma, \\delta)$ is given by",
+    "options": [
+      { "id": "A", "textLaTeX": "$(2n, -n, -n, -n)$" },
+      { "id": "B", "textLaTeX": "$(n, -n, -2n, -n)$" },
+      { "id": "C", "textLaTeX": "$(n, -n, -n, -2n)$" },
+      { "id": "D", "textLaTeX": "$(2n, -n, -2n, -2n)$" }
+    ],
+    "correctAnswer": "A",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Physics",
+    "topic": "Magnetism",
+    "difficulty": "MEDIUM",
+    "questionType": "MCQ",
+    "contentLaTeX": "An infinitely long wire, located on the $z$-axis, carries a current $I$ along the $+z$-direction and produces the magnetic field $\\vec{B}$. The magnitude of the line integral $\\int \\vec{B} \\cdot d\\vec{l}$ along a straight line from the point $(-\\sqrt{3}a, a, 0)$ to $(a, a, 0)$ is given by [$\\mu_0$ is the magnetic permeability of free space.]",
+    "options": [
+      { "id": "A", "textLaTeX": "$7\\mu_0 I / 24$" },
+      { "id": "B", "textLaTeX": "$7\\mu_0 I / 12$" },
+      { "id": "C", "textLaTeX": "$\\mu_0 I / 8$" },
+      { "id": "D", "textLaTeX": "$\\mu_0 I / 6$" }
+    ],
+    "correctAnswer": "A",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Physics",
+    "topic": "Electrostatics",
+    "difficulty": "HARD",
+    "questionType": "MCQ",
+    "contentLaTeX": "Two beads, each with charge $q$ and mass $m$, are on a horizontal, frictionless, non-conducting, circular hoop of radius $R$. One of the beads is glued to the hoop at some point, while the other one performs small oscillations about its equilibrium position along the hoop. The square of the angular frequency of the small oscillations is given by [$\\varepsilon_0$ is the permittivity of free space.]",
+    "options": [
+      { "id": "A", "textLaTeX": "$q^2 / (4\\pi \\varepsilon_0 R^3 m)$" },
+      { "id": "B", "textLaTeX": "$q^2 / (32\\pi \\varepsilon_0 R^3 m)$" },
+      { "id": "C", "textLaTeX": "$q^2 / (8\\pi \\varepsilon_0 R^3 m)$" },
+      { "id": "D", "textLaTeX": "$q^2 / (16\\pi \\varepsilon_0 R^3 m)$" }
+    ],
+    "correctAnswer": "B",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Physics",
+    "topic": "Simple Harmonic Motion",
+    "difficulty": "EASY",
+    "questionType": "MCQ",
+    "contentLaTeX": "A block of mass 5 kg moves along the $x$-direction subject to the force $F = (-20x + 10)\\text{ N}$, with the value of $x$ in metre. At time $t = 0\\text{ s}$, it is at rest at position $x = 1\\text{ m}$. The position and momentum of the block at $t = (\\pi/4)\\text{ s}$ are",
+    "options": [
+      { "id": "A", "textLaTeX": "$-0.5\\text{ m}, 5\\text{ kg m/s}$" },
+      { "id": "B", "textLaTeX": "$0.5\\text{ m}, 0\\text{ kg m/s}$" },
+      { "id": "C", "textLaTeX": "$0.5\\text{ m}, -5\\text{ kg m/s}$" },
+      { "id": "D", "textLaTeX": "$-1\\text{ m}, 5\\text{ kg m/s}$" }
+    ],
+    "correctAnswer": "C",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Physics",
+    "topic": "Modern Physics",
+    "difficulty": "MEDIUM",
+    "questionType": "MSQ",
+    "contentLaTeX": "A particle of mass $m$ is moving in a circular orbit under the influence of the central force $F(r) = -kr$, corresponding to the potential energy $V(r) = kr^2/2$, where $k$ is a positive force constant and $r$ is the radial distance from the origin. According to the Bohr's quantization rule, the angular momentum of the particle is given by $L = n\\hbar$, where $\\hbar = h/(2\\pi)$, $h$ is the Planck's constant, and $n$ a positive integer. If $v$ and $E$ are the speed and total energy of the particle, respectively, then which of the following expression(s) is(are) correct?",
+    "options": [
+      { "id": "A", "textLaTeX": "$r^2 = n\\hbar \\sqrt{\\frac{1}{mk}}$" },
+      { "id": "B", "textLaTeX": "$v^2 = n\\hbar \\sqrt{\\frac{k}{m^3}}$" },
+      { "id": "C", "textLaTeX": "$\\frac{L}{mr^2} = \\sqrt{\\frac{k}{m}}$" },
+      { "id": "D", "textLaTeX": "$E = \\frac{n\\hbar}{2} \\sqrt{\\frac{k}{m}}$" }
+    ],
+    "correctAnswer": ["A", "B", "C"],
+    "positiveMarks": 4,
+    "negativeMarks": 2,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Physics",
+    "topic": "Thermodynamics",
+    "difficulty": "EASY",
+    "questionType": "NUMERICAL",
+    "contentLaTeX": "The specific heat capacity of a substance is temperature dependent and is given by the formula $C = kT$, where $k$ is a constant of suitable dimensions in SI units, and $T$ is the absolute temperature. If the heat required to raise the temperature of $1\\text{ kg}$ of the substance from $-73^\\circ\\text{C}$ to $27^\\circ\\text{C}$ is $nk$, the value of $n$ is _____. [Given: $0\\text{ K} = -273^\\circ\\text{C}$.]",
+    "options": [],
+    "correctAnswer": 25000,
+    "positiveMarks": 4,
+    "negativeMarks": 0,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Physics",
+    "topic": "Wave Optics",
+    "difficulty": "MEDIUM",
+    "questionType": "NUMERICAL",
+    "contentLaTeX": "A point source S emits unpolarized light uniformly in all directions. At two points A and B, the ratio $r = I_A / I_B$ of the intensities of light is 2. If a set of two polaroids having $45^\\circ$ angle between their pass-axes is placed just before point B, then the new value of $r$ will be _____.",
+    "options": [],
+    "correctAnswer": 8,
+    "positiveMarks": 4,
+    "negativeMarks": 0,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Physics",
+    "topic": "Fluid Mechanics",
+    "difficulty": "MEDIUM",
+    "questionType": "NUMERICAL",
+    "contentLaTeX": "Two large, identical water tanks, 1 and 2, kept on the top of a building of height $H$, are filled with water up to height $h$ in each tank. Both the tanks contain an identical hole of small radius on their sides, close to their bottom. A pipe of the same internal radius as that of the hole is connected to tank 2, and the pipe ends at the ground level. When the water flows from the tanks 1 and 2 through the holes, the times taken to empty the tanks are $t_1$ and $t_2$, respectively. If $H = \\left(\\frac{16}{9}\\right)h$, then the ratio $t_1 / t_2$ is _____.",
+    "options": [],
+    "correctAnswer": 3,
+    "positiveMarks": 4,
+    "negativeMarks": 0,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Physics",
+    "topic": "Ray Optics",
+    "difficulty": "HARD",
+    "questionType": "MCQ",
+    "contentLaTeX": "A light ray is incident on the surface of a sphere of refractive index $n$ at an angle of incidence $\\theta_0$. The ray partially refracts into the sphere with angle of refraction $\\phi_0$ and then partly reflects from the back surface. The reflected ray then emerges out of the sphere after a partial refraction. The total angle of deviation of the emergent ray with respect to the incident ray is $\\delta$. Match the quantities mentioned in List-I with their values in List-II and choose the correct option.\n\n**List-I:**\n(P) If $n = 2$ and $\\delta = 180^\\circ$, then all the possible values of $\\theta_0$ will be\n(Q) If $n = \\sqrt{3}$ and $\\delta = 180^\\circ$, then all the possible values of $\\theta_0$ will be\n(R) If $n = \\sqrt{3}$ and $\\delta = 180^\\circ$, then all the possible values of $\\phi_0$ will be\n(S) If $n = \\sqrt{2}$ and $\\theta_0 = 45^\\circ$, then all the possible values of $\\delta$ will be\n\n**List-II:**\n(1) $30^\\circ$ and $0^\\circ$\n(2) $60^\\circ$ and $0^\\circ$\n(3) $45^\\circ$ and $0^\\circ$\n(4) $150^\\circ$\n(5) $0^\\circ$",
+    "options": [
+      { "id": "A", "textLaTeX": "(P) $\\to$ (5), (Q) $\\to$ (2), (R) $\\to$ (1), (S) $\\to$ (4)" },
+      { "id": "B", "textLaTeX": "(P) $\\to$ (5), (Q) $\\to$ (1), (R) $\\to$ (2), (S) $\\to$ (4)" },
+      { "id": "C", "textLaTeX": "(P) $\\to$ (3), (Q) $\\to$ (2), (R) $\\to$ (1), (S) $\\to$ (4)" },
+      { "id": "D", "textLaTeX": "(P) $\\to$ (3), (Q) $\\to$ (1), (R) $\\to$ (2), (S) $\\to$ (5)" }
+    ],
+    "correctAnswer": "A",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Chemistry",
+    "topic": "Gaseous State",
+    "difficulty": "EASY",
+    "questionType": "MCQ",
+    "contentLaTeX": "A closed vessel contains $10\\text{ g}$ of an ideal gas X at $300\\text{ K}$, which exerts $2\\text{ atm}$ pressure. At the same temperature, $80\\text{ g}$ of another ideal gas Y is added to it and the pressure becomes $6\\text{ atm}$. The ratio of root mean square velocities of X and Y at $300\\text{ K}$ is",
+    "options": [
+      { "id": "A", "textLaTeX": "$2\\sqrt{2} : \\sqrt{3}$" },
+      { "id": "B", "textLaTeX": "$2\\sqrt{2} : 1$" },
+      { "id": "C", "textLaTeX": "$1 : 2$" },
+      { "id": "D", "textLaTeX": "$2 : 1$" }
+    ],
+    "correctAnswer": "D",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Chemistry",
+    "topic": "Inorganic Chemistry",
+    "difficulty": "EASY",
+    "questionType": "MCQ",
+    "contentLaTeX": "At room temperature, disproportionation of an aqueous solution of in situ generated nitrous acid ($\\text{HNO}_2$) gives the species",
+    "options": [
+      { "id": "A", "textLaTeX": "$\\text{H}_3\\text{O}^+$, $\\text{NO}_3^-$ and $\\text{NO}$" },
+      { "id": "B", "textLaTeX": "$\\text{H}_3\\text{O}^+$, $\\text{NO}_3^-$ and $\\text{NO}_2$" },
+      { "id": "C", "textLaTeX": "$\\text{H}_3\\text{O}^+$, $\\text{NO}^-$ and $\\text{NO}_2$" },
+      { "id": "D", "textLaTeX": "$\\text{H}_3\\text{O}^+$, $\\text{NO}_3^-$ and $\\text{N}_2\\text{O}$" }
+    ],
+    "correctAnswer": "A",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Chemistry",
+    "topic": "Coordination Chemistry",
+    "difficulty": "MEDIUM",
+    "questionType": "MCQ",
+    "contentLaTeX": "Among the following options, select the option in which each complex in Set-I shows geometrical isomerism and the two complexes in Set-II are ionization isomers of each other. [$\\text{en} = \\text{H}_2\\text{NCH}_2\\text{CH}_2\\text{NH}_2$]",
+    "options": [
+      { "id": "A", "textLaTeX": "Set-I: $[\\text{Ni}(\\text{CO})_4]$ and $[\\text{PdCl}_2(\\text{PPh}_3)_2]$\nSet-II: $[\\text{Co}(\\text{NH}_3)_5\\text{Cl}]\\text{SO}_4$ and $[\\text{Co}(\\text{NH}_3)_5(\\text{SO}_4)]\\text{Cl}$" },
+      { "id": "B", "textLaTeX": "Set-I: $[\\text{Co}(\\text{en})(\\text{NH}_3)_2\\text{Cl}_2]$ and $[\\text{PdCl}_2(\\text{PPh}_3)_2]$\nSet-II: $[\\text{Co}(\\text{NH}_3)_6][\\text{Cr}(\\text{CN})_6]$ and $[\\text{Cr}(\\text{NH}_3)_6][\\text{Co}(\\text{CN})_6]$" },
+      { "id": "C", "textLaTeX": "Set-I: $[\\text{Co}(\\text{NH}_3)_3(\\text{NO}_2)_3]$ and $[\\text{Co}(\\text{en})_2\\text{Cl}_2]$\nSet-II: $[\\text{Co}(\\text{NH}_3)_5\\text{Cl}]\\text{SO}_4$ and $[\\text{Co}(\\text{NH}_3)_5(\\text{SO}_4)]\\text{Cl}$" },
+      { "id": "D", "textLaTeX": "Set-I: $[\\text{Cr}(\\text{NH}_3)_5\\text{Cl}]\\text{Cl}_2$ and $[\\text{Co}(\\text{en})(\\text{NH}_3)_2\\text{Cl}_2]$\nSet-II: $[\\text{Cr}(\\text{H}_2\\text{O})_6]\\text{Cl}_3$ and $[\\text{Cr}(\\text{H}_2\\text{O})_5\\text{Cl}]\\text{Cl}_2 \\cdot \\text{H}_2\\text{O}$" }
+    ],
+    "correctAnswer": "C",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Chemistry",
+    "topic": "Atomic Structure",
+    "difficulty": "MEDIUM",
+    "questionType": "MSQ",
+    "contentLaTeX": "Among the following, the correct statement(s) for electrons in an atom is(are)",
+    "options": [
+      { "id": "A", "textLaTeX": "Uncertainty principle rules out the existence of definite paths for electrons." },
+      { "id": "B", "textLaTeX": "The energy of an electron in 2s orbital of an atom is lower than the energy of an electron that is infinitely far away from the nucleus." },
+      { "id": "C", "textLaTeX": "According to Bohr's model, the most negative energy value for an electron is given by $n = 1$, which corresponds to the most stable orbit." },
+      { "id": "D", "textLaTeX": "According to Bohr's model, the magnitude of velocity of electrons increases with increase in values of $n$." }
+    ],
+    "correctAnswer": ["A", "B", "C"],
+    "positiveMarks": 4,
+    "negativeMarks": 2,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Chemistry",
+    "topic": "Chemical Bonding",
+    "difficulty": "MEDIUM",
+    "questionType": "MSQ",
+    "contentLaTeX": "The option(s) in which at least three molecules follow Octet Rule is(are)",
+    "options": [
+      { "id": "A", "textLaTeX": "$\\text{CO}_2, \\text{C}_2\\text{H}_4, \\text{NO}$ and $\\text{HCl}$" },
+      { "id": "B", "textLaTeX": "$\\text{NO}_2, \\text{O}_3, \\text{HCl}$ and $\\text{H}_2\\text{SO}_4$" },
+      { "id": "C", "textLaTeX": "$\\text{BCl}_3, \\text{NO}, \\text{NO}_2$ and $\\text{H}_2\\text{SO}_4$" },
+      { "id": "D", "textLaTeX": "$\\text{CO}_2, \\text{BCl}_3, \\text{O}_3$ and $\\text{C}_2\\text{H}_4$" }
+    ],
+    "correctAnswer": ["A", "D"],
+    "positiveMarks": 4,
+    "negativeMarks": 2,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Chemistry",
+    "topic": "Chemical Kinetics",
+    "difficulty": "EASY",
+    "questionType": "NUMERICAL",
+    "contentLaTeX": "Consider the following reaction, $$2\\text{H}_2(g) + 2\\text{NO}(g) \\to \\text{N}_2(g) + 2\\text{H}_2\\text{O}(g)$$ which follows the mechanism given below:\n$$2\\text{NO}(g) \\underset{k_{-1}}{\\overset{k_1}{\\rightleftharpoons}} \\text{N}_2\\text{O}_2(g) \\quad \\text{(fast equilibrium)}$$\n$$\\text{N}_2\\text{O}_2(g) + \\text{H}_2(g) \\xrightarrow{k_2} \\text{N}_2\\text{O}(g) + \\text{H}_2\\text{O}(g) \\quad \\text{(slow reaction)}$$\n$$\\text{N}_2\\text{O}(g) + \\text{H}_2(g) \\xrightarrow{k_3} \\text{N}_2(g) + \\text{H}_2\\text{O}(g) \\quad \\text{(fast reaction)}$$\nThe order of the reaction is _____.",
+    "options": [],
+    "correctAnswer": 3,
+    "positiveMarks": 4,
+    "negativeMarks": 0,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Chemistry",
+    "topic": "Organometallic Chemistry",
+    "difficulty": "MEDIUM",
+    "questionType": "NUMERICAL",
+    "contentLaTeX": "Among $\\text{V}(\\text{CO})_6$, $\\text{Cr}(\\text{CO})_5$, $\\text{Cu}(\\text{CO})_3$, $\\text{Mn}(\\text{CO})_5$, $\\text{Fe}(\\text{CO})_5$, $[\\text{Co}(\\text{CO})_3]^{3-}$, $[\\text{Cr}(\\text{CO})_4]^{4-}$, and $\\text{Ir}(\\text{CO})_3$, the total number of species isoelectronic with $\\text{Ni}(\\text{CO})_4$ is _____.\n\n[Given, atomic number: $\\text{V} = 23, \\text{Cr} = 24, \\text{Mn} = 25, \\text{Fe} = 26, \\text{Co} = 27, \\text{Ni} = 28, \\text{Cu} = 29, \\text{Ir} = 77$]",
+    "options": [],
+    "correctAnswer": 3,
+    "positiveMarks": 4,
+    "negativeMarks": 0,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Chemistry",
+    "topic": "Coordination Chemistry",
+    "difficulty": "HARD",
+    "questionType": "NUMERICAL",
+    "contentLaTeX": "Among the following complexes, the total number of diamagnetic species is _____.\n\n$[\\text{Mn}(\\text{NH}_3)_6]^{3+}$, $[\\text{MnCl}_6]^{3-}$, $[\\text{FeF}_6]^{3-}$, $[\\text{CoF}_6]^{3-}$, $[\\text{Fe}(\\text{NH}_3)_6]^{3+}$, and $[\\text{Co}(\\text{en})_3]^{3+}$\n\n[Given, atomic number: $\\text{Mn} = 25, \\text{Fe} = 26, \\text{Co} = 27$; $\\text{en} = \\text{H}_2\\text{NCH}_2\\text{CH}_2\\text{NH}_2$]",
+    "options": [],
+    "correctAnswer": 1,
+    "positiveMarks": 4,
+    "negativeMarks": 0,
+    "numericalTolerance": 0.01
+  },
+  {
+    "examType": "JEE_ADVANCED",
+    "subject": "Chemistry",
+    "topic": "Chemical Bonding",
+    "difficulty": "EASY",
+    "questionType": "MCQ",
+    "contentLaTeX": "Based on VSEPR model, match the xenon compounds given in List-I with the corresponding geometries and the number of lone pairs on xenon given in List-II and choose the correct option.\n\n**List-I:**\n(P) $\\text{XeF}_2$\n(Q) $\\text{XeF}_4$\n(R) $\\text{XeO}_3$\n(S) $\\text{XeO}_3\\text{F}_2$\n\n**List-II:**\n(1) Trigonal bipyramidal and two lone pair of electrons\n(2) Tetrahedral and one lone pair of electrons\n(3) Octahedral and two lone pair of electrons\n(4) Trigonal bipyramidal and no lone pair of electrons\n(5) Trigonal bipyramidal and three lone pair of electrons",
+    "options": [
+      { "id": "A", "textLaTeX": "P-5, Q-2, R-3, S-1" },
+      { "id": "B", "textLaTeX": "P-5, Q-3, R-2, S-4" },
+      { "id": "C", "textLaTeX": "P-4, Q-3, R-2, S-1" },
+      { "id": "D", "textLaTeX": "P-4, Q-2, R-5, S-3" }
+    ],
+    "correctAnswer": "B",
+    "positiveMarks": 3,
+    "negativeMarks": 1,
+    "numericalTolerance": 0.01
+  }
+]

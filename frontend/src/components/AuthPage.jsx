@@ -37,15 +37,14 @@ export default function AuthPage() {
     name: '',
     email: '',
     password: '',
-    targetExamTrack: 'JEE'
+    confirmPassword: ''
   });
   const [otpCode, setOtpCode] = useState('');
   const [pendingEmail, setPendingEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-
-  const tracks = ['JEE', 'GATE', 'NEET', 'Aptitude'];
 
   // Automatically redirect authenticated candidate to /dashboard
   if (user) {
@@ -55,10 +54,6 @@ export default function AuthPage() {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError(null);
-  };
-
-  const handleTrackSelect = (track) => {
-    setFormData({ ...formData, targetExamTrack: track });
   };
 
   const handleRegisterOrLogin = async (e) => {
@@ -72,11 +67,13 @@ export default function AuthPage() {
         if (!formData.name.trim()) {
           throw new Error('Please enter your full name');
         }
+        if (formData.password !== formData.confirmPassword) {
+          throw new Error('Passwords do not match');
+        }
         await register(
           formData.name,
           formData.email,
-          formData.password,
-          formData.targetExamTrack
+          formData.password
         );
         setPendingEmail(formData.email);
         setMode('verify_otp');
@@ -144,14 +141,14 @@ export default function AuthPage() {
         name: 'Aarav Sharma',
         email: demoEmail,
         password: 'password123',
-        targetExamTrack: 'JEE'
+        confirmPassword: 'password123'
       });
     } else {
       setFormData({
         name: '',
         email: 'teststudent@exam.com',
         password: 'password123',
-        targetExamTrack: 'JEE'
+        confirmPassword: ''
       });
     }
   };
@@ -356,18 +353,31 @@ export default function AuthPage() {
 
               {mode === 'register' && (
                 <div className="form-group">
-                  <label className="form-label">Target Exam Track</label>
-                  <div className="track-grid">
-                    {tracks.map((track) => (
-                      <button
-                        key={track}
-                        type="button"
-                        className={`track-btn ${formData.targetExamTrack === track ? 'selected' : ''}`}
-                        onClick={() => handleTrackSelect(track)}
-                      >
-                        {track}
-                      </button>
-                    ))}
+                  <label className="form-label">Confirm Password</label>
+                  <div className="input-container">
+                    <Lock className="input-icon-left" />
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      name="confirmPassword"
+                      className="form-input"
+                      style={{ paddingRight: '40px' }}
+                      placeholder="••••••••••••"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      required={mode === 'register'}
+                    />
+                    <button
+                      type="button"
+                      className="input-icon-right"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      tabIndex={-1}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff style={{ width: '18px', height: '18px' }} />
+                      ) : (
+                        <Eye style={{ width: '18px', height: '18px' }} />
+                      )}
+                    </button>
                   </div>
                 </div>
               )}

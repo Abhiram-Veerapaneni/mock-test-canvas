@@ -1,4 +1,8 @@
+import dns from 'dns';
 import nodemailer from 'nodemailer';
+
+// Force Node.js to resolve IPv4 addresses first globally to prevent ENETUNREACH on IPv6-restricted cloud hosts like Render
+dns.setDefaultResultOrder('ipv4first');
 
 /**
  * Creates Nodemailer transporter using SMTP configuration with IPv4 family enforced
@@ -14,7 +18,8 @@ const createTransporter = () => {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
       },
-      family: 4 // Force IPv4 connection to prevent ENETUNREACH on cloud hosts like Render
+      family: 4, // Force IPv4 connection to prevent ENETUNREACH on cloud hosts like Render
+      autoSelectFamily: false // Disable Happy Eyeballs auto-selection of IPv6 in Node 18+
     });
   }
   return null;

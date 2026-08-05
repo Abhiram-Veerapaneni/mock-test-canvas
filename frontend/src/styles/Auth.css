@@ -485,6 +485,11 @@ body {
 }
 
 .logout-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
   background-color: rgba(239, 68, 68, 0.12);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.3);
@@ -498,4 +503,116 @@ body {
 
 .logout-btn:hover {
   background-color: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+/* Modal Overlay & Dialog */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: modalSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalSlideUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-icon-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-color: rgba(239, 68, 68, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.modal-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.modal-cancel-btn {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-input);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-cancel-btn:hover {
+  background-color: var(--border-input);
+}
+
+.modal-confirm-btn {
+  background-color: #ef4444;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  transition: all 0.2s ease;
+}
+
+.modal-confirm-btn:hover {
+  background-color: #dc2626;
 }

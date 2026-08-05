@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   GraduationCap, 
@@ -10,12 +11,15 @@ import {
   Brain, 
   BookOpen, 
   Award,
-  ArrowRight
+  ArrowRight,
+  AlertTriangle
 } from 'lucide-react';
 import '../styles/Auth.css';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const { user, logout, darkMode, toggleTheme } = useAuth();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   return (
     <div className="dashboard-page" data-theme={darkMode ? 'dark' : 'light'}>
@@ -51,9 +55,9 @@ export default function Dashboard() {
             )}
           </button>
 
-          <button type="button" className="logout-btn" onClick={logout}>
-            <LogOut style={{ width: '14px', height: '14px', marginRight: '6px' }} />
-            Logout
+          <button type="button" className="logout-btn" onClick={() => setShowLogoutModal(true)}>
+            <LogOut style={{ width: '14px', height: '14px' }} />
+            <span>Logout</span>
           </button>
         </div>
       </header>
@@ -72,10 +76,9 @@ export default function Dashboard() {
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{user?.email}</p>
               </div>
             </div>
-            <span className="user-badge">{user?.targetExamTrack || 'JEE'} Track</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginTop: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#34d399', fontSize: '0.875rem', fontWeight: 700 }}>
               <CheckCircle2 style={{ width: '18px', height: '18px' }} />
               <span>Email Verified • Ready for Examination</span>
@@ -92,11 +95,15 @@ export default function Dashboard() {
               <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Available Mock Tests</h3>
             </div>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              Select target exam tracks ({user?.targetExamTrack || 'JEE'}, GATE, NEET, Aptitude) to begin adaptive proctored mock tests.
+              Select target exam tracks (JEE, GATE, NEET, Aptitude) to begin adaptive proctored mock tests.
             </p>
             <div style={{ marginTop: 'auto', paddingTop: '12px' }}>
-              <button className="submit-btn" style={{ fontSize: '0.85rem', padding: '10px' }}>
-                Launch Test Chamber <ArrowRight style={{ width: '16px', height: '16px' }} />
+              <button 
+                onClick={() => navigate('/exams')}
+                className="submit-btn" 
+                style={{ fontSize: '0.85rem', padding: '10px' }}
+              >
+                Browse Exam Catalog <ArrowRight style={{ width: '16px', height: '16px' }} />
               </button>
             </div>
           </div>
@@ -130,6 +137,39 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
+
+      {/* Confirm Logout Modal */}
+      {showLogoutModal && (
+        <div className="modal-overlay" onClick={() => setShowLogoutModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-icon-badge">
+                <LogOut style={{ width: '22px', height: '22px', color: '#ef4444' }} />
+              </div>
+              <h3 className="modal-title">Confirm Logout</h3>
+            </div>
+            <p className="modal-description">
+              Are you sure you want to sign out of your candidate examination portal session?
+            </p>
+            <div className="modal-actions">
+              <button 
+                type="button" 
+                className="modal-cancel-btn" 
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="modal-confirm-btn" 
+                onClick={logout}
+              >
+                Confirm Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,9 +1,14 @@
+import dns from 'dns';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
+import examRoutes from './routes/examRoutes.js';
+
+// Force Node.js DNS resolution to prioritize IPv4 over IPv6 globally
+dns.setDefaultResultOrder('ipv4first');
 
 dotenv.config();
 
@@ -46,13 +51,13 @@ app.use(cookieParser());
 
 // API Routes
 app.use('/api/users', userRoutes);
+app.use('/api/exams', examRoutes);
 
 // Basic Health Check Route
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',
     system: 'AI-Proctored Mock Tests API',
-    database: 'pmt_db',
     timestamp: new Date().toISOString()
   });
 });

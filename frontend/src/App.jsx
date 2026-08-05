@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AuthPage from './components/AuthPage';
 import Dashboard from './pages/Dashboard';
+import ExamCatalog from './pages/ExamCatalog';
+import ExamPlayer from './pages/ExamPlayer';
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -32,6 +34,30 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/exams"
+        element={
+          <ProtectedRoute>
+            <ExamCatalog />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/exam"
+        element={
+          <ProtectedRoute>
+            <ExamPlayer />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/exam/:examId"
+        element={
+          <ProtectedRoute>
+            <ExamPlayer />
           </ProtectedRoute>
         }
       />
