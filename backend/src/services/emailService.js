@@ -6,22 +6,35 @@ dns.setDefaultResultOrder('ipv4first');
 
 /**
  * Custom DNS lookup to strictly enforce IPv4 (A records) resolution.
- * Prevents Nodemailer from falling back to IPv6 (AAAA records like 2607:f8b0:...)
- * which cause ENETUNREACH errors on networks/hosts without IPv6 routing.
+ * Handles both lookup(hostname, callback) and lookup(hostname, options, callback) signatures correctly.
  */
 const customIPv4Lookup = (hostname, options, callback) => {
-  dns.lookup(hostname, { family: 4, all: false }, (err, address, family) => {
-    if (err) return callback(err);
-    callback(null, address, family);
+  const cb = typeof options === 'function' ? options : callback;
+  const opts = typeof options === 'object' && options !== null ? { ...options, family: 4 } : { family: 4, all: false };
+  dns.lookup(hostname, opts, (err, address, family) => {
+    if (err) return cb(err);
+    cb(null, address, family);
   });
 };
 
 /**
- * Creates Nodemailer transporter using SMTP configuration with strict IPv4 lookup
+ * Resolves a hostname to a direct IPv4 IP address.
  */
-const createTransporter = (portOverride = null, secureOverride = null) => {
+const resolveIPv4Host = async (host) => {
+  try {
+    const res = await dns.promises.lookup(host, { family: 4 });
+    return res.address;
+  } catch {
+    return host;
+  }
+};
+
+/**
+ * Creates Nodemailer transporter using SMTP configuration with strict IPv4 address binding
+ */
+const createTransporter = async (portOverride = null, secureOverride = null) => {
   if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+    const origHost = process.env.EMAIL_HOST || 'smtp.gmail.com';
     const envPort = process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT, 10) : 465;
     const port = portOverride !== null ? portOverride : envPort;
 
@@ -30,8 +43,10 @@ const createTransporter = (portOverride = null, secureOverride = null) => {
       : port === 465;
     const secure = secureOverride !== null ? secureOverride : envSecure;
 
+    const resolvedHost = await resolveIPv4Host(origHost);
+
     return nodemailer.createTransport({
-      host,
+      host: resolvedHost,
       port,
       secure,
       auth: {
@@ -41,6 +56,7 @@ const createTransporter = (portOverride = null, secureOverride = null) => {
       family: 4,
       lookup: customIPv4Lookup,
       tls: {
+        servername: origHost,
         rejectUnauthorized: false
       },
       connectionTimeout: 10000,
@@ -99,7 +115,7 @@ export const sendOTPEmail = async (toEmail, otpCode, candidateName = 'Candidate'
 
   // Primary Attempt (Default Port 465 / Configured Port)
   try {
-    const transporter = createTransporter();
+    const transporter = await createTransporter();
     const info = await transporter.sendMail(mailOptions);
     console.log(`✉️ REAL EMAIL DELIVERED TO: ${toEmail} (Message ID: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
@@ -108,7 +124,7 @@ export const sendOTPEmail = async (toEmail, otpCode, candidateName = 'Candidate'
 
     // Fallback Attempt (Port 587 STARTTLS)
     try {
-      const fallbackTransporter = createTransporter(587, false);
+      const fallbackTransporter = await createTransporter(587, false);
       const fallbackInfo = await fallbackTransporter.sendMail(mailOptions);
       console.log(`✉️ REAL EMAIL DELIVERED via Fallback Port 587 TO: ${toEmail} (Message ID: ${fallbackInfo.messageId})`);
       return { success: true, messageId: fallbackInfo.messageId };
