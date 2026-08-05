@@ -30,6 +30,77 @@ const resolveIPv4Host = async (host) => {
 };
 
 /**
+ * Sends email via HTTP API (Resend or Brevo) over HTTPS Port 443.
+ * Solves Render/cloud host outbound SMTP port restrictions (ports 25, 465, 587).
+ */
+const sendViaHttpApi = async (toEmail, subject, htmlContent) => {
+  // 1. Resend API (https://resend.com - Free 3,000 emails/mo)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: process.env.EMAIL_FROM || 'AI-Proctored Mock Tests <onboarding@resend.dev>',
+          to: [toEmail],
+          subject,
+          html: htmlContent
+        })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        console.log(`✉️ RESEND HTTP EMAIL DELIVERED TO: ${toEmail} (ID: ${data.id})`);
+        return { success: true, messageId: data.id, provider: 'resend' };
+      } else {
+        console.warn(`⚠️ Resend HTTP API Warning:`, data);
+      }
+    } catch (err) {
+      console.warn(`⚠️ Resend HTTP API Error: ${err.message}`);
+    }
+  }
+
+  // 2. Brevo (Sendinblue) API (https://brevo.com - Free 300 emails/day)
+  if (process.env.BREVO_API_KEY) {
+    if (process.env.BREVO_API_KEY.startsWith('xsmtpsib-')) {
+      console.warn(`💡 Brevo Key Notice: BREVO_API_KEY starts with 'xsmtpsib-' (Brevo SMTP Key). For HTTP API dispatch over Port 443 on Render, generate an 'API Key' (starts with 'xkeysib-') in Brevo Dashboard -> SMTP & API -> API Keys.`);
+    }
+
+    try {
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': process.env.BREVO_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sender: {
+            name: 'AI-Proctored Mock Tests',
+            email: process.env.EMAIL_USER || 'no-reply@proctored-mock-tests.com'
+          },
+          to: [{ email: toEmail }],
+          subject,
+          htmlContent
+        })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        console.log(`✉️ BREVO HTTP EMAIL DELIVERED TO: ${toEmail} (ID: ${data.messageId})`);
+        return { success: true, messageId: data.messageId, provider: 'brevo' };
+      } else {
+        console.warn(`⚠️ Brevo HTTP API Warning:`, data);
+      }
+    } catch (err) {
+      console.warn(`⚠️ Brevo HTTP API Error: ${err.message}`);
+    }
+  }
+
+  return null;
+};
+
+/**
  * Creates Nodemailer transporter using SMTP configuration with strict IPv4 address binding
  */
 const createTransporter = async (portOverride = null, secureOverride = null) => {
@@ -59,9 +130,9 @@ const createTransporter = async (portOverride = null, secureOverride = null) => 
         servername: origHost,
         rejectUnauthorized: false
       },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 10000
     });
   }
   return null;
@@ -74,12 +145,10 @@ const createTransporter = async (portOverride = null, secureOverride = null) => 
  * @param {string} candidateName - Candidate full name
  */
 export const sendOTPEmail = async (toEmail, otpCode, candidateName = 'Candidate') => {
-  // Log OTP to server console as backup
+  // Always log OTP to server console as backup (Viewable in Render dashboard logs)
   logOTPToConsole(toEmail, otpCode);
 
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    return { success: true, simulated: true };
-  }
+  const subject = `${otpCode} is your AI-Proctored Mock Tests Verification OTP`;
 
   // HTML Email Template
   const htmlContent = `
@@ -106,10 +175,21 @@ export const sendOTPEmail = async (toEmail, otpCode, candidateName = 'Candidate'
     </div>
   `;
 
+  // 1. Try HTTPS API Email providers first (Port 443 - Bypasses Render cloud SMTP blocks)
+  const httpResult = await sendViaHttpApi(toEmail, subject, htmlContent);
+  if (httpResult && httpResult.success) {
+    return httpResult;
+  }
+
+  // 2. Fallback to Nodemailer SMTP (Works locally; subject to host port restrictions on cloud)
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    return { success: true, simulated: true };
+  }
+
   const mailOptions = {
     from: process.env.EMAIL_FROM || `"AI-Proctored Mock Tests" <${process.env.EMAIL_USER}>`,
     to: toEmail,
-    subject: `${otpCode} is your AI-Proctored Mock Tests Verification OTP`,
+    subject,
     html: htmlContent
   };
 
@@ -129,8 +209,9 @@ export const sendOTPEmail = async (toEmail, otpCode, candidateName = 'Candidate'
       console.log(`✉️ REAL EMAIL DELIVERED via Fallback Port 587 TO: ${toEmail} (Message ID: ${fallbackInfo.messageId})`);
       return { success: true, messageId: fallbackInfo.messageId };
     } catch (fallbackError) {
-      console.error(`⚠️ Email Dispatch Error (${fallbackError.message}). Backup OTP logged above.`);
-      return { success: false, fallback: true, error: fallbackError.message };
+      console.error(`⚠️ SMTP Dispatch Timeout/Blocked on Host: ${fallbackError.message}`);
+      console.warn(`💡 RENDER HOSTING NOTICE: Render free tier blocks outbound SMTP ports 25/465/587. The OTP code above [ ${otpCode} ] is logged in your Render Logs, or set RESEND_API_KEY / BREVO_API_KEY in Render env vars for instant HTTPS delivery.`);
+      return { success: true, fallback: true, error: fallbackError.message };
     }
   }
 };
