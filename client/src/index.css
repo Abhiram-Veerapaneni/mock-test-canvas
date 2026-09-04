@@ -1,0 +1,66 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+/* Tailwind v4 dark class strategy */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color-scheme: light dark;
+  }
+
+  * {
+    box-sizing: border-box;
+    border-color: var(--color-slate-200);
+  }
+
+  .dark * {
+    border-color: var(--color-slate-800);
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background-color: #020617; /* dark:bg-slate-950 */
+    color: #f8fafc;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* KaTeX Clean Enterprise Formula Styling */
+.katex-display {
+  margin: 1rem 0 !important;
+  padding: 0.75rem 1rem;
+  background-color: #0f172a; /* slate-900 */
+  border: 1px solid #1e293b; /* slate-800 */
+  border-radius: 0.75rem; /* rounded-xl */
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.katex {
+  font-size: 1.05em !important;
+  line-height: 1.5 !important;
+}
+
+/* Subtle enterprise scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
