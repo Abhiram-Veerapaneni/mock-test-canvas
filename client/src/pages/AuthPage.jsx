@@ -44,8 +44,7 @@ export default function AuthPage() {
             }
           },
           auto_select: false,
-          cancel_on_tap_outside: true,
-          use_fedcm_for_prompt: true
+          cancel_on_tap_outside: true
         });
 
         const btnContainer = document.getElementById('googleSignInButton');
