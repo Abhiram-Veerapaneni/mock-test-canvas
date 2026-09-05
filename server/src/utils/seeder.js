@@ -166,8 +166,7 @@ const seedDatabase = async () => {
       user = await User.create({
         name: 'Arjun Sharma',
         email: 'candidate@mockcanvas.com',
-        password: 'Password123!',
-        role: 'STUDENT'
+        password: 'Password123!'
       });
       console.log('[Seeder] Created default test candidate: candidate@mockcanvas.com / Password123!');
     }
@@ -177,8 +176,7 @@ const seedDatabase = async () => {
       admin = await User.create({
         name: 'Professor Rao',
         email: 'admin@mockcanvas.com',
-        password: 'AdminPassword123!',
-        role: 'ADMIN'
+        password: 'AdminPassword123!'
       });
       console.log('[Seeder] Created default admin: admin@mockcanvas.com / AdminPassword123!');
     }

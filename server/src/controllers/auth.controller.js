@@ -1,5 +1,8 @@
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 import { User } from '../models/User.model.js';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 /**
  * Generate signed JWT
@@ -17,7 +20,7 @@ const generateToken = (id) => {
  */
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -41,8 +44,7 @@ export const register = async (req, res) => {
     const user = await User.create({
       name: name.trim(),
       email: normalizedEmail,
-      password,
-      role: role && ['STUDENT', 'ADMIN'].includes(role.toUpperCase()) ? role.toUpperCase() : 'STUDENT'
+      password
     });
 
     const token = generateToken(user._id);
@@ -55,7 +57,6 @@ export const register = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
         createdTests: user.createdTests,
         attemptedTests: user.attemptedTests,
         createdAt: user.createdAt
@@ -106,7 +107,6 @@ export const login = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
         createdTests: user.createdTests,
         attemptedTests: user.attemptedTests,
         createdAt: user.createdAt
@@ -148,6 +148,92 @@ export const getMe = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || 'Server error fetching user profile'
+    });
+  }
+};
+
+/**
+ * @desc    Authenticate with Google OAuth ID Token
+ * @route   POST /api/auth/google
+ * @access  Public
+ */
+export const googleAuth = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google credential token is required'
+      });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid Google token payload'
+      });
+    }
+
+    const { sub: googleId, email, name, picture: avatar } = payload;
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if user exists by googleId or email
+    let user = await User.findOne({
+      $or: [{ googleId }, { email: normalizedEmail }]
+    });
+
+    if (user) {
+      let needsSave = false;
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.authProvider = user.authProvider === 'local' ? 'google' : user.authProvider;
+        needsSave = true;
+      }
+      if (!user.avatar && avatar) {
+        user.avatar = avatar;
+        needsSave = true;
+      }
+      if (needsSave) {
+        await user.save();
+      }
+    } else {
+      user = await User.create({
+        name: name || 'Google Candidate',
+        email: normalizedEmail,
+        googleId,
+        avatar: avatar || '',
+        authProvider: 'google'
+      });
+    }
+
+    const token = generateToken(user._id);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Google sign-in successful',
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        createdTests: user.createdTests,
+        attemptedTests: user.attemptedTests,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Google Auth Error:', error);
+    return res.status(401).json({
+      success: false,
+      message: error.message || 'Google token verification failed'
     });
   }
 };

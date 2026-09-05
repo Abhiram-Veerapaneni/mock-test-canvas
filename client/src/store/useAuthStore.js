@@ -65,10 +65,10 @@ export const useAuthStore = create((set, get) => ({
   },
 
   // Register method
-  register: async (name, email, password, role = 'STUDENT') => {
+  register: async (name, email, password) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post('/auth/register', { name, email, password, role });
+      const response = await api.post('/auth/register', { name, email, password });
       const { token, user } = response.data;
 
       localStorage.setItem('token', token);
@@ -82,6 +82,29 @@ export const useAuthStore = create((set, get) => ({
       return { success: true, user };
     } catch (err) {
       const message = err.response?.data?.message || 'Registration failed.';
+      set({ isLoading: false, error: message });
+      return { success: false, message };
+    }
+  },
+
+  // Google OAuth Login method
+  loginWithGoogle: async (credential) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await api.post('/auth/google', { credential });
+      const { token, user } = response.data;
+
+      localStorage.setItem('token', token);
+      set({
+        user,
+        token,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null
+      });
+      return { success: true, user };
+    } catch (err) {
+      const message = err.response?.data?.message || 'Google authentication failed.';
       set({ isLoading: false, error: message });
       return { success: false, message };
     }

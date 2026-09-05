@@ -18,12 +18,23 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, 'Password is required']
+      required: function () {
+        return !this.googleId;
+      }
     },
-    role: {
+    googleId: {
       type: String,
-      enum: ['STUDENT', 'ADMIN'],
-      default: 'STUDENT'
+      sparse: true,
+      unique: true
+    },
+    avatar: {
+      type: String,
+      default: ''
+    },
+    authProvider: {
+      type: String,
+      enum: ['local', 'google'],
+      default: 'local'
     },
     createdTests: [
       {
@@ -56,7 +67,7 @@ const userSchema = new mongoose.Schema(
 
 // Pre-save hook to hash password if modified
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
+  if (!this.isModified('password') || !this.password) {
     return next();
   }
   try {
@@ -70,6 +81,7 @@ userSchema.pre('save', async function (next) {
 
 // Compare hashed password
 userSchema.methods.matchPassword = async function (enteredPassword) {
+  if (!this.password) return false;
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

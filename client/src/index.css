@@ -7,27 +7,53 @@
 @layer base {
   :root {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    color-scheme: light dark;
+    color-scheme: light;
   }
 
-  * {
+  .dark {
+    color-scheme: dark;
+  }
+
+  *, ::before, ::after {
     box-sizing: border-box;
-    border-color: var(--color-slate-200);
-  }
-
-  .dark * {
-    border-color: var(--color-slate-800);
   }
 
   body {
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    background-color: #020617; /* dark:bg-slate-950 */
-    color: #f8fafc;
+    background-color: #f8fafc;
+    color: #0f172a;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+  .dark body {
+    background-color: #020617;
+    color: #f8fafc;
+  }
+}
+
+/* Eradicate Chrome / Safari / Edge browser native autofill grey box */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #0f172a inset !important;
+  box-shadow: 0 0 0 1000px #0f172a inset !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  caret-color: #f8fafc !important;
 }
 
 /* KaTeX Clean Enterprise Formula Styling */
