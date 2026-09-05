@@ -68,7 +68,7 @@ export default function Navbar() {
                   {user.name}
                 </span>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
-                  {user.role || 'STUDENT'}
+                  {user.email}
                 </span>
               </div>
               <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400">

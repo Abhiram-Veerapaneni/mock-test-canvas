@@ -68,7 +68,7 @@ export default function DashboardPage() {
               Assessment Dashboard
             </h1>
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              Logged in as <span className="font-medium text-slate-900 dark:text-white">{user?.name || 'Candidate'}</span> ({user?.role || 'STUDENT'}). Access your examinations and authoring suite below.
+              Welcome back, <span className="font-medium text-slate-900 dark:text-white">{user?.name || 'User'}</span>. Access your examinations and authoring suite below.
             </p>
           </div>
 
