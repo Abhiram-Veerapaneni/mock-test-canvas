@@ -44,7 +44,8 @@ export default function AuthPage() {
             }
           },
           auto_select: false,
-          cancel_on_tap_outside: true
+          cancel_on_tap_outside: true,
+          use_fedcm_for_prompt: true
         });
 
         const btnContainer = document.getElementById('googleSignInButton');
@@ -60,6 +61,9 @@ export default function AuthPage() {
             logo_alignment: 'left'
           });
         }
+
+        // Display Google One Tap floating prompt (top-right card)
+        window.google.accounts.id.prompt();
       }
     };
 
