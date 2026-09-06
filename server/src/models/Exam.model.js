@@ -30,6 +30,12 @@ const examSchema = new mongoose.Schema(
       type: Number,
       default: 100
     },
+    maxAttempts: {
+      type: Number,
+      default: null, // null = unlimited
+      min: 1,
+      // null = unlimited attempts
+    },
     markingScheme: {
       correct: {
         type: Number,

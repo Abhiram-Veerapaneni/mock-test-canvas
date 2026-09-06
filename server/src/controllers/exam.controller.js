@@ -14,6 +14,7 @@ export const createExam = async (req, res) => {
       description,
       category,
       durationMinutes,
+      maxAttempts,
       markingScheme,
       proctorSettings,
       questions
@@ -55,6 +56,9 @@ export const createExam = async (req, res) => {
       creatorId: req.user?._id,
       durationMinutes: durationMinutes ? Number(durationMinutes) : 180,
       totalMarks,
+      maxAttempts: (maxAttempts === null || maxAttempts === 0 || maxAttempts === 'unlimited')
+        ? null
+        : Math.max(1, Number(maxAttempts)) || 1,
       markingScheme: {
         correct: correctMark,
         incorrect: incorrectMark
@@ -122,11 +126,24 @@ export const getAllExams = async (req, res) => {
 
     const total = await Exam.countDocuments(query);
     const exams = await Exam.find(query)
-      .select('title description category durationMinutes totalMarks markingScheme proctorSettings questions createdAt')
+      .select('title description category durationMinutes totalMarks maxAttempts markingScheme proctorSettings questions createdAt')
       .populate('creatorId', 'name')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNumber);
+
+    // Build a map of examId -> attempt count for the logged-in user
+    let userAttemptMap = {};
+    if (req.user?._id) {
+      const { User } = await import('../models/User.model.js');
+      const userDoc = await User.findById(req.user._id).select('attemptedTests').lean();
+      if (userDoc?.attemptedTests) {
+        userDoc.attemptedTests.forEach((a) => {
+          const id = a.examId.toString();
+          userAttemptMap[id] = (userAttemptMap[id] || 0) + 1;
+        });
+      }
+    }
 
     const formattedExams = exams.map((exam) => ({
       _id: exam._id,
@@ -136,9 +153,11 @@ export const getAllExams = async (req, res) => {
       creatorName: exam.creatorId?.name || 'Academic Administrator',
       durationMinutes: exam.durationMinutes,
       totalMarks: exam.totalMarks,
+      maxAttempts: exam.maxAttempts ?? null, // null = unlimited
       markingScheme: exam.markingScheme,
       proctorSettings: exam.proctorSettings,
       questionCount: exam.questions.length,
+      userAttemptCount: userAttemptMap[exam._id.toString()] || 0,
       createdAt: exam.createdAt
     }));
 

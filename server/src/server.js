@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import examRoutes from './routes/exam.routes.js';
+import submissionRoutes from './routes/submission.routes.js';
 import { apiLimiter } from './middleware/rateLimiter.middleware.js';
 
 dotenv.config();
@@ -66,6 +67,7 @@ app.get('/api/health', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/exams', examRoutes);
+app.use('/api/submissions', submissionRoutes);
 
 // Global 404 Handler
 app.use((req, res) => {

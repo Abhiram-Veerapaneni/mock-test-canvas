@@ -42,3 +42,22 @@ export const protect = async (req, res, next) => {
     });
   }
 };
+
+/**
+ * Optional auth - silently attaches req.user if a valid token is present.
+ * Does NOT reject the request if no token is provided.
+ */
+export const optionalAuth = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer')) return next();
+
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    const user = await User.findById(decoded.id).select('-password').lean();
+    if (user) req.user = user;
+  } catch (_) {
+    // Invalid token — just continue without attaching user
+  }
+  next();
+};
