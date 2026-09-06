@@ -43,6 +43,15 @@ export default function App() {
 
         {/* Test Detail Page — shows metadata + attempt history */}
         <Route
+          path="/test/:testId"
+          element={
+            <ProtectedRoute>
+              <ExamDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Backwards compatibility for /exam/:examId */}
+        <Route
           path="/exam/:examId"
           element={
             <ProtectedRoute>
@@ -51,9 +60,9 @@ export default function App() {
           }
         />
 
-        {/* Interactive Exam Session Player */}
+        {/* Interactive Exam Session Player — generic SPA route during active test */}
         <Route
-          path="/exam/:examId/take"
+          path="/test"
           element={
             <ProtectedRoute>
               <ExamSessionPage />

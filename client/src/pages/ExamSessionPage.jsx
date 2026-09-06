@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import useExamStore from '../store/useExamStore';
 import useProctorStore from '../store/useProctorStore';
 import api from '../services/api';
@@ -27,8 +27,14 @@ const VIOLATION_LABELS = {
 const FINAL_WARNING_THRESHOLD = 30;
 
 export default function ExamSessionPage() {
-  const { examId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Resolve examId from location state, localStorage, or Zustand store
+  const examId =
+    location.state?.examId ||
+    (typeof window !== 'undefined' ? localStorage.getItem('active_exam_id') : null) ||
+    useExamStore.getState().activeExamId;
 
   const {
     exam,
@@ -73,6 +79,8 @@ export default function ExamSessionPage() {
   const [submittedSnapshot, setSubmittedSnapshot] = useState(null);
   // Snapshot violations before resetProctor()
   const [submittedViolations, setSubmittedViolations] = useState([]);
+  // Preserved examId for after-submission review navigation
+  const [submittedExamId, setSubmittedExamId] = useState(examId);
 
   // Bug #2 fix: ref so trust-score effect always calls the latest doSubmit
   const doSubmitRef = useRef(null);
@@ -167,6 +175,7 @@ export default function ExamSessionPage() {
       });
     }
     setSubmittedViolations(currentViolations);
+    setSubmittedExamId(currentExam?._id || examId);
 
     setIsSubmitting(true);
 
@@ -209,6 +218,10 @@ export default function ExamSessionPage() {
     } finally {
       setIsSubmitting(false);
       clearStoredSession();
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('active_exam_id');
+      }
+      useExamStore.getState().setActiveExamId?.(null);
       setIsSubmitted(true);
     }
   }, [clearStoredSession, examId]);
@@ -313,22 +326,44 @@ export default function ExamSessionPage() {
 
   // ── Exam fetch ────────────────────────────────────────────────────────────────
   useEffect(() => {
+    // If no active exam was initiated or cached, redirect away from /test
+    if (!examId) {
+      navigate('/dashboard', { replace: true });
+      return;
+    }
+
     let isMounted = true;
 
     const loadExam = async () => {
       setIsLoading(true);
       setFetchError(null);
       finalWarningShownRef.current = false;
-      // Only reset proctor state when starting a DIFFERENT exam.
+      // Only reset proctor state when starting a DIFFERENT exam or a FRESH attempt.
       // On same-exam refresh, preserve the existing violations and trust score.
       const currentActiveExamId = useProctorStore.getState().activeExamId;
-      if (currentActiveExamId !== examId) {
+      const isFreshAttempt = !localStorage.getItem(`mock_test_session_${examId}`);
+      if (currentActiveExamId !== examId || isFreshAttempt) {
         resetProctor(examId);
       }
+
       try {
-        const res = await api.get(`/exams/${examId}`);
-        if (res.data?.success && res.data.exam) {
-          if (isMounted) initExam(res.data.exam);
+        const [examRes, attemptsRes] = await Promise.all([
+          api.get(`/exams/${examId}`),
+          api.get(`/submissions/my/${examId}`).catch(() => ({ data: { success: true, attempts: [] } }))
+        ]);
+
+        if (examRes.data?.success && examRes.data.exam) {
+          const examData = examRes.data.exam;
+          
+          // Prevent manual navigation bypass for exhausted attempts
+          if (examData.maxAttempts !== null && isFreshAttempt) {
+            const attemptsUsed = attemptsRes.data?.attempts?.length || 0;
+            if (attemptsUsed >= examData.maxAttempts) {
+              throw new Error('You have exhausted all attempts for this examination.');
+            }
+          }
+
+          if (isMounted) initExam(examData);
         } else {
           throw new Error('Invalid exam payload');
         }
@@ -342,7 +377,7 @@ export default function ExamSessionPage() {
 
     if (examId) loadExam();
     return () => { isMounted = false; };
-  }, [examId, resetProctor]);
+  }, [examId, resetProctor, navigate]);
 
   const answeredCount = Object.values(answers).filter(
     (arr) => Array.isArray(arr) && arr.length > 0
@@ -478,7 +513,7 @@ export default function ExamSessionPage() {
           {/* Actions */}
           <div className="flex gap-3">
             <button
-              onClick={() => navigate(`/exam/${examId}`)}
+              onClick={() => navigate(`/test/${submittedExamId || examId}`)}
               className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               View Attempts
@@ -514,7 +549,7 @@ export default function ExamSessionPage() {
           <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Examination Unavailable</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{fetchError || 'Unable to locate examination.'}</p>
           <button
-            onClick={() => navigate(`/exam/${examId}`)}
+            onClick={() => navigate(examId ? `/test/${examId}` : '/dashboard')}
             className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium"
           >
             Back to Exam Page
