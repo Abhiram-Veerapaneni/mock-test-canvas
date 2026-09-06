@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react';
 import useExamStore from '../../store/useExamStore';
+import useProctorStore from '../../store/useProctorStore';
 import { Clock, ShieldCheck, CheckCircle2, ShieldAlert } from 'lucide-react';
 
-export default function ExamHeader({ onSubmitClick, violationCount = 0 }) {
+export default function ExamHeader({ onSubmitClick }) {
   const { exam, questions, currentIndex, timeRemainingSeconds } = useExamStore();
+  const { violationCount, trustScore } = useProctorStore();
 
   const formattedTime = useMemo(() => {
     const hours = Math.floor(timeRemainingSeconds / 3600);
@@ -71,11 +73,38 @@ export default function ExamHeader({ onSubmitClick, violationCount = 0 }) {
             <span>{questions.length}</span>
           </div>
 
-          {/* Violation Badge */}
+          {/* Violation Badge + Trust Score */}
           {violationCount > 0 && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 text-xs font-semibold">
-              <ShieldAlert className="w-3.5 h-3.5 animate-pulse" />
-              <span>{violationCount}</span>
+            <div className="flex items-center gap-1.5">
+              {/* Violation count — custom tooltip */}
+              <div className="relative group">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 text-xs font-semibold cursor-default">
+                  <ShieldAlert className="w-3.5 h-3.5 animate-pulse" />
+                  <span>{violationCount}</span>
+                </div>
+                {/* Tooltip */}
+                <span className="pointer-events-none absolute top-full mt-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 shadow-lg z-50">
+                  Violations
+                </span>
+              </div>
+
+              {/* Trust score pill — custom tooltip */}
+              <div className="relative group hidden sm:block">
+                <div className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[10px] font-bold tabular-nums transition-colors cursor-default ${
+                  trustScore >= 70
+                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 text-amber-600 dark:text-amber-400'
+                    : trustScore >= 40
+                    ? 'bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-900 text-orange-600 dark:text-orange-400'
+                    : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400'
+                }`}>
+                  <ShieldCheck className="w-3 h-3" />
+                  <span>{trustScore}</span>
+                </div>
+                {/* Tooltip */}
+                <span className="pointer-events-none absolute top-full mt-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-800 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-medium text-white opacity-0 group-hover:opacity-100 transition-opacity duration-150 shadow-lg z-50">
+                  Trust Score
+                </span>
+              </div>
             </div>
           )}
 

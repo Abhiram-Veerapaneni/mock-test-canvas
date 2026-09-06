@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useExamStore from '../store/useExamStore';
+import useProctorStore from '../store/useProctorStore';
 import api from '../services/api';
 import ExamHeader from '../components/exam-player/ExamHeader';
 import QuestionCanvas from '../components/exam-player/QuestionCanvas';
@@ -10,7 +11,7 @@ import useExamTimer from '../hooks/useExamTimer';
 import useBrowserLockdown from '../hooks/useBrowserLockdown';
 import {
   Loader2, AlertCircle, CheckCircle2, ArrowRight,
-  Maximize, ShieldAlert, Trophy, Target, XCircle, MinusCircle
+  Maximize, ShieldAlert, Trophy, Target, XCircle, MinusCircle, AlertTriangle, ShieldOff
 } from 'lucide-react';
 
 export default function ExamSessionPage() {
@@ -32,18 +33,73 @@ export default function ExamSessionPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFullscreenBlocked, setIsFullscreenBlocked] = useState(false);
-  const [violations, setViolations] = useState([]);
+
+  // Per-violation warning popup
+  const [violationWarning, setViolationWarning] = useState({ open: false, type: null });
+  // Trust-score-zero termination modal
+  const [trustZeroModal, setTrustZeroModal] = useState(false);
+  const [trustZeroCountdown, setTrustZeroCountdown] = useState(5);
+
+  // ── Proctor store ─────────────────────────────────────────────────────────────
+  const { violations, violationCount, addViolation, resetProctor } = useProctorStore();
 
   // Graded result from the server
   const [gradedResult, setGradedResult] = useState(null);
   // Snapshot metadata captured before clearStoredSession()
   const [submittedSnapshot, setSubmittedSnapshot] = useState(null);
 
-  // ── Violation handler ─────────────────────────────────────────────────────────
+  // Friendly labels for violation types
+  const VIOLATION_LABELS = {
+    TAB_SWITCH: 'Tab Switch Detected',
+    WINDOW_BLUR: 'Window Focus Lost',
+    FULLSCREEN_EXIT: 'Fullscreen Exited',
+  };
+
+  // ── Violation handler → delegates to proctor store ───────────────────────────
   const handleViolation = useCallback((type) => {
-    setViolations((prev) => [...prev, { type, timestamp: new Date().toISOString() }]);
+    addViolation(type);
     console.warn(`[Lockdown] Violation: ${type}`);
-  }, []);
+  }, [addViolation]);
+
+  // ── Show warning popup after each violation (skip during fullscreen blocker) ──
+  const { trustScore } = useProctorStore();
+  useEffect(() => {
+    if (violationCount === 0 || isSubmitted || isFullscreenBlocked) return;
+    const latest = violations[violations.length - 1];
+    if (!latest) return;
+    setViolationWarning({ open: true, type: latest.type });
+    const t = setTimeout(() => setViolationWarning({ open: false, type: null }), 4000);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [violationCount]);
+
+  // ── Trust score zero → auto-terminate exam ───────────────────────────────────
+  useEffect(() => {
+    if (trustScore !== 0 || isSubmitted || !isInitialized) return;
+    setTrustZeroModal(true);
+    setViolationWarning({ open: false, type: null });
+    setTrustZeroCountdown(5);
+
+    // Countdown ticker
+    const interval = setInterval(() => {
+      setTrustZeroCountdown((c) => {
+        if (c <= 1) { clearInterval(interval); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+
+    // Auto-submit after 5 s
+    const submitTimer = setTimeout(() => {
+      setTrustZeroModal(false);
+      doSubmit();
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(submitTimer);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trustScore]);
 
   // ── Submit to API, grade on server ────────────────────────────────────────────
   const doSubmit = useCallback(async () => {
@@ -139,6 +195,8 @@ export default function ExamSessionPage() {
     const loadExam = async () => {
       setIsLoading(true);
       setFetchError(null);
+      // Reset proctor state for each fresh session
+      resetProctor();
       try {
         const res = await api.get(`/exams/${examId}`);
         if (res.data?.success && res.data.exam) {
@@ -156,7 +214,7 @@ export default function ExamSessionPage() {
 
     if (examId) loadExam();
     return () => { isMounted = false; };
-  }, [examId]);
+  }, [examId, resetProctor]);
 
   const handleConfirmSubmit = () => {
     setIsSubmitModalOpen(false);
@@ -319,7 +377,7 @@ export default function ExamSessionPage() {
       {/* 1. Header */}
       <ExamHeader
         onSubmitClick={() => setIsSubmitModalOpen(true)}
-        violationCount={violations.length}
+        violationCount={violationCount}
       />
 
       {/* 2. Main Workspace */}
@@ -352,7 +410,93 @@ export default function ExamSessionPage() {
         </div>
       )}
 
-      {/* 4. Submit Confirmation Modal */}
+      {/* 4a. Per-violation warning popup — centered modal with blurred backdrop */}
+      {violationWarning.open && (
+        <div className="fixed inset-0 z-[9998] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 rounded-2xl shadow-2xl shadow-rose-500/20 w-full max-w-sm overflow-hidden">
+            {/* Coloured top bar */}
+            <div className="h-1 bg-gradient-to-r from-rose-500 to-orange-500" />
+            <div className="p-5">
+              {/* Icon + title */}
+              <div className="flex items-start gap-3 mb-4">
+                <div className="shrink-0 w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-rose-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white mb-0.5">
+                    Proctoring Violation
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {VIOLATION_LABELS[violationWarning.type] ?? violationWarning.type}
+                  </p>
+                </div>
+              </div>
+
+              {/* Stats row */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900 rounded-xl p-3 text-center">
+                  <p className="text-[10px] uppercase font-medium text-rose-400 mb-0.5">Violations</p>
+                  <p className="text-xl font-bold text-rose-600 dark:text-rose-400 tabular-nums">{violationCount}</p>
+                </div>
+                <div className={`border rounded-xl p-3 text-center ${
+                  trustScore >= 70
+                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-100 dark:border-amber-900'
+                    : trustScore >= 40
+                    ? 'bg-orange-50 dark:bg-orange-950/40 border-orange-100 dark:border-orange-900'
+                    : 'bg-rose-50 dark:bg-rose-950/40 border-rose-100 dark:border-rose-900'
+                }`}>
+                  <p className="text-[10px] uppercase font-medium text-slate-400 mb-0.5">Trust Score</p>
+                  <p className={`text-xl font-bold tabular-nums ${
+                    trustScore >= 70 ? 'text-amber-600 dark:text-amber-400'
+                    : trustScore >= 40 ? 'text-orange-600 dark:text-orange-400'
+                    : 'text-rose-600 dark:text-rose-400'
+                  }`}>{trustScore}<span className="text-xs font-normal opacity-60">/100</span></p>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center mb-4">
+                Repeated violations will result in automatic exam termination.
+              </p>
+
+              {/* OK button */}
+              <button
+                onClick={() => setViolationWarning({ open: false, type: null })}
+                className="w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-semibold transition-all duration-150"
+              >
+                OK, I Understand
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4b. Trust-score-zero termination modal */}
+      {trustZeroModal && (
+        <div className="fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-800 rounded-2xl shadow-2xl shadow-rose-500/20 w-full max-w-sm overflow-hidden">
+            <div className="h-1.5 bg-gradient-to-r from-rose-600 to-rose-400" />
+            <div className="p-6 text-center">
+              <div className="w-14 h-14 rounded-full bg-rose-100 dark:bg-rose-950/60 border-2 border-rose-300 dark:border-rose-800 flex items-center justify-center mx-auto mb-4">
+                <ShieldOff className="w-7 h-7 text-rose-500" />
+              </div>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white mb-1">Exam Terminated</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+                Your trust score has reached <strong className="text-rose-500">zero</strong> due to repeated proctoring violations.
+                The examination is being automatically submitted.
+              </p>
+              <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl p-3 mb-4">
+                <p className="text-[10px] uppercase font-medium text-rose-400 mb-1">Total Violations</p>
+                <p className="text-2xl font-bold text-rose-600 dark:text-rose-400 tabular-nums">{violationCount}</p>
+              </div>
+              <p className="text-xs text-slate-400">
+                Submitting in <span className="font-bold text-rose-500 tabular-nums">{trustZeroCountdown}s</span>…
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Submit Confirmation Modal */}
       <Modal
         isOpen={isSubmitModalOpen}
         onClose={() => setIsSubmitModalOpen(false)}
