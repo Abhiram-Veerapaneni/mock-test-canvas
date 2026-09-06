@@ -37,6 +37,14 @@ export const useExamStore = create((set, get) => ({
         if (parsed.questionStatus) initialStatus = { ...initialStatus, ...parsed.questionStatus };
         if (typeof parsed.timeRemainingSeconds === 'number' && parsed.timeRemainingSeconds > 0) {
           initialTimeRemaining = parsed.timeRemainingSeconds;
+          // Bug fix: subtract actual wall-clock time elapsed since the last sync
+          // This prevents the timer appearing to gain time on refresh
+          if (typeof parsed.updatedAt === 'number') {
+            const wallClockElapsed = Math.floor((Date.now() - parsed.updatedAt) / 1000);
+            if (wallClockElapsed > 0) {
+              initialTimeRemaining = Math.max(0, initialTimeRemaining - wallClockElapsed);
+            }
+          }
         }
         if (typeof parsed.currentIndex === 'number') initialIndex = parsed.currentIndex;
       } catch (err) {
