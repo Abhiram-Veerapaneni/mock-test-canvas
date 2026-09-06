@@ -218,7 +218,7 @@ export const useExamStore = create((set, get) => ({
     get().syncToLocalStorage();
   },
 
-  // Tick remaining timer down
+  // Tick remaining timer down (legacy – kept for compatibility)
   decrementTimer: () => {
     const { timeRemainingSeconds } = get();
     if (timeRemainingSeconds <= 0) return;
@@ -226,6 +226,15 @@ export const useExamStore = create((set, get) => ({
     set({ timeRemainingSeconds: updated });
     // Periodic local sync every 10 seconds
     if (updated % 10 === 0) {
+      get().syncToLocalStorage();
+    }
+  },
+
+  // Direct setter used by the Web Worker timer hook
+  setTimeRemaining: (seconds) => {
+    set({ timeRemainingSeconds: seconds });
+    // Sync to localStorage every 10 seconds
+    if (seconds % 10 === 0) {
       get().syncToLocalStorage();
     }
   },

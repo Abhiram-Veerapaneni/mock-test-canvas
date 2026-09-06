@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useExamStore from '../store/useExamStore';
 import api from '../services/api';
@@ -6,7 +6,9 @@ import ExamHeader from '../components/exam-player/ExamHeader';
 import QuestionCanvas from '../components/exam-player/QuestionCanvas';
 import QuestionPalette from '../components/exam-player/QuestionPalette';
 import Modal from '../components/common/Modal';
-import { Loader2, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
+import useExamTimer from '../hooks/useExamTimer';
+import useBrowserLockdown from '../hooks/useBrowserLockdown';
+import { Loader2, AlertCircle, CheckCircle2, ArrowRight, Maximize, ShieldAlert } from 'lucide-react';
 
 export default function ExamSessionPage() {
   const { examId } = useParams();
@@ -16,18 +18,56 @@ export default function ExamSessionPage() {
     exam,
     questions,
     initExam,
-    decrementTimer,
     isInitialized,
     answers,
-    clearStoredSession
+    clearStoredSession,
   } = useExamStore();
 
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isFullscreenBlocked, setIsFullscreenBlocked] = useState(false);
+  const [violations, setViolations] = useState([]);
 
-  // Fetch exam and populate questions
+  // ── Violation handler ────────────────────────────────────────────────────────
+  const handleViolation = useCallback((type) => {
+    setViolations((prev) => [...prev, { type, timestamp: new Date().toISOString() }]);
+    console.warn(`[Lockdown] Violation: ${type}`);
+  }, []);
+
+  // ── 3.1 Drift-free Web Worker timer ─────────────────────────────────────────
+  const handleTimerExpired = useCallback(() => {
+    // Auto-submit when time runs out
+    setIsSubmitted(true);
+    clearStoredSession();
+  }, [clearStoredSession]);
+
+  useExamTimer({
+    active: isInitialized && !isSubmitted,
+    onExpired: handleTimerExpired,
+  });
+
+  // ── 3.2 Browser lockdown (fullscreen + traps) ────────────────────────────────
+  const { enterFullscreen, dismissBlocker } = useBrowserLockdown({
+    active: isInitialized && !isSubmitted,
+    onViolation: handleViolation,
+  });
+
+  // Listen for the custom events the lockdown hook dispatches
+  useEffect(() => {
+    const onBlock = () => setIsFullscreenBlocked(true);
+    const onUnblock = () => setIsFullscreenBlocked(false);
+
+    window.addEventListener('lockdown:block', onBlock);
+    window.addEventListener('lockdown:unblock', onUnblock);
+    return () => {
+      window.removeEventListener('lockdown:block', onBlock);
+      window.removeEventListener('lockdown:unblock', onUnblock);
+    };
+  }, []);
+
+  // ── Exam fetch ───────────────────────────────────────────────────────────────
   useEffect(() => {
     let isMounted = true;
 
@@ -64,17 +104,7 @@ export default function ExamSessionPage() {
     };
   }, [examId]);
 
-  // Decrement countdown timer
-  useEffect(() => {
-    if (!isInitialized || isSubmitted) return;
-
-    const timer = setInterval(() => {
-      decrementTimer();
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [isInitialized, isSubmitted, decrementTimer]);
-
+  // ── Submit handlers ──────────────────────────────────────────────────────────
   const handleConfirmSubmit = () => {
     setIsSubmitModalOpen(false);
     setIsSubmitted(true);
@@ -84,6 +114,7 @@ export default function ExamSessionPage() {
   const answeredCount = Object.keys(answers).length;
   const remainingCount = Math.max(0, questions.length - answeredCount);
 
+  // ── Loading state ────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
@@ -93,6 +124,7 @@ export default function ExamSessionPage() {
     );
   }
 
+  // ── Fetch error ──────────────────────────────────────────────────────────────
   if (fetchError || !exam) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 text-slate-900 dark:text-slate-100">
@@ -111,7 +143,7 @@ export default function ExamSessionPage() {
     );
   }
 
-  // Submitted Completion Screen
+  // ── Submitted completion screen ──────────────────────────────────────────────
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 text-slate-900 dark:text-slate-100">
@@ -136,6 +168,12 @@ export default function ExamSessionPage() {
               <span className="text-[10px] text-slate-400 uppercase font-medium block">Answered</span>
               <span className="text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">{answeredCount}</span>
             </div>
+            {violations.length > 0 && (
+              <div className="col-span-2">
+                <span className="text-[10px] text-slate-400 uppercase font-medium block">Violations Recorded</span>
+                <span className="text-sm font-bold tabular-nums text-rose-600 dark:text-rose-400">{violations.length}</span>
+              </div>
+            )}
           </div>
 
           <button
@@ -153,7 +191,10 @@ export default function ExamSessionPage() {
   return (
     <div className="h-screen w-screen bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden select-none">
       {/* 1. Header Bar */}
-      <ExamHeader onSubmitClick={() => setIsSubmitModalOpen(true)} />
+      <ExamHeader
+        onSubmitClick={() => setIsSubmitModalOpen(true)}
+        violationCount={violations.length}
+      />
 
       {/* 2. Main Workspace */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
@@ -161,7 +202,42 @@ export default function ExamSessionPage() {
         <QuestionPalette />
       </div>
 
-      {/* 3. Submit Modal */}
+      {/* 3. Fullscreen Blocked Overlay (unclosable) */}
+      {isFullscreenBlocked && (
+        <div className="fixed inset-0 z-[9999] bg-slate-950/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+          <div className="max-w-sm w-full">
+            {/* Animated warning icon */}
+            <div className="w-16 h-16 rounded-full bg-rose-500/10 border-2 border-rose-500/40 flex items-center justify-center mx-auto mb-5 animate-pulse">
+              <ShieldAlert className="w-8 h-8 text-rose-400" />
+            </div>
+
+            <h2 className="text-lg font-bold text-white mb-2">
+              Fullscreen Mode Exited
+            </h2>
+            <p className="text-sm text-slate-400 leading-relaxed mb-1">
+              Exiting fullscreen during an examination is a proctoring violation.
+              This incident has been recorded.
+            </p>
+            <p className="text-xs text-rose-400 font-medium mb-7">
+              Violations recorded: {violations.length}
+            </p>
+
+            <button
+              onClick={dismissBlocker}
+              className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-150 shadow-lg shadow-blue-600/20"
+            >
+              <Maximize className="w-4 h-4" />
+              Re-enter Fullscreen to Continue
+            </button>
+
+            <p className="text-[11px] text-slate-600 mt-4">
+              Your exam progress has been preserved. You may continue after re-entering fullscreen.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Submit Modal */}
       <Modal
         isOpen={isSubmitModalOpen}
         onClose={() => setIsSubmitModalOpen(false)}
