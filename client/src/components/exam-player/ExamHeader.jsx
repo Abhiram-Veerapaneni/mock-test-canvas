@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import useExamStore from '../../store/useExamStore';
-import { Clock, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Clock, ShieldCheck, CheckCircle2, ShieldAlert } from 'lucide-react';
 
-export default function ExamHeader({ onSubmitClick }) {
+export default function ExamHeader({ onSubmitClick, violationCount = 0 }) {
   const { exam, questions, currentIndex, timeRemainingSeconds } = useExamStore();
 
   const formattedTime = useMemo(() => {
@@ -70,6 +70,14 @@ export default function ExamHeader({ onSubmitClick }) {
             <span className="text-slate-400">/</span>
             <span>{questions.length}</span>
           </div>
+
+          {/* Violation Badge */}
+          {violationCount > 0 && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 text-xs font-semibold">
+              <ShieldAlert className="w-3.5 h-3.5 animate-pulse" />
+              <span>{violationCount}</span>
+            </div>
+          )}
 
           {/* Countdown Clock */}
           <div
