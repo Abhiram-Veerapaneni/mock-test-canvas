@@ -1,53 +1,115 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 /**
  * useProctorStore
  *
  * Central Zustand store for all proctoring state.
- * Tracks live violations, violation count, and a derived trust score.
+ * Uses Zustand persist middleware so violations and trust score survive
+ * page refreshes — a student can't reset their record by pressing F5.
  *
- * Trust score starts at 100 and decrements by 15 per violation (floor 0).
- * Used by Phase 3 (lockdown hooks) and Phase 4 (camera/audio proctoring).
+ * S2: Tiered trust score deductions by violation severity.
+ * S1: Per-type cooldown (10 s) prevents rapid stacking from a single incident.
  */
-const useProctorStore = create((set, get) => ({
-  /** @type {{ type: string, timestamp: string }[]} */
-  violations: [],
 
-  /** Total number of violations recorded */
-  violationCount: 0,
+// S2: Tiered deductions — more deliberate acts cost more
+const VIOLATION_DEDUCTIONS = {
+  FULLSCREEN_EXIT: 20,   // deliberate, hard to do accidentally
+  TAB_SWITCH: 15,        // moderate — common cheat vector
+  WINDOW_BLUR: 10,       // often accidental (OS notification, etc.)
+  EXTENDED_ABSENCE: 10,  // default; overridden dynamically based on duration
+};
 
-  /**
-   * Trust score: starts at 100, decremented by 15 per violation, min 0.
-   * Indicates candidate integrity level throughout the exam session.
-   */
-  trustScore: 100,
+// S1: Minimum milliseconds between successive violations of the same type
+const VIOLATION_COOLDOWN_MS = 10_000; // 10 seconds
 
-  /**
-   * addViolation
-   * Records a new violation event, increments count, and decrements trust score.
-   * @param {string} type  Violation type identifier, e.g. 'TAB_SWITCH', 'FULLSCREEN_EXIT'
-   */
-  addViolation: (type) => {
-    const { violations, trustScore } = get();
-    const newViolation = { type, timestamp: new Date().toISOString() };
-    set({
-      violations: [...violations, newViolation],
-      violationCount: violations.length + 1,
-      trustScore: Math.max(0, trustScore - 15),
-    });
-  },
+// Types that bypass the cooldown (fired once per discrete event, not continuously)
+const NO_COOLDOWN_TYPES = new Set(['EXTENDED_ABSENCE']);
 
-  /**
-   * resetProctor
-   * Clears all violation state. Call when a new exam session begins.
-   */
-  resetProctor: () => {
-    set({
+const useProctorStore = create(
+  persist(
+    (set, get) => ({
+      /** @type {{ type: string, timestamp: string }[]} */
       violations: [],
+
+      /** Total number of violations recorded */
       violationCount: 0,
+
+      /**
+       * Trust score: starts at 100.
+       * Decremented by a type-specific amount per violation (min 0).
+       */
       trustScore: 100,
-    });
-  },
-}));
+
+      /**
+       * S1: Tracks the last time each violation type was recorded (Unix ms).
+       * @type {Record<string, number>}
+       */
+      lastViolationTime: {},
+
+      /**
+       * examId scoping: store the examId so we can detect when a NEW exam
+       * starts and auto-reset instead of carrying over old violations.
+       */
+      activeExamId: null,
+
+      /**
+       * addViolation
+       * Records a new violation, enforces cooldown, applies tiered deduction.
+       * @param {string}      type             Violation type string
+       * @param {number|null} customDeduction  Override the default deduction
+       * @returns {boolean}   true if recorded, false if cooldown suppressed it
+       */
+      addViolation: (type, customDeduction = null) => {
+        const { violations, trustScore, lastViolationTime } = get();
+
+        // S1: Enforce per-type cooldown (skipped for NO_COOLDOWN_TYPES)
+        const now = Date.now();
+        if (!NO_COOLDOWN_TYPES.has(type)) {
+          const lastTime = lastViolationTime[type] ?? 0;
+          if (now - lastTime < VIOLATION_COOLDOWN_MS) return false;
+        }
+
+        const deduction = customDeduction ?? (VIOLATION_DEDUCTIONS[type] ?? 15);
+        const newViolation = { type, timestamp: new Date().toISOString() };
+
+        set({
+          violations: [...violations, newViolation],
+          violationCount: violations.length + 1,
+          trustScore: Math.max(0, trustScore - deduction),
+          lastViolationTime: { ...lastViolationTime, [type]: now },
+        });
+
+        return true;
+      },
+
+      /**
+       * resetProctor
+       * Clears all violation state. Call when a new exam session begins.
+       * Pass the examId so the store can detect cross-exam reuse.
+       */
+      resetProctor: (examId = null) => {
+        set({
+          violations: [],
+          violationCount: 0,
+          trustScore: 100,
+          lastViolationTime: {},
+          activeExamId: examId,
+        });
+      },
+    }),
+    {
+      name: 'proctor-session', // localStorage key
+      // Only persist the violation record fields, not the cooldown timestamps
+      // (cooldown is session-only — restarting the browser should reset it)
+      partialize: (state) => ({
+        violations: state.violations,
+        violationCount: state.violationCount,
+        trustScore: state.trustScore,
+        activeExamId: state.activeExamId,
+      }),
+    }
+  )
+);
 
 export default useProctorStore;

@@ -35,14 +35,22 @@ export default function QuestionCanvas() {
     const currentStr = currentAnswers.length > 0 ? String(currentAnswers[0]) : '';
     if (char === 'BACKSPACE') {
       const updated = currentStr.slice(0, -1);
-      setAnswer(currentQ._id, updated, 'NAT');
+      // Edge case fix: if backspace leaves only "-", clear entirely
+      if (updated === '-') {
+        clearCurrentResponse();
+      } else {
+        setAnswer(currentQ._id, updated, 'NAT');
+      }
     } else if (char === 'CLEAR') {
       clearCurrentResponse();
     } else {
       if (char === '.' && currentStr.includes('.')) return;
       if (char === '-' && currentStr.length > 0) return;
       const updated = currentStr + char;
-      setAnswer(currentQ._id, updated, 'NAT');
+      // Don't save a bare "-" — it's not a valid number yet
+      if (updated !== '-') {
+        setAnswer(currentQ._id, updated, 'NAT');
+      }
     }
   };
 
