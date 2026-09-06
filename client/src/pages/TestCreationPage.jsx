@@ -23,6 +23,8 @@ export default function TestCreationPage() {
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [correctMark, setCorrectMark] = useState(4);
   const [incorrectMark, setIncorrectMark] = useState(-1);
+  const [isUnlimitedAttempts, setIsUnlimitedAttempts] = useState(true);
+  const [maxAttemptsValue, setMaxAttemptsValue] = useState(3);
 
   // Proctor settings
   const [faceCheck, setFaceCheck] = useState(true);
@@ -69,6 +71,7 @@ export default function TestCreationPage() {
           correct: Number(correctMark),
           incorrect: Number(incorrectMark)
         },
+        maxAttempts: isUnlimitedAttempts ? null : Math.max(1, Number(maxAttemptsValue)),
         proctorSettings: {
           faceCheck,
           audioCheck,
@@ -213,6 +216,35 @@ export default function TestCreationPage() {
                     onChange={(e) => setDurationMinutes(e.target.value)}
                     className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
+                </div>
+              </div>
+
+              {/* Attempt Limit */}
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  Attempt Limit
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isUnlimitedAttempts}
+                      onChange={(e) => setIsUnlimitedAttempts(e.target.checked)}
+                      className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-0"
+                    />
+                    <span className="text-xs text-slate-600 dark:text-slate-400">Unlimited attempts</span>
+                  </label>
+                  {!isUnlimitedAttempts && (
+                    <input
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={maxAttemptsValue}
+                      onChange={(e) => setMaxAttemptsValue(e.target.value)}
+                      placeholder="e.g. 3"
+                      className="w-full px-2.5 py-1.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  )}
                 </div>
               </div>
 

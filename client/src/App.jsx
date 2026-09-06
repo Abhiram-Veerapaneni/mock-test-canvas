@@ -5,6 +5,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import AuthPage from './pages/AuthPage';
 import DashboardPage from './pages/DashboardPage';
 import TestCreationPage from './pages/TestCreationPage';
+import ExamDetailPage from './pages/ExamDetailPage';
 import ExamSessionPage from './pages/ExamSessionPage';
 
 export default function App() {
@@ -40,9 +41,19 @@ export default function App() {
           }
         />
 
-        {/* Protected Interactive Exam Session Player */}
+        {/* Test Detail Page — shows metadata + attempt history */}
         <Route
           path="/exam/:examId"
+          element={
+            <ProtectedRoute>
+              <ExamDetailPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Interactive Exam Session Player */}
+        <Route
+          path="/exam/:examId/take"
           element={
             <ProtectedRoute>
               <ExamSessionPage />

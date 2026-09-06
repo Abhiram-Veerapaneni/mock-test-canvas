@@ -11,8 +11,11 @@ import {
   Search,
   PlusCircle,
   Play,
+  RotateCcw,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  HelpCircle,
+  CheckCircle2
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -91,36 +94,40 @@ export default function DashboardPage() {
               <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">{exams.length}</div>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500">Active question papers</span>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">Ready for assessment</span>
           </div>
 
           <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
-              <span className="text-xs font-medium">Active Track</span>
-              <Award className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-medium">Total Questions</span>
+              <HelpCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <div className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
+              {exams.reduce((sum, e) => sum + (e.questions?.length || 0), 0)}
+            </div>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">Across current exams</span>
+          </div>
+
+          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+              <span className="text-xs font-medium">Tests Attempted</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">
+              {user?.attemptedTests?.length || 0}
+            </div>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">Completed by you</span>
+          </div>
+
+          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
+              <span className="text-xs font-medium">Selected Stream</span>
+              <Award className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             </div>
             <div className="text-2xl font-bold text-slate-900 dark:text-white">
-              {selectedCategory === 'ALL' ? 'All Tracks' : selectedCategory}
+              {selectedCategory === 'ALL' ? 'All Streams' : selectedCategory}
             </div>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500">Curriculum standard</span>
-          </div>
-
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
-              <span className="text-xs font-medium">Marking Rule</span>
-              <Clock className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-            </div>
-            <div className="text-2xl font-bold tabular-nums text-slate-900 dark:text-white">+4 / -1</div>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500">Standard grading key</span>
-          </div>
-
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-1">
-              <span className="text-xs font-medium">Integrity Guards</span>
-              <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div className="text-2xl font-bold text-slate-900 dark:text-white">Enabled</div>
-            <span className="text-[11px] text-slate-400 dark:text-slate-500">Lockdown & telemetry</span>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">Active category filter</span>
           </div>
         </section>
 
@@ -192,54 +199,93 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {exams.map((exam) => (
-                <div
-                  key={exam._id}
-                  className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 flex flex-col justify-between shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-900/60">
-                        {exam.category}
-                      </span>
-                      <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span className="tabular-nums">{exam.durationMinutes} mins</span>
+              {exams.map((exam) => {
+                const attemptsUsed = exam.userAttemptCount || 0;
+                const maxAttempts = exam.maxAttempts; // null = unlimited
+                const isUnlimited = maxAttempts === null || maxAttempts === undefined;
+                const attemptsLeft = isUnlimited ? Infinity : Math.max(0, maxAttempts - attemptsUsed);
+                const hasAttempted = attemptsUsed > 0;
+                const isExhausted = !isUnlimited && attemptsLeft === 0;
+
+                return (
+                  <div
+                    key={exam._id}
+                    onClick={() => navigate(`/exam/${exam._id}`)}
+                    className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 flex flex-col justify-between shadow-xs hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md cursor-pointer transition-all duration-150"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-900/60">
+                          {exam.category}
+                        </span>
+                        <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span className="tabular-nums">{exam.durationMinutes} mins</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h2 className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">
+                          {exam.title}
+                        </h2>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                          {exam.description || 'Comprehensive evaluation covering competitive entrance syllabus.'}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+                        <div className="bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-200/60 dark:border-slate-800/80">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 block">Questions</span>
+                          <span className="font-semibold text-slate-900 dark:text-white tabular-nums">{exam.questionCount || 0}</span>
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-200/60 dark:border-slate-800/80">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 block">Total Marks</span>
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">{exam.totalMarks || 100} pts</span>
+                        </div>
+                        <div className={`p-2 rounded-lg border text-xs ${
+                          isExhausted
+                            ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/60'
+                            : 'bg-slate-50 dark:bg-slate-950 border-slate-200/60 dark:border-slate-800/80'
+                        }`}>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 block">Attempts</span>
+                          <span className={`font-semibold tabular-nums ${
+                            isExhausted ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'
+                          }`}>
+                            {isUnlimited ? `${attemptsUsed} / ∞` : `${attemptsUsed}/${maxAttempts}`}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    <div>
-                      <h2 className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">
-                        {exam.title}
-                      </h2>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-                        {exam.description || 'Comprehensive evaluation covering competitive entrance syllabus.'}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-                      <div className="bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-200/60 dark:border-slate-800/80">
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 block">Questions</span>
-                        <span className="font-semibold text-slate-900 dark:text-white tabular-nums">{exam.questionCount || 0} items</span>
-                      </div>
-                      <div className="bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-200/60 dark:border-slate-800/80">
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 block">Total Marks</span>
-                        <span className="font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">{exam.totalMarks || 100} pts</span>
-                      </div>
+                    <div className="pt-4">
+                      {isExhausted ? (
+                        <button
+                          disabled
+                          className="w-full py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-medium text-xs flex items-center justify-center gap-1.5 cursor-not-allowed"
+                        >
+                          <span>Attempts Exhausted</span>
+                        </button>
+                      ) : hasAttempted ? (
+                        <button
+                          onClick={() => navigate(`/exam/${exam._id}`)}
+                          className="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-xs focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-colors"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Retake Exam{!isUnlimited ? ` (${attemptsLeft} left)` : ''}</span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => navigate(`/exam/${exam._id}`)}
+                          className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors"
+                        >
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                          <span>Start Proctored Exam</span>
+                        </button>
+                      )}
                     </div>
                   </div>
-
-                  <div className="pt-4">
-                    <button
-                      onClick={() => navigate(`/exam/${exam._id}`)}
-                      className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-current" />
-                      <span>Start Proctored Exam</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>

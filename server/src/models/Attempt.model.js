@@ -72,6 +72,18 @@ const attemptSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
+    correct: {
+      type: Number,
+      default: 0
+    },
+    incorrect: {
+      type: Number,
+      default: 0
+    },
+    unanswered: {
+      type: Number,
+      default: 0
+    },
     trustScore: {
       type: Number,
       default: 100
