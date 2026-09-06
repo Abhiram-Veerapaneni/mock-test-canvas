@@ -210,7 +210,7 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={exam._id}
-                    onClick={() => navigate(`/exam/${exam._id}`)}
+                    onClick={() => navigate(`/test/${exam._id}`)}
                     className="rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 flex flex-col justify-between shadow-xs hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md cursor-pointer transition-all duration-150"
                   >
                     <div className="space-y-3">
@@ -267,7 +267,7 @@ export default function DashboardPage() {
                         </button>
                       ) : hasAttempted ? (
                         <button
-                          onClick={() => navigate(`/exam/${exam._id}`)}
+                          onClick={() => navigate(`/test/${exam._id}`)}
                           className="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-xs focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-colors"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
@@ -275,7 +275,7 @@ export default function DashboardPage() {
                         </button>
                       ) : (
                         <button
-                          onClick={() => navigate(`/exam/${exam._id}`)}
+                          onClick={() => navigate(`/test/${exam._id}`)}
                           className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors"
                         >
                           <Play className="w-3.5 h-3.5 fill-current" />

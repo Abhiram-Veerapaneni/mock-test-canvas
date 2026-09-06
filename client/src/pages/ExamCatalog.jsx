@@ -370,7 +370,7 @@ export default function ExamCatalog() {
                     <div style={{ marginTop: 'auto', paddingTop: '8px' }}>
                       <button
                         className="submit-btn"
-                        onClick={() => navigate(`/exam/${item._id}`)}
+                        onClick={() => navigate(`/test/${item._id}`)}
                       >
                         <span>Start Proctored Exam</span>
                         <ArrowRight style={{ width: '16px', height: '16px' }} />

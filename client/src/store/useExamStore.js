@@ -12,6 +12,15 @@ export const useExamStore = create((set, get) => ({
   questionStatus: {},
   timeRemainingSeconds: 0,
   isInitialized: false,
+  activeExamId: typeof window !== 'undefined' ? localStorage.getItem('active_exam_id') || null : null,
+
+  setActiveExamId: (id) => {
+    if (typeof window !== 'undefined') {
+      if (id) localStorage.setItem('active_exam_id', id);
+      else localStorage.removeItem('active_exam_id');
+    }
+    set({ activeExamId: id || null });
+  },
 
   // Initialize exam session with localStorage persistence
   initExam: (examData) => {
@@ -59,8 +68,12 @@ export const useExamStore = create((set, get) => ({
       answers: initialAnswers,
       questionStatus: initialStatus,
       timeRemainingSeconds: initialTimeRemaining,
-      isInitialized: true
+      isInitialized: true,
+      activeExamId: examData._id
     });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('active_exam_id', examData._id);
+    }
   },
 
   // Navigate directly to question index
@@ -267,10 +280,12 @@ export const useExamStore = create((set, get) => ({
 
   // Clear local storage session on exam submission
   clearStoredSession: () => {
-    const { exam } = get();
-    if (exam?._id) {
-      localStorage.removeItem(getStorageKey(exam._id));
+    const { exam, activeExamId } = get();
+    const idToClear = exam?._id || activeExamId;
+    if (idToClear) {
+      localStorage.removeItem(getStorageKey(idToClear));
     }
+    localStorage.removeItem('active_exam_id');
     set({
       exam: null,
       questions: [],
@@ -278,7 +293,8 @@ export const useExamStore = create((set, get) => ({
       answers: {},
       questionStatus: {},
       timeRemainingSeconds: 0,
-      isInitialized: false
+      isInitialized: false,
+      activeExamId: null
     });
   }
 }));

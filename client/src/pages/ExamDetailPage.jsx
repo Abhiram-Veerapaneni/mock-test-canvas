@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import api from '../services/api';
+import useExamStore from '../store/useExamStore';
 import {
   Clock,
   BookOpen,
@@ -20,7 +21,8 @@ import {
 } from 'lucide-react';
 
 export default function ExamDetailPage() {
-  const { examId } = useParams();
+  const { testId, examId: routeExamId } = useParams();
+  const examId = testId || routeExamId;
   const navigate = useNavigate();
 
   const [exam, setExam] = useState(null);
@@ -56,6 +58,13 @@ export default function ExamDetailPage() {
     fetchExam();
     fetchAttempts();
   }, [fetchExam, fetchAttempts]);
+
+  const handleStartExam = () => {
+    if (!examId) return;
+    localStorage.setItem('active_exam_id', examId);
+    useExamStore.getState().setActiveExamId(examId);
+    navigate('/test', { state: { examId } });
+  };
 
   const attemptsUsed = attempts.length;
   const maxAttempts = exam?.maxAttempts ?? null;
@@ -152,7 +161,7 @@ export default function ExamDetailPage() {
                 </button>
               ) : hasAttempted ? (
                 <button
-                  onClick={() => navigate(`/exam/${examId}/take`)}
+                  onClick={handleStartExam}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow transition-colors"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -160,7 +169,7 @@ export default function ExamDetailPage() {
                 </button>
               ) : (
                 <button
-                  onClick={() => navigate(`/exam/${examId}/take`)}
+                  onClick={handleStartExam}
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow transition-colors"
                 >
                   <Play className="w-4 h-4 fill-current" />
