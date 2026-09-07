@@ -70,6 +70,7 @@ export const createExam = async (req, res) => {
         audioCheck: proctorSettings?.audioCheck ?? true,
         fullScreenLock: proctorSettings?.fullScreenLock ?? true,
         liveNotifications: proctorSettings?.liveNotifications ?? false,
+        objectCheck: proctorSettings?.objectCheck ?? true,
         maxWarningsAllowed: proctorSettings?.maxWarningsAllowed ?? 3
       }
     });

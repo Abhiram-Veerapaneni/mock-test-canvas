@@ -40,7 +40,7 @@ export default function useAudioProctor({
 
   // Noise spike debounce
   const consecutiveHighTicksRef = useRef(0);
-  const HIGH_TICKS_THRESHOLD = 30; // 3.0 seconds (30 * 100ms)
+  const HIGH_TICKS_THRESHOLD = 12; // 1.2 seconds (12 * 100ms) — triggers in 1-1.5s
   const hasFiredRef = useRef(false);
 
   // Keep ref fresh

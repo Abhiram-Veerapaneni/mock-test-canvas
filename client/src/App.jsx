@@ -134,30 +134,30 @@ export default function App() {
       {/* Instant Snapshot Lightbox Preview */}
       {previewImage && (
         <div
-          className="fixed inset-0 z-[10000] bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+          className="fixed inset-0 z-[10000] bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setPreviewImage(null)}
         >
           <div
-            className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl p-5 text-slate-100 space-y-4"
+            className="max-w-2xl w-full bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl overflow-hidden shadow-2xl p-6 text-slate-900 dark:text-slate-100 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-white">Live Proctoring Snapshot</h3>
-                <p className="text-xs text-slate-400">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Live Proctoring Snapshot</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {previewImage.userName} • {previewImage.type} •{' '}
                   {new Date(previewImage.timestamp).toLocaleTimeString()}
                 </p>
               </div>
               <button
                 onClick={() => setPreviewImage(null)}
-                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer"
+                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors border border-slate-200/80 dark:border-slate-700"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="rounded-2xl overflow-hidden bg-black border border-slate-800 max-h-[60vh] flex items-center justify-center">
+            <div className="rounded-xl overflow-hidden bg-slate-100 dark:bg-[#090d16] border border-slate-200/80 dark:border-[#1f293d] max-h-[60vh] flex items-center justify-center">
               <img
                 src={previewImage.imageUrl}
                 alt="Captured proctoring violation"
@@ -166,14 +166,14 @@ export default function App() {
             </div>
 
             <div className="flex items-center justify-between text-xs pt-1">
-              <span className="text-slate-400 font-mono text-[11px]">
-                Violation: {previewImage.type} • Trust Score: {previewImage.trustScore}%
+              <span className="text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                Violation: {previewImage.type} • Trust Score: <strong className="text-rose-600 dark:text-rose-400">{previewImage.trustScore}%</strong>
               </span>
               <a
                 href={previewImage.imageUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 font-medium"
+                className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
               >
                 <span>Full Resolution</span>
                 <ExternalLink className="w-3.5 h-3.5" />

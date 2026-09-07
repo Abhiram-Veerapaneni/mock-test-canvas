@@ -17,9 +17,9 @@ export default function ProtectedRoute({ children }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-200">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-400 mb-3" />
-        <p className="text-sm font-medium tracking-wide">Securing session...</p>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center text-slate-700 dark:text-slate-300">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400 mb-3" />
+        <p className="text-xs font-medium tracking-wide">Securing session...</p>
       </div>
     );
   }

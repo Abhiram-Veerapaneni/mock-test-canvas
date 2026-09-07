@@ -488,7 +488,7 @@ export default function ExamPlayer() {
         <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md mb-6">{error || 'No active exam configuration found.'}</p>
         <button
           onClick={() => navigate('/dashboard')}
-          className="flex items-center space-x-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-md shadow-blue-600/30"
+          className="flex items-center space-x-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-lg transition-colors shadow-xs"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Return to Dashboard</span>
