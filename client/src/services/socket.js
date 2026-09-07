@@ -49,6 +49,22 @@ export const joinCreatorRoom = (creatorId) => {
 };
 
 /**
+ * Join user notification room to receive personal notifications in real time
+ * @param {string} userId
+ */
+export const joinUserRoom = (userId) => {
+  if (!userId) return;
+  const s = getSocket();
+  if (s.connected) {
+    s.emit('join_user', userId);
+  } else {
+    s.once('connect', () => {
+      s.emit('join_user', userId);
+    });
+  }
+};
+
+/**
  * Join specific exam room for live monitoring
  * @param {string} examId
  */

@@ -8,8 +8,10 @@ import TestCreationPage from './pages/TestCreationPage';
 import ExamDetailPage from './pages/ExamDetailPage';
 import ExamSessionPage from './pages/ExamSessionPage';
 import ExamAuditReportPage from './pages/ExamAuditReportPage';
+import NotificationsPage from './pages/NotificationsPage';
 import LiveViolationToast from './components/proctoring/LiveViolationToast';
-import { getSocket, joinCreatorRoom } from './services/socket';
+import { getSocket, joinCreatorRoom, joinUserRoom } from './services/socket';
+import useNotificationStore from './store/useNotificationStore';
 import { X, ExternalLink } from 'lucide-react';
 
 export default function App() {
@@ -21,11 +23,12 @@ export default function App() {
     fetchMe();
   }, [fetchMe]);
 
-  // Connect creator to personal Socket.IO room to receive live notifications across tests
+  // Connect user and creator to personal Socket.IO rooms to receive live notifications across tests
   useEffect(() => {
     if (!user?._id) return;
 
     joinCreatorRoom(user._id);
+    joinUserRoom(user._id);
     const socket = getSocket();
 
     const handleLiveViolation = (alertData) => {
@@ -33,10 +36,17 @@ export default function App() {
       setActiveAlert(alertData);
     };
 
+    const handleNewNotification = (notification) => {
+      console.log('[Notification] Incoming new notification:', notification);
+      useNotificationStore.getState().addNotification(notification);
+    };
+
     socket.on('violation:live', handleLiveViolation);
+    socket.on('notification:new', handleNewNotification);
 
     return () => {
       socket.off('violation:live', handleLiveViolation);
+      socket.off('notification:new', handleNewNotification);
     };
   }, [user?._id]);
 
@@ -52,6 +62,16 @@ export default function App() {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Notifications Center */}
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <NotificationsPage />
             </ProtectedRoute>
           }
         />
