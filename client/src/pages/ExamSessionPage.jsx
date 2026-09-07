@@ -7,6 +7,9 @@ import ExamHeader from '../components/exam-player/ExamHeader';
 import QuestionCanvas from '../components/exam-player/QuestionCanvas';
 import QuestionPalette from '../components/exam-player/QuestionPalette';
 import Modal from '../components/common/Modal';
+import CameraMonitor from '../components/proctoring/CameraMonitor';
+import StrikeModal from '../components/proctoring/StrikeModal';
+import ProctoringCheckGate from '../components/proctoring/ProctoringCheckGate';
 import useExamTimer from '../hooks/useExamTimer';
 import useBrowserLockdown from '../hooks/useBrowserLockdown';
 import {
@@ -21,6 +24,9 @@ const VIOLATION_LABELS = {
   WINDOW_BLUR: 'Window Focus Lost',
   FULLSCREEN_EXIT: 'Fullscreen Exited',
   EXTENDED_ABSENCE: 'Extended Tab Absence',
+  NO_FACE: 'No Face Detected',
+  MULTI_FACE: 'Multiple Faces Detected',
+  NOISE_SPIKE: 'Excessive Noise Detected',
 };
 
 // S4: Show final-warning modal when trust score first drops to/below this threshold
@@ -71,7 +77,40 @@ export default function ExamSessionPage() {
   const finalWarningShownRef = useRef(false);
 
   // Bug #4 fix: single useProctorStore subscription (also pulls activeExamId for reset scoping)
-  const { violations, violationCount, trustScore, addViolation, resetProctor, activeExamId } = useProctorStore();
+  const { violations, violationCount, strikeCount, trustScore, addViolation, resetProctor, activeExamId } = useProctorStore();
+
+  // Phase 4: Proctoring Hardware & Permission state
+  const [proctorStream, setProctorStream] = useState(null);
+  const proctorStreamRef = useRef(null);
+  const [isHardwareVerified, setIsHardwareVerified] = useState(false);
+  const [attemptId, setAttemptId] = useState(null);
+
+  // Unconditionally stops all camera and microphone hardware tracks
+  const stopProctoringMedia = useCallback(() => {
+    if (proctorStreamRef.current) {
+      proctorStreamRef.current.getTracks().forEach((track) => {
+        try {
+          track.stop();
+        } catch (err) {
+          console.warn('[ExamSession] Track stop error:', err);
+        }
+      });
+      proctorStreamRef.current = null;
+    }
+    setProctorStream(null);
+  }, []);
+
+  // Check if proctoring is required for this exam
+  const requiresProctoring =
+    exam?.proctorSettings?.faceCheck !== false ||
+    exam?.proctorSettings?.audioCheck !== false;
+
+  const handleHardwareVerified = useCallback((stream) => {
+    proctorStreamRef.current = stream;
+    setProctorStream(stream);
+    setIsHardwareVerified(true);
+    setNeedsFullscreenGate(false);
+  }, []);
 
   // Graded result from the server
   const [gradedResult, setGradedResult] = useState(null);
@@ -85,11 +124,22 @@ export default function ExamSessionPage() {
   // Bug #2 fix: ref so trust-score effect always calls the latest doSubmit
   const doSubmitRef = useRef(null);
 
-  // ── Violation handler → delegates to proctor store ───────────────────────────
+  // ── Violation handler → delegates to proctor store ───────────────────────────────
+  // Phase 4: Vision/audio violation types ('NO_FACE', 'MULTI_FACE', 'NOISE_SPIKE')
+  // use the dedicated StrikeModal instead of the generic violation popup.
+  const VISION_AUDIO_TYPES = new Set(['NO_FACE', 'MULTI_FACE', 'NOISE_SPIKE']);
+
+  // State for StrikeModal (used for vision/audio violations)
+  const [strikeModalState, setStrikeModalState] = useState({ open: false, type: null });
+
   const handleViolation = useCallback((type) => {
     const recorded = addViolation(type);
     if (recorded) {
       console.warn(`[Lockdown] Violation: ${type}`);
+      // Show StrikeModal for vision/audio violations
+      if (VISION_AUDIO_TYPES.has(type)) {
+        setStrikeModalState({ open: true, type });
+      }
     }
   }, [addViolation]);
 
@@ -223,11 +273,35 @@ export default function ExamSessionPage() {
       }
       useExamStore.getState().setActiveExamId?.(null);
       setIsSubmitted(true);
+
+      // Phase 4: Stop all camera and microphone tracks immediately on submission
+      stopProctoringMedia();
     }
-  }, [clearStoredSession, examId]);
+  }, [clearStoredSession, examId, stopProctoringMedia]);
+
+  // Phase 4: Ensure all media tracks stop immediately on submit, page leave, or unmount
+  useEffect(() => {
+    if (isSubmitted) {
+      stopProctoringMedia();
+    }
+  }, [isSubmitted, stopProctoringMedia]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      stopProctoringMedia();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      stopProctoringMedia();
+    };
+  }, [stopProctoringMedia]);
 
   // Bug #2 fix: keep doSubmitRef always pointing to the latest doSubmit
   useEffect(() => { doSubmitRef.current = doSubmit; }, [doSubmit]);
+
+  // Active session condition: active only when initialized, not submitted, and hardware verified (if proctoring required)
+  const isSessionActive = isInitialized && !isSubmitted && (!requiresProctoring || isHardwareVerified);
 
   // ── 3.1 Drift-free Web Worker timer ──────────────────────────────────────────
   const handleTimerExpired = useCallback(() => {
@@ -236,7 +310,7 @@ export default function ExamSessionPage() {
 
   // Edge case fix: capture stopTimer so we can halt the worker on manual submit
   const { stopTimer } = useExamTimer({
-    active: isInitialized && !isSubmitted,
+    active: isSessionActive,
     onExpired: handleTimerExpired,
   });
 
@@ -249,7 +323,7 @@ export default function ExamSessionPage() {
 
   // ── 3.2 Browser lockdown ──────────────────────────────────────────────────────
   const { dismissBlocker } = useBrowserLockdown({
-    active: isInitialized && !isSubmitted,
+    active: isSessionActive,
     onViolation: handleViolation,
   });
 
@@ -347,10 +421,18 @@ export default function ExamSessionPage() {
       }
 
       try {
-        const [examRes, attemptsRes] = await Promise.all([
+        const [examRes, attemptsRes, startRes] = await Promise.all([
           api.get(`/exams/${examId}`),
-          api.get(`/submissions/my/${examId}`).catch(() => ({ data: { success: true, attempts: [] } }))
+          api.get(`/submissions/my/${examId}`).catch(() => ({ data: { success: true, attempts: [] } })),
+          api.post('/submissions/start', { examId }).catch((err) => {
+            console.warn('[ExamSession] Start attempt error:', err?.response?.data || err?.message);
+            return { data: { success: false } };
+          }),
         ]);
+
+        if (startRes.data?.success && startRes.data?.attemptId) {
+          setAttemptId(startRes.data.attemptId);
+        }
 
         if (examRes.data?.success && examRes.data.exam) {
           const examData = examRes.data.exam;
@@ -363,7 +445,15 @@ export default function ExamSessionPage() {
             }
           }
 
-          if (isMounted) initExam(examData);
+          if (isMounted) {
+            initExam(examData);
+            const needsProctor =
+              examData.proctorSettings?.faceCheck !== false ||
+              examData.proctorSettings?.audioCheck !== false;
+            if (!needsProctor) {
+              setIsHardwareVerified(true);
+            }
+          }
         } else {
           throw new Error('Invalid exam payload');
         }
@@ -559,6 +649,18 @@ export default function ExamSessionPage() {
     );
   }
 
+  // ── Pre-Exam Proctoring Verification Gate ─────────────────────────────────────
+  // If proctoring is enabled and hardware permissions haven't been verified yet:
+  if (requiresProctoring && !isHardwareVerified && !isSubmitted) {
+    return (
+      <ProctoringCheckGate
+        exam={exam}
+        onVerified={handleHardwareVerified}
+        onCancel={() => navigate(examId ? `/test/${examId}` : '/dashboard')}
+      />
+    );
+  }
+
   // ── Fullscreen Entry Gate ─────────────────────────────────────────────────────
   // Browsers block auto-fullscreen without a user gesture (e.g. after a page refresh).
   // Show a click-to-enter-fullscreen screen so the user initiates it themselves.
@@ -603,6 +705,27 @@ export default function ExamSessionPage() {
         <QuestionCanvas />
         <QuestionPalette />
       </div>
+
+      {/* Phase 4: Camera & Audio Monitor */}
+      {isSessionActive && (
+        <CameraMonitor
+          active={isSessionActive}
+          proctorSettings={exam?.proctorSettings}
+          onViolation={handleViolation}
+          attemptId={attemptId}
+          mediaStream={proctorStream}
+        />
+      )}
+
+      {/* Phase 4: StrikeModal for vision/audio violations */}
+      <StrikeModal
+        type={strikeModalState.type}
+        strikeCount={strikeCount}
+        trustScore={trustScore}
+        maxWarnings={exam?.proctorSettings?.maxWarningsAllowed || 5}
+        isOpen={strikeModalState.open}
+        onClose={() => setStrikeModalState({ open: false, type: null })}
+      />
 
       {/* S6: Fullscreen not supported warning banner */}
       {isFullscreenUnsupported && (

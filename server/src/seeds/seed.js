@@ -126,7 +126,7 @@ const exams = [
       durationMinutes: 180,
       markingScheme: { correct: 2, incorrect: -0.67 },
       maxAttempts: null,
-      proctorSettings: { faceCheck: true, audioCheck: false, fullScreenLock: true, maxWarningsAllowed: 3 }
+      proctorSettings: { faceCheck: true, audioCheck: true, fullScreenLock: true, maxWarningsAllowed: 3 }
     },
     questions: [
       {
