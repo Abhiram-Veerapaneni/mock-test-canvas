@@ -1,6 +1,7 @@
 import { Exam } from '../models/Exam.model.js';
 import { Attempt } from '../models/Attempt.model.js';
 import { User } from '../models/User.model.js';
+import { Notification } from '../models/Notification.model.js';
 import { gradeAttempt } from '../services/grading.service.js';
 import cloudinary, { isCloudinaryConfigured } from '../config/cloudinary.js';
 
@@ -171,6 +172,63 @@ export const submitExam = async (req, res) => {
       }
     });
 
+    // Create persistent notifications for examiner and candidate
+    try {
+      const io = req.app.get('io');
+
+      // 1. Notify creator / examiner (if different from candidate)
+      if (exam.creatorId && String(exam.creatorId) !== String(userId)) {
+        const examinerNotif = await Notification.create({
+          recipient: exam.creatorId,
+          sender: userId,
+          type: 'EXAM_SUBMISSION',
+          title: 'New Exam Submission',
+          message: `${req.user.name || 'Candidate'} completed "${exam.title}" with score ${result.score}/${exam.totalMarks}`,
+          data: {
+            examId: exam._id,
+            examTitle: exam.title,
+            attemptId: attempt._id,
+            candidateName: req.user.name || 'Candidate',
+            candidateEmail: req.user.email,
+            score: result.score,
+            totalMarks: exam.totalMarks,
+            accuracy: Math.round(result.accuracy || 0),
+            timestamp: new Date(),
+          },
+          link: `/test/${exam._id}/audit`,
+        });
+
+        if (io) {
+          io.to(`creator_${exam.creatorId}`).emit('notification:new', examinerNotif);
+          io.to(`user_${exam.creatorId}`).emit('notification:new', examinerNotif);
+        }
+      }
+
+      // 2. Notify candidate of completion
+      const candidateNotif = await Notification.create({
+        recipient: userId,
+        type: 'EXAM_SUBMISSION',
+        title: 'Exam Submitted Successfully',
+        message: `You completed "${exam.title}". Score: ${result.score}/${exam.totalMarks} (${Math.round(result.accuracy || 0)}% accuracy).`,
+        data: {
+          examId: exam._id,
+          examTitle: exam.title,
+          attemptId: attempt._id,
+          score: result.score,
+          totalMarks: exam.totalMarks,
+          accuracy: Math.round(result.accuracy || 0),
+          timestamp: new Date(),
+        },
+        link: `/test/${exam._id}`,
+      });
+
+      if (io) {
+        io.to(`user_${userId}`).emit('notification:new', candidateNotif);
+      }
+    } catch (notifErr) {
+      console.warn('[submitExam] Failed to create submission notifications:', notifErr?.message);
+    }
+
     return res.status(200).json({
       success: true,
       result: {
@@ -333,6 +391,37 @@ export const logViolation = async (req, res) => {
       { new: true, select: 'violations trustScore status' }
     );
 
+    // Create persistent Notification for examiner (creator)
+    let persistentNotification = null;
+    if (exam && exam.creatorId) {
+      try {
+        const readableType = violation.type ? violation.type.replace(/_/g, ' ') : 'Proctoring Anomaly';
+        persistentNotification = await Notification.create({
+          recipient: exam.creatorId,
+          sender: req.user._id,
+          type: 'VIOLATION',
+          title: `Violation Alert: ${readableType}`,
+          message: `${req.user.name || 'Candidate'} triggered "${readableType}" in "${exam.title}"`,
+          data: {
+            examId: exam._id,
+            examTitle: exam.title,
+            attemptId: attempt._id,
+            candidateName: req.user.name || 'Candidate',
+            candidateEmail: req.user.email,
+            violationType: violation.type,
+            imageUrl: violation.imageUrl || null,
+            trustScore: updatedAttempt.trustScore,
+            totalViolations: updatedAttempt.violations.length,
+            timestamp: violation.timestamp,
+          },
+          link: `/test/${exam._id}/audit`,
+          read: false,
+        });
+      } catch (notifErr) {
+        console.warn('[logViolation] Failed to create persistent violation notification:', notifErr?.message);
+      }
+    }
+
     // Broadcast live violation to creator and exam rooms via Socket.IO
     try {
       const io = req.app.get('io');
@@ -355,6 +444,10 @@ export const logViolation = async (req, res) => {
         io.to(`exam_${exam._id}`).emit('violation:live', alertPayload);
         if (exam.creatorId) {
           io.to(`creator_${exam.creatorId}`).emit('violation:live', alertPayload);
+          if (persistentNotification) {
+            io.to(`creator_${exam.creatorId}`).emit('notification:new', persistentNotification);
+            io.to(`user_${exam.creatorId}`).emit('notification:new', persistentNotification);
+          }
         }
         console.log(`[Socket.IO] Broadcasted violation (${type}) to creator_${exam.creatorId} & exam_${exam._id}`);
       }

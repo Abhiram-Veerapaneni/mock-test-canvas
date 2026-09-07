@@ -7,6 +7,7 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import examRoutes from './routes/exam.routes.js';
 import submissionRoutes from './routes/submission.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 import { apiLimiter } from './middleware/rateLimiter.middleware.js';
 
 dotenv.config();
@@ -41,7 +42,7 @@ const corsOptions = {
     return callback(null, true);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
 
@@ -64,11 +65,21 @@ app.set('io', io);
 io.on('connection', (socket) => {
   console.log(`[Socket.IO] Client connected: ${socket.id}`);
 
-  // Test creator joins their personal notification room
+  // Test creator / examiner joins personal notification room
   socket.on('join_creator', (creatorId) => {
     if (creatorId) {
       socket.join(`creator_${creatorId}`);
+      socket.join(`user_${creatorId}`);
       console.log(`[Socket.IO] Socket ${socket.id} joined creator_${creatorId}`);
+    }
+  });
+
+  // User joins their personal notification room
+  socket.on('join_user', (userId) => {
+    if (userId) {
+      socket.join(`user_${userId}`);
+      socket.join(`creator_${userId}`);
+      console.log(`[Socket.IO] Socket ${socket.id} joined user_${userId}`);
     }
   });
 
@@ -107,6 +118,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/exams', examRoutes);
 app.use('/api/submissions', submissionRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Global 404 Handler
 app.use((req, res) => {
