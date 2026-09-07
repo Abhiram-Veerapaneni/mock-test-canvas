@@ -31,9 +31,9 @@ export default function useVisionProctor({ videoRef, active, onViolation }) {
   const violationStartRef = useRef(null);   // { type: string, startTime: number } | null
   const firedAlertsRef = useRef(new Set()); // track which alerts already fired in this streak
 
-  const DETECT_INTERVAL_MS = 1000;         // run inference every 1 second
-  const NO_FACE_DEBOUNCE_MS = 7000;        // 7s absence debounce (prevents false positives)
-  const MULTI_FACE_DEBOUNCE_MS = 4000;     // 4s multi-face debounce
+  const DETECT_INTERVAL_MS = 500;          // run inference every 500ms for rapid responsiveness
+  const NO_FACE_DEBOUNCE_MS = 2000;        // 2s absence debounce (fires in 1-3s)
+  const MULTI_FACE_DEBOUNCE_MS = 1500;     // 1.5s multi-face debounce (fires in 1-3s)
 
   // Keep onViolation ref fresh
   useEffect(() => { onViolationRef.current = onViolation; }, [onViolation]);

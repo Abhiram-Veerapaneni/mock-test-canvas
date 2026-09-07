@@ -65,6 +65,10 @@ const examSchema = new mongoose.Schema(
         type: Boolean,
         default: true
       },
+      liveNotifications: {
+        type: Boolean,
+        default: false
+      },
       maxWarningsAllowed: {
         type: Number,
         default: 3
