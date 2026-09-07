@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import examRoutes from './routes/exam.routes.js';
@@ -46,6 +48,43 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
+// Create HTTP Server & Initialize Socket.IO
+const httpServer = http.createServer(app);
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: corsOptions.origin,
+    credentials: true,
+    methods: ['GET', 'POST']
+  }
+});
+
+// Store io instance on app for controller access
+app.set('io', io);
+
+io.on('connection', (socket) => {
+  console.log(`[Socket.IO] Client connected: ${socket.id}`);
+
+  // Test creator joins their personal notification room
+  socket.on('join_creator', (creatorId) => {
+    if (creatorId) {
+      socket.join(`creator_${creatorId}`);
+      console.log(`[Socket.IO] Socket ${socket.id} joined creator_${creatorId}`);
+    }
+  });
+
+  // Client joins specific exam room for live monitoring
+  socket.on('join_exam', (examId) => {
+    if (examId) {
+      socket.join(`exam_${examId}`);
+      console.log(`[Socket.IO] Socket ${socket.id} joined exam_${examId}`);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    // disconnected
+  });
+});
+
 // Express JSON parsing middleware with 10mb limit
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -86,9 +125,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`[Server] Mock Test Canvas API running on port ${PORT}`);
+httpServer.listen(PORT, () => {
+  console.log(`[Server] Mock Test Canvas API & Socket.IO running on port ${PORT}`);
   console.log(`[Server] Health check: http://localhost:${PORT}/api/health`);
 });
 
+export { io };
 export default app;

@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import api from '../services/api';
 import useExamStore from '../store/useExamStore';
+import useAuthStore from '../store/useAuthStore';
+import ExamLiveMonitorModal from '../components/proctoring/ExamLiveMonitorModal';
 import {
   Clock,
   BookOpen,
@@ -17,7 +19,9 @@ import {
   XCircle,
   Trophy,
   CalendarDays,
-  Infinity as InfinityIcon
+  Infinity as InfinityIcon,
+  Radio,
+  FileText
 } from 'lucide-react';
 
 export default function ExamDetailPage() {
@@ -30,6 +34,9 @@ export default function ExamDetailPage() {
   const [isLoadingExam, setIsLoadingExam] = useState(true);
   const [isLoadingAttempts, setIsLoadingAttempts] = useState(true);
   const [error, setError] = useState(null);
+  const [isLiveMonitorOpen, setIsLiveMonitorOpen] = useState(false);
+
+  const { user } = useAuthStore();
 
   const fetchExam = useCallback(async () => {
     try {
@@ -154,7 +161,27 @@ export default function ExamDetailPage() {
             </div>
 
             {/* CTA */}
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex items-center gap-2 flex-wrap sm:flex-nowrap">
+              {user && (exam.creatorId?._id === user._id || exam.creatorId === user._id) && (
+                <>
+                  <button
+                    onClick={() => navigate(`/test/${examId}/audit`)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-medium text-xs transition-colors shadow-xs cursor-pointer"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Violation Logs & Reports</span>
+                  </button>
+
+                  <button
+                    onClick={() => setIsLiveMonitorOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white font-medium text-xs border border-slate-700/80 transition-colors shadow-xs cursor-pointer"
+                  >
+                    <Radio className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+                    <span>Live Console</span>
+                  </button>
+                </>
+              )}
+
               {isExhausted ? (
                 <button disabled className="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 font-medium text-sm cursor-not-allowed">
                   Attempts Exhausted
@@ -162,7 +189,7 @@ export default function ExamDetailPage() {
               ) : hasAttempted ? (
                 <button
                   onClick={handleStartExam}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow transition-colors"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow transition-colors cursor-pointer"
                 >
                   <RotateCcw className="w-4 h-4" />
                   Retake Exam
@@ -170,7 +197,7 @@ export default function ExamDetailPage() {
               ) : (
                 <button
                   onClick={handleStartExam}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow transition-colors"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow transition-colors cursor-pointer"
                 >
                   <Play className="w-4 h-4 fill-current" />
                   Start Exam
@@ -393,6 +420,14 @@ export default function ExamDetailPage() {
           )}
         </section>
 
+        {/* Live Proctoring Modal for Creator */}
+        {isLiveMonitorOpen && (
+          <ExamLiveMonitorModal
+            examId={examId}
+            examTitle={exam.title}
+            onClose={() => setIsLiveMonitorOpen(false)}
+          />
+        )}
       </main>
     </div>
   );

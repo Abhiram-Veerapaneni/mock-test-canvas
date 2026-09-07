@@ -30,6 +30,7 @@ export default function TestCreationPage() {
   const [faceCheck, setFaceCheck] = useState(true);
   const [audioCheck, setAudioCheck] = useState(true);
   const [fullScreenLock, setFullScreenLock] = useState(true);
+  const [liveNotifications, setLiveNotifications] = useState(false);
 
   // Added questions array
   const [questions, setQuestions] = useState([]);
@@ -76,6 +77,7 @@ export default function TestCreationPage() {
           faceCheck,
           audioCheck,
           fullScreenLock,
+          liveNotifications,
           maxWarningsAllowed: 3
         },
         questions
@@ -308,6 +310,20 @@ export default function TestCreationPage() {
                       className="rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-0"
                     />
                     <span>Full-Screen & Tab Lock</span>
+                  </label>
+                  <label className="flex items-start gap-2 cursor-pointer pt-1 border-t border-slate-200 dark:border-slate-800/60">
+                    <input
+                      type="checkbox"
+                      checked={liveNotifications}
+                      onChange={(e) => setLiveNotifications(e.target.checked)}
+                      className="mt-0.5 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-0"
+                    />
+                    <div className="flex flex-col">
+                      <span className="font-medium text-slate-800 dark:text-slate-200">Live Violation Alerts for Creator</span>
+                      <span className="text-[10px] text-slate-500 leading-tight">
+                        Receive instant notifications with captured candidate photos when violations occur.
+                      </span>
+                    </div>
                   </label>
                 </div>
               </div>

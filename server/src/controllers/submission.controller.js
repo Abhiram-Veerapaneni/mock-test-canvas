@@ -254,20 +254,43 @@ export const logViolation = async (req, res) => {
       });
     }
 
+    // Fetch exam info
+    const exam = await Exam.findById(attempt.examId).select('title creatorId proctorSettings');
+
     let imageUrl = '';
 
     // Upload snapshot to Cloudinary if a file was provided and Cloudinary is configured
     if (req.file && isCloudinaryConfigured()) {
       try {
+        const dateStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        const sanitizedExamTitle = (exam?.title || 'exam')
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]/g, '_')
+          .replace(/_+/g, '_')
+          .slice(0, 40);
+        const sanitizedUsername = (req.user?.name || req.user?.email || 'candidate')
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]/g, '_')
+          .replace(/_+/g, '_')
+          .slice(0, 30);
+
+        const folder = `mock-test-canvas/violations/${attempt.examId}_${sanitizedExamTitle}/${dateStr}`;
+        const timestamp = Date.now();
+        // format: <examtitle>_<timestamp>_<userid>_<username>
+        const public_id = `${sanitizedExamTitle}_${timestamp}_${req.user._id}_${sanitizedUsername}`;
+
         const uploadResult = await new Promise((resolve, reject) => {
           const uploadStream = cloudinary.uploader.upload_stream(
             {
-              folder: `mock-test-canvas/violations/${attemptId}`,
+              folder,
+              public_id,
               resource_type: 'image',
               format: 'jpg',
               transformation: [
                 { width: 640, height: 480, crop: 'limit' },
-                { quality: 'auto:low' },
+                { quality: 'auto:good' },
               ],
             },
             (error, result) => {
@@ -280,7 +303,7 @@ export const logViolation = async (req, res) => {
         });
 
         imageUrl = uploadResult.secure_url;
-        console.log(`[logViolation] Snapshot uploaded: ${imageUrl}`);
+        console.log(`[logViolation] Snapshot uploaded to ${folder}/${public_id}: ${imageUrl}`);
       } catch (uploadErr) {
         // Don't fail the entire request if Cloudinary upload fails
         console.error('[logViolation] Cloudinary upload failed:', uploadErr.message);
@@ -309,6 +332,35 @@ export const logViolation = async (req, res) => {
       },
       { new: true, select: 'violations trustScore status' }
     );
+
+    // Broadcast live violation to creator and exam rooms via Socket.IO
+    try {
+      const io = req.app.get('io');
+      if (io && exam) {
+        const alertPayload = {
+          examId: exam._id,
+          examTitle: exam.title,
+          attemptId: attempt._id,
+          userId: req.user._id,
+          userName: req.user.name || 'Candidate',
+          userEmail: req.user.email,
+          type: violation.type,
+          timestamp: violation.timestamp,
+          imageUrl: violation.imageUrl,
+          trustScore: updatedAttempt.trustScore,
+          totalViolations: updatedAttempt.violations.length,
+          liveNotificationsEnabled: !!exam.proctorSettings?.liveNotifications,
+        };
+
+        io.to(`exam_${exam._id}`).emit('violation:live', alertPayload);
+        if (exam.creatorId) {
+          io.to(`creator_${exam.creatorId}`).emit('violation:live', alertPayload);
+        }
+        console.log(`[Socket.IO] Broadcasted violation (${type}) to creator_${exam.creatorId} & exam_${exam._id}`);
+      }
+    } catch (socketErr) {
+      console.warn('[logViolation] Socket broadcast warning:', socketErr?.message);
+    }
 
     return res.status(200).json({
       success: true,

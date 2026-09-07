@@ -1,6 +1,7 @@
 import { Exam } from '../models/Exam.model.js';
 import { Question } from '../models/Question.model.js';
 import { User } from '../models/User.model.js';
+import { Attempt } from '../models/Attempt.model.js';
 
 /**
  * @desc    Create a new exam with bulk questions
@@ -68,6 +69,7 @@ export const createExam = async (req, res) => {
         faceCheck: proctorSettings?.faceCheck ?? true,
         audioCheck: proctorSettings?.audioCheck ?? true,
         fullScreenLock: proctorSettings?.fullScreenLock ?? true,
+        liveNotifications: proctorSettings?.liveNotifications ?? false,
         maxWarningsAllowed: proctorSettings?.maxWarningsAllowed ?? 3
       }
     });
@@ -211,3 +213,116 @@ export const getExamById = async (req, res) => {
     });
   }
 };
+
+/**
+ * @desc    Get all violations & snapshot images for an exam (creator only)
+ * @route   GET /api/exams/:id/live-violations
+ * @access  Private (Creator only)
+ */
+export const getExamViolations = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const exam = await Exam.findById(id).select('title creatorId proctorSettings');
+    if (!exam) {
+      return res.status(404).json({ success: false, message: 'Exam not found' });
+    }
+
+    // Ensure the requester is the creator of the exam (if creator is specified)
+    if (exam.creatorId && exam.creatorId.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access restricted: Only the creator of this exam can view live violations.'
+      });
+    }
+
+    // Find all attempts for this exam (for both violation logs and completion reports)
+    const attempts = await Attempt.find({ examId: id })
+      .select('userId score accuracy correct incorrect unanswered responses violations trustScore status startedAt submittedAt')
+      .populate('userId', 'name email avatar')
+      .sort({ createdAt: -1 });
+
+    // Flatten all violations for the violation logs table
+    const allViolations = [];
+    attempts.forEach((att) => {
+      const userTotalViolations = att.violations?.length || 0;
+      att.violations.forEach((v) => {
+        allViolations.push({
+          attemptId: att._id,
+          userId: att.userId?._id,
+          userName: att.userId?.name || 'Anonymous Candidate',
+          userEmail: att.userId?.email || '',
+          userAvatar: att.userId?.avatar || '',
+          candidateTrustScore: att.trustScore,
+          attemptStatus: att.status,
+          type: v.type,
+          timestamp: v.timestamp,
+          imageUrl: v.imageUrl,
+          noOfViolations: userTotalViolations,
+        });
+      });
+    });
+
+    // Sort violations by timestamp newest first
+    allViolations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    // Build completion reports for users who submitted / attempted the test
+    const completionReport = attempts.map((att) => {
+      let answeredCount = 0;
+      if (typeof att.correct === 'number' || typeof att.incorrect === 'number') {
+        answeredCount = (att.correct || 0) + (att.incorrect || 0);
+      } else if (Array.isArray(att.responses)) {
+        answeredCount = att.responses.filter((r) => r.selectedAnswers?.length > 0).length;
+      }
+
+      const totalQ = exam.questions?.length || 0;
+      const unansweredCount = typeof att.unanswered === 'number'
+        ? att.unanswered
+        : Math.max(0, totalQ - answeredCount);
+
+      return {
+        attemptId: att._id,
+        user: att.userId ? {
+          _id: att.userId._id,
+          name: att.userId.name || 'Anonymous Candidate',
+          email: att.userId.email || '',
+          avatar: att.userId.avatar || '',
+        } : { name: 'Deleted User', email: '' },
+        score: att.score ?? 0,
+        accuracy: att.accuracy ?? 0,
+        correct: att.correct ?? 0,
+        incorrect: att.incorrect ?? 0,
+        answeredCount,
+        unansweredCount,
+        violationsCount: att.violations?.length || 0,
+        trustScore: att.trustScore ?? 100,
+        status: att.status,
+        startedAt: att.startedAt,
+        submittedAt: att.submittedAt || att.updatedAt,
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      exam: {
+        _id: exam._id,
+        title: exam.title,
+        durationMinutes: exam.durationMinutes,
+        totalMarks: exam.totalMarks,
+        questionCount: exam.questions?.length || 0,
+        proctorSettings: exam.proctorSettings,
+      },
+      totalViolations: allViolations.length,
+      violations: allViolations,
+      completionReport,
+    });
+  } catch (error) {
+    console.error('Get exam violations error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error fetching exam violations'
+    });
+  }
+};
+

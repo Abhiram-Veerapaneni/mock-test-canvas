@@ -391,6 +391,33 @@ export default function ProctoringCheckGate({ exam, onVerified, onCancel }) {
           </div>
         )}
 
+        {/* ── Candidate Proctoring Disclosure & Creator Transmission Notice ── */}
+        <div className="p-4 rounded-2xl bg-slate-950/80 border border-amber-500/30 text-xs space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 font-semibold text-amber-300">
+              <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>Mandatory Proctoring Disclosure</span>
+            </div>
+            {proctorSettings?.liveNotifications && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-300 text-[10px] font-semibold uppercase tracking-wider animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                Live Creator Alerts
+              </span>
+            )}
+          </div>
+          <p className="text-slate-300 leading-relaxed text-[11px]">
+            Please be advised that your webcam and environment are continuously analyzed for test integrity. Any detected infractions (leaving camera view, presence of multiple individuals, loud noises, or tab switching) are automatically recorded with <strong>webcam snapshots</strong> and transmitted directly to the <strong>test creator</strong>.
+          </p>
+          {proctorSettings?.liveNotifications && (
+            <div className="p-2 rounded-xl bg-rose-950/30 border border-rose-900/50 text-[11px] text-rose-200 flex items-start gap-2">
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5" />
+              <span>
+                <strong>Real-Time Notice:</strong> The examiner has enabled live notifications. Violation alerts and captured images will be sent to the examiner immediately as they occur during your test.
+              </span>
+            </div>
+          )}
+        </div>
+
         {/* ── Action Buttons ─────────────────────────────────────────────── */}
         <div className="space-y-3 pt-2">
           {permissionState === 'granted' ? (
