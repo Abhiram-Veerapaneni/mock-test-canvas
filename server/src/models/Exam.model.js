@@ -69,6 +69,10 @@ const examSchema = new mongoose.Schema(
         type: Boolean,
         default: false
       },
+      objectCheck: {
+        type: Boolean,
+        default: true
+      },
       maxWarningsAllowed: {
         type: Number,
         default: 3

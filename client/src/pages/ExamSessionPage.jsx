@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useExamStore from '../store/useExamStore';
 import useProctorStore from '../store/useProctorStore';
@@ -27,6 +27,9 @@ const VIOLATION_LABELS = {
   NO_FACE: 'No Face Detected',
   MULTI_FACE: 'Multiple Faces Detected',
   NOISE_SPIKE: 'Excessive Noise Detected',
+  CELL_PHONE: 'Mobile Phone Detected',
+  PROHIBITED_BOOK: 'Study Material / Book Detected',
+  PROHIBITED_OBJECT: 'Prohibited Device Detected',
 };
 
 // S4: Show final-warning modal when trust score first drops to/below this threshold
@@ -36,8 +39,14 @@ export default function ExamSessionPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Resolve examId from location state, localStorage, or Zustand store
+  // Check if arriving via auto-refresh after submission
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(location.search) : null;
+  const isJustSubmitted = searchParams?.get('submitted') === 'true';
+  const urlExamId = searchParams?.get('examId');
+
+  // Resolve examId from URL query, location state, localStorage, or Zustand store
   const examId =
+    urlExamId ||
     location.state?.examId ||
     (typeof window !== 'undefined' ? localStorage.getItem('active_exam_id') : null) ||
     useExamStore.getState().activeExamId;
@@ -51,10 +60,25 @@ export default function ExamSessionPage() {
     clearStoredSession,
   } = useExamStore();
 
-  const [isLoading, setIsLoading] = useState(true);
+  // Read saved result if arriving via auto-refresh after submission
+  const savedResultData = useMemo(() => {
+    if (isJustSubmitted && examId && typeof window !== 'undefined') {
+      const raw = sessionStorage.getItem(`exam_result_${examId}`);
+      if (raw) {
+        try {
+          return JSON.parse(raw);
+        } catch (e) {
+          console.warn('[ExamSession] Failed to parse saved result:', e);
+        }
+      }
+    }
+    return null;
+  }, [isJustSubmitted, examId]);
+
+  const [isLoading, setIsLoading] = useState(!savedResultData);
   const [fetchError, setFetchError] = useState(null);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(Boolean(savedResultData));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFullscreenBlocked, setIsFullscreenBlocked] = useState(false);
   const [isFullscreenUnsupported, setIsFullscreenUnsupported] = useState(false);
@@ -97,6 +121,17 @@ export default function ExamSessionPage() {
       });
       proctorStreamRef.current = null;
     }
+    // Sweep any video elements in DOM to release hardware capture
+    if (typeof document !== 'undefined') {
+      document.querySelectorAll('video').forEach((video) => {
+        if (video.srcObject && typeof video.srcObject.getTracks === 'function') {
+          video.srcObject.getTracks().forEach((track) => {
+            try { track.stop(); } catch (e) {}
+          });
+          video.srcObject = null;
+        }
+      });
+    }
     setProctorStream(null);
   }, []);
 
@@ -113,13 +148,13 @@ export default function ExamSessionPage() {
   }, []);
 
   // Graded result from the server
-  const [gradedResult, setGradedResult] = useState(null);
+  const [gradedResult, setGradedResult] = useState(savedResultData?.result || null);
   // Snapshot metadata captured before clearStoredSession()
-  const [submittedSnapshot, setSubmittedSnapshot] = useState(null);
+  const [submittedSnapshot, setSubmittedSnapshot] = useState(savedResultData?.snap || null);
   // Snapshot violations before resetProctor()
-  const [submittedViolations, setSubmittedViolations] = useState([]);
+  const [submittedViolations, setSubmittedViolations] = useState(savedResultData?.violations || []);
   // Preserved examId for after-submission review navigation
-  const [submittedExamId, setSubmittedExamId] = useState(examId);
+  const [submittedExamId, setSubmittedExamId] = useState(savedResultData?.examId || examId);
 
   // Bug #2 fix: ref so trust-score effect always calls the latest doSubmit
   const doSubmitRef = useRef(null);
@@ -127,7 +162,10 @@ export default function ExamSessionPage() {
   // ── Violation handler → delegates to proctor store ───────────────────────────────
   // Phase 4: Vision/audio violation types ('NO_FACE', 'MULTI_FACE', 'NOISE_SPIKE')
   // use the dedicated StrikeModal instead of the generic violation popup.
-  const VISION_AUDIO_TYPES = new Set(['NO_FACE', 'MULTI_FACE', 'NOISE_SPIKE']);
+  const VISION_AUDIO_TYPES = new Set([
+    'NO_FACE', 'MULTI_FACE', 'NOISE_SPIKE',
+    'CELL_PHONE', 'PROHIBITED_BOOK', 'PROHIBITED_OBJECT'
+  ]);
 
   // State for StrikeModal (used for vision/audio violations)
   const [strikeModalState, setStrikeModalState] = useState({ open: false, type: null });
@@ -197,6 +235,7 @@ export default function ExamSessionPage() {
 
     // Auto-submit after 5 s — Bug #2 fix: use ref so doSubmit is never stale
     const submitTimer = setTimeout(() => {
+      stopProctoringMedia();
       setTrustZeroModal(false);
       doSubmitRef.current?.();
     }, 5000);
@@ -210,6 +249,17 @@ export default function ExamSessionPage() {
 
   // ── Submit to API, grade on server ────────────────────────────────────────────
   const doSubmit = useCallback(async () => {
+    // Immediately flag isSubmitting to unmount proctoring monitor and prevent rogue fallbacks
+    setIsSubmitting(true);
+
+    // Phase 4: Immediately stop all camera and microphone hardware tracks so lights turn off at once
+    stopProctoringMedia();
+
+    // Exit fullscreen if active
+    if (typeof document !== 'undefined' && document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+
     const currentExam = useExamStore.getState().exam;
     const currentAnswers = useExamStore.getState().answers;
     const currentQuestions = useExamStore.getState().questions;
@@ -226,8 +276,6 @@ export default function ExamSessionPage() {
     }
     setSubmittedViolations(currentViolations);
     setSubmittedExamId(currentExam?._id || examId);
-
-    setIsSubmitting(true);
 
     // Convert answers map: { questionId → [selectedAnswers] }
     const answersByQuestionId = {};
@@ -252,6 +300,7 @@ export default function ExamSessionPage() {
       });
     }
 
+    let resultDataPayload = null;
     try {
       // S5: Include violations in submission payload so the server can persist them
       const res = await api.post('/submissions/submit', {
@@ -260,24 +309,53 @@ export default function ExamSessionPage() {
         violations: currentViolations,
       });
       if (res.data?.success) {
+        resultDataPayload = res.data.result;
         setGradedResult(res.data.result);
       }
     } catch (err) {
       console.error('[Submit] Error:', err);
       // Still mark as submitted even if API fails — show local snapshot
     } finally {
-      setIsSubmitting(false);
       clearStoredSession();
       if (typeof window !== 'undefined') {
         localStorage.removeItem('active_exam_id');
       }
       useExamStore.getState().setActiveExamId?.(null);
-      setIsSubmitted(true);
 
       // Phase 4: Stop all camera and microphone tracks immediately on submission
       stopProctoringMedia();
+
+      const finalExamId = currentExam?._id || examId;
+      const snapshotObj = currentExam ? {
+        title: currentExam.title,
+        markingScheme: currentExam.markingScheme,
+        totalMarks: currentExam.totalMarks,
+        totalQuestions: currentQuestions.length,
+      } : submittedSnapshot;
+
+      // Auto-refresh via window.location.replace: completely flushes Windows Media Foundation device handles so webcam LED turns OFF immediately
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem(
+            `exam_result_${finalExamId}`,
+            JSON.stringify({
+              snap: snapshotObj,
+              result: resultDataPayload,
+              violations: currentViolations,
+              examId: finalExamId,
+            })
+          );
+          window.location.replace(`/test?submitted=true&examId=${finalExamId}`);
+          return;
+        } catch (e) {
+          console.warn('[ExamSession] sessionStorage save note:', e);
+        }
+      }
+
+      setIsSubmitting(false);
+      setIsSubmitted(true);
     }
-  }, [clearStoredSession, examId, stopProctoringMedia]);
+  }, [clearStoredSession, examId, stopProctoringMedia, submittedSnapshot]);
 
   // Phase 4: Ensure all media tracks stop immediately on submit, page leave, or unmount
   useEffect(() => {
@@ -300,13 +378,14 @@ export default function ExamSessionPage() {
   // Bug #2 fix: keep doSubmitRef always pointing to the latest doSubmit
   useEffect(() => { doSubmitRef.current = doSubmit; }, [doSubmit]);
 
-  // Active session condition: active only when initialized, not submitted, and hardware verified (if proctoring required)
-  const isSessionActive = isInitialized && !isSubmitted && (!requiresProctoring || isHardwareVerified);
+  // Active session condition: active only when initialized, not submitted, not submitting, and hardware verified (if proctoring required)
+  const isSessionActive = isInitialized && !isSubmitted && !isSubmitting && (!requiresProctoring || isHardwareVerified);
 
   // ── 3.1 Drift-free Web Worker timer ──────────────────────────────────────────
   const handleTimerExpired = useCallback(() => {
+    stopProctoringMedia();
     doSubmit();
-  }, [doSubmit]);
+  }, [doSubmit, stopProctoringMedia]);
 
   // Edge case fix: capture stopTimer so we can halt the worker on manual submit
   const { stopTimer } = useExamTimer({
@@ -316,10 +395,11 @@ export default function ExamSessionPage() {
 
   // Wrap doSubmit to stop the timer first
   const handleConfirmSubmit = useCallback(() => {
+    stopProctoringMedia();
     stopTimer();
     setIsSubmitModalOpen(false);
     doSubmit();
-  }, [stopTimer, doSubmit]);
+  }, [stopTimer, doSubmit, stopProctoringMedia]);
 
   // ── 3.2 Browser lockdown ──────────────────────────────────────────────────────
   const { dismissBlocker } = useBrowserLockdown({
@@ -376,6 +456,7 @@ export default function ExamSessionPage() {
 
       if (newTime <= 0) {
         // Time ran out while tab was hidden — submit immediately
+        stopProctoringMedia();
         stopTimer();
         doSubmitRef.current?.();
         return;
@@ -400,6 +481,9 @@ export default function ExamSessionPage() {
 
   // ── Exam fetch ────────────────────────────────────────────────────────────────
   useEffect(() => {
+    // If arriving via auto-refresh after submission, skip exam fetch and proctor setup
+    if (isJustSubmitted) return;
+
     // If no active exam was initiated or cached, redirect away from /test
     if (!examId) {
       navigate('/dashboard', { replace: true });
@@ -505,7 +589,7 @@ export default function ExamSessionPage() {
 
           {/* Score card */}
           {result ? (
-            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-5 text-white shadow-lg">
+            <div className="bg-blue-600 dark:bg-blue-700 rounded-xl p-5 text-white shadow-xs">
               <div className="flex items-center gap-2 mb-3">
                 <Trophy className="w-4 h-4 text-yellow-300" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-blue-100">Your Score</span>
@@ -666,26 +750,28 @@ export default function ExamSessionPage() {
   // Show a click-to-enter-fullscreen screen so the user initiates it themselves.
   if (needsFullscreenGate && !isSubmitted) {
     return (
-      <div className="h-screen w-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
-        <div className="max-w-sm w-full">
-          <div className="w-16 h-16 rounded-full bg-blue-500/10 border-2 border-blue-500/40 flex items-center justify-center mx-auto mb-5">
-            <Maximize className="w-8 h-8 text-blue-400" />
+      <div className="h-screen w-screen bg-slate-50 dark:bg-[#090d16] flex flex-col items-center justify-center p-6 text-center transition-colors duration-200">
+        <div className="max-w-md w-full bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl p-7 sm:p-8 shadow-xl space-y-4">
+          <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900/60 flex items-center justify-center mx-auto">
+            <Maximize className="w-7 h-7 text-blue-600 dark:text-blue-400" />
           </div>
-          <h2 className="text-lg font-bold text-white mb-2">Fullscreen Required</h2>
-          <p className="text-sm text-slate-400 leading-relaxed mb-6">
-            This exam must be taken in fullscreen mode. Click the button below to enter fullscreen and continue.
-          </p>
+          <div className="space-y-1.5">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Fullscreen Required</h2>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
+              This examination must be completed in a secured fullscreen environment. Click the button below to initiate full lockdown mode.
+            </p>
+          </div>
           <button
             onClick={() => {
               dismissBlocker();
               setNeedsFullscreenGate(false);
             }}
-            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all"
+            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer hover:shadow-md"
           >
             <Maximize className="w-4 h-4" />
-            Enter Fullscreen to Continue
+            <span>Enter Fullscreen Assessment</span>
           </button>
-          <p className="text-[11px] text-slate-600 mt-3">Your progress and answers are safe.</p>
+          <p className="text-[11px] text-slate-400">Your questions and answers are saved automatically.</p>
         </div>
       </div>
     );
@@ -693,7 +779,7 @@ export default function ExamSessionPage() {
 
   // ── Main Exam UI ──────────────────────────────────────────────────────────────
   return (
-    <div className="h-screen w-screen bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden select-none">
+    <div className="h-screen w-screen bg-slate-50 dark:bg-[#090d16] flex flex-col overflow-hidden select-none transition-colors duration-200">
       {/* 1. Header */}
       <ExamHeader
         onSubmitClick={() => setIsSubmitModalOpen(true)}
@@ -729,49 +815,55 @@ export default function ExamSessionPage() {
 
       {/* S6: Fullscreen not supported warning banner */}
       {isFullscreenUnsupported && (
-        <div className="fixed top-0 inset-x-0 z-50 bg-amber-500 text-white text-xs font-medium text-center py-1.5 px-4">
+        <div className="fixed top-0 inset-x-0 z-50 bg-amber-500 text-white text-xs font-semibold text-center py-2 px-4 shadow-sm">
           ⚠️ Fullscreen mode is not supported in this browser. Proctoring may be limited.
         </div>
       )}
 
       {/* 3a. Fullscreen Blocked Overlay */}
       {isFullscreenBlocked && (
-        <div className="fixed inset-0 z-[9999] bg-slate-950/95 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
-          <div className="max-w-sm w-full">
-            <div className="w-16 h-16 rounded-full bg-rose-500/10 border-2 border-rose-500/40 flex items-center justify-center mx-auto mb-5 animate-pulse">
-              <ShieldAlert className="w-8 h-8 text-rose-400" />
+        <div className="fixed inset-0 z-[9999] bg-slate-950/75 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+          <div className="max-w-md w-full bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl p-6 sm:p-8 shadow-2xl text-slate-900 dark:text-slate-100 space-y-4">
+            <div className="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 flex items-center justify-center mx-auto">
+              <ShieldAlert className="w-8 h-8 text-rose-600 dark:text-rose-400" />
             </div>
-            <h2 className="text-lg font-bold text-white mb-2">Fullscreen Mode Exited</h2>
-            <p className="text-sm text-slate-400 leading-relaxed mb-1">
-              Exiting fullscreen during an examination is a proctoring violation. This incident has been recorded.
-            </p>
-            <p className="text-xs text-rose-400 font-medium mb-7">Violations recorded: {violationCount}</p>
+            <div className="space-y-1.5">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Fullscreen Mode Exited</h2>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
+                Exiting fullscreen during an examination is a recorded proctoring infraction. Your answers and timer have been paused until re-entry.
+              </p>
+            </div>
+            <div className="py-2 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-900/60 text-xs font-semibold text-rose-600 dark:text-rose-400 tabular-nums">
+              Total Infractions Recorded: {violationCount}
+            </div>
             <button
               onClick={dismissBlocker}
-              className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-150 shadow-lg shadow-blue-600/20"
+              className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer hover:shadow-md"
             >
               <Maximize className="w-4 h-4" />
-              Re-enter Fullscreen to Continue
+              <span>Re-enter Fullscreen to Continue Exam</span>
             </button>
-            <p className="text-[11px] text-slate-600 mt-4">Your exam progress has been preserved.</p>
+            <p className="text-[11px] text-slate-400">All progress is safely preserved in real-time.</p>
           </div>
         </div>
       )}
 
       {/* 3b. Alt+Tab / Window Blur Overlay — blurs screen when user switches apps */}
       {isWindowBlurred && !isFullscreenBlocked && (
-        <div className="fixed inset-0 z-[9997] bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
-          <div className="max-w-sm w-full">
-            <div className="w-14 h-14 rounded-full bg-orange-500/10 border-2 border-orange-500/40 flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-7 h-7 text-orange-400" />
+        <div className="fixed inset-0 z-[9997] bg-slate-950/75 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+          <div className="max-w-md w-full bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl p-6 sm:p-8 shadow-2xl text-slate-900 dark:text-slate-100 space-y-4">
+            <div className="w-16 h-16 rounded-full bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-900/60 flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
             </div>
-            <h2 className="text-base font-bold text-white mb-2">Window Focus Lost</h2>
-            <p className="text-sm text-slate-400 leading-relaxed mb-5">
-              You switched away from the exam window. This has been recorded as a proctoring violation.
-            </p>
+            <div className="space-y-1.5">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Window Focus Lost</h2>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
+                You switched away from the exam window. This event has been recorded in your candidate proctoring audit log.
+              </p>
+            </div>
             <button
               onClick={() => setIsWindowBlurred(false)}
-              className="w-full py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 active:scale-95 text-white font-semibold text-sm transition-all duration-150"
+              className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-all cursor-pointer hover:shadow-md"
             >
               Click to Return to Exam
             </button>
@@ -779,21 +871,20 @@ export default function ExamSessionPage() {
         </div>
       )}
 
-      {/* 4a. Per-violation warning popup — centered modal with blurred backdrop */}
+      {/* 4a. Per-violation warning popup */}
       {violationWarning.open && (
-        <div className="fixed inset-0 z-[9998] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 rounded-2xl shadow-2xl shadow-rose-500/20 w-full max-w-sm overflow-hidden">
-            {/* Coloured top bar */}
-            <div className="h-1 bg-gradient-to-r from-rose-500 to-orange-500" />
-            <div className="p-5">
+        <div className="fixed inset-0 z-[9998] bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-6">
+          <div className="bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="h-1.5 bg-rose-500" />
+            <div className="p-6">
               {/* Icon + title */}
-              <div className="flex items-start gap-3 mb-4">
-                <div className="shrink-0 w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 flex items-center justify-center">
-                  <AlertTriangle className="w-5 h-5 text-rose-500" />
+              <div className="flex items-start gap-3.5 mb-5">
+                <div className="shrink-0 w-11 h-11 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white mb-0.5">
-                    Proctoring Violation
+                  <p className="text-sm font-bold text-slate-900 dark:text-white mb-0.5">
+                    Proctoring Infraction
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     {VIOLATION_LABELS[violationWarning.type] ?? violationWarning.type}
@@ -802,20 +893,20 @@ export default function ExamSessionPage() {
               </div>
 
               {/* Stats row */}
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900 rounded-xl p-3 text-center">
-                  <p className="text-[10px] uppercase font-medium text-rose-400 mb-0.5">Violations</p>
-                  <p className="text-xl font-bold text-rose-600 dark:text-rose-400 tabular-nums">{violationCount}</p>
+              <div className="grid grid-cols-2 gap-2.5 mb-5">
+                <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/60 rounded-xl p-3 text-center">
+                  <p className="text-[10px] uppercase font-bold text-rose-600 dark:text-rose-400 mb-0.5">Violations</p>
+                  <p className="text-2xl font-extrabold text-rose-700 dark:text-rose-300 tabular-nums">{violationCount}</p>
                 </div>
                 <div className={`border rounded-xl p-3 text-center ${
                   trustScore >= 70
-                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-100 dark:border-amber-900'
+                    ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200/80 dark:border-amber-900/60'
                     : trustScore >= 40
-                    ? 'bg-orange-50 dark:bg-orange-950/40 border-orange-100 dark:border-orange-900'
-                    : 'bg-rose-50 dark:bg-rose-950/40 border-rose-100 dark:border-rose-900'
+                    ? 'bg-orange-50 dark:bg-orange-950/40 border-orange-200/80 dark:border-orange-900/60'
+                    : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200/80 dark:border-rose-900/60'
                 }`}>
-                  <p className="text-[10px] uppercase font-medium text-slate-400 mb-0.5">Trust Score</p>
-                  <p className={`text-xl font-bold tabular-nums ${
+                  <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 mb-0.5">Trust Score</p>
+                  <p className={`text-2xl font-extrabold tabular-nums ${
                     trustScore >= 70 ? 'text-amber-600 dark:text-amber-400'
                     : trustScore >= 40 ? 'text-orange-600 dark:text-orange-400'
                     : 'text-rose-600 dark:text-rose-400'
@@ -823,19 +914,18 @@ export default function ExamSessionPage() {
                 </div>
               </div>
 
-              <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center mb-4">
-                Repeated violations will result in automatic exam termination.
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center mb-5">
+                Repeated infractions will result in immediate examination termination.
               </p>
 
-              {/* Bug #5 fix: OK cancels the auto-dismiss timer */}
               <button
                 onClick={() => {
                   clearTimeout(violationTimerRef.current);
                   setViolationWarning({ open: false, type: null });
                 }}
-                className="w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-semibold transition-all duration-150"
+                className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-md"
               >
-                OK, I Understand
+                I Acknowledge & Understand
               </button>
             </div>
           </div>
@@ -844,24 +934,26 @@ export default function ExamSessionPage() {
 
       {/* 4b. S4: Final warning modal — shown once when trust score ≤ 30 */}
       {finalWarningModal && (
-        <div className="fixed inset-0 z-[9998] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="bg-white dark:bg-slate-900 border border-orange-300 dark:border-orange-800 rounded-2xl shadow-2xl shadow-orange-500/20 w-full max-w-sm overflow-hidden">
-            <div className="h-1.5 bg-gradient-to-r from-orange-500 to-amber-400" />
-            <div className="p-5 text-center">
-              <div className="w-12 h-12 rounded-full bg-orange-50 dark:bg-orange-950/50 border-2 border-orange-200 dark:border-orange-800 flex items-center justify-center mx-auto mb-3">
-                <AlertTriangle className="w-6 h-6 text-orange-500" />
+        <div className="fixed inset-0 z-[9998] bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-6">
+          <div className="bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="h-1.5 bg-amber-500" />
+            <div className="p-6 text-center space-y-4">
+              <div className="w-14 h-14 rounded-full bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 flex items-center justify-center mx-auto">
+                <AlertTriangle className="w-7 h-7 text-amber-600 dark:text-amber-400" />
               </div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-1">⚠️ Final Warning</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
-                Your trust score has dropped to{' '}
-                <strong className="text-orange-500">{trustScore}/100</strong>.{' '}
-                One more major violation will automatically terminate your exam.
-              </p>
+              <div className="space-y-1">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">Critical Final Warning</h2>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Your candidate trust score has dropped to{' '}
+                  <strong className="text-amber-600 dark:text-amber-400 tabular-nums">{trustScore}/100</strong>.{' '}
+                  Any further violation will trigger automatic termination.
+                </p>
+              </div>
               <button
                 onClick={() => setFinalWarningModal(false)}
-                className="w-full py-2 rounded-xl bg-orange-500 hover:bg-orange-400 active:scale-95 text-white text-xs font-semibold transition-all duration-150"
+                className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all cursor-pointer shadow-xs hover:shadow-md"
               >
-                I Understand — Continue Exam
+                I Understand — Resume Assessment
               </button>
             </div>
           </div>
@@ -870,24 +962,26 @@ export default function ExamSessionPage() {
 
       {/* 4c. Trust-score-zero termination modal */}
       {trustZeroModal && (
-        <div className="fixed inset-0 z-[10000] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="bg-white dark:bg-slate-900 border border-rose-300 dark:border-rose-800 rounded-2xl shadow-2xl shadow-rose-500/20 w-full max-w-sm overflow-hidden">
-            <div className="h-1.5 bg-gradient-to-r from-rose-600 to-rose-400" />
-            <div className="p-6 text-center">
-              <div className="w-14 h-14 rounded-full bg-rose-100 dark:bg-rose-950/60 border-2 border-rose-300 dark:border-rose-800 flex items-center justify-center mx-auto mb-4">
-                <ShieldOff className="w-7 h-7 text-rose-500" />
+        <div className="fixed inset-0 z-[10000] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-6">
+          <div className="bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="h-1.5 bg-rose-600" />
+            <div className="p-6 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 flex items-center justify-center mx-auto">
+                <ShieldOff className="w-8 h-8 text-rose-600 dark:text-rose-400" />
               </div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-white mb-1">Exam Terminated</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
-                Your trust score has reached <strong className="text-rose-500">zero</strong> due to repeated proctoring violations.
-                The examination is being automatically submitted.
-              </p>
-              <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl p-3 mb-4">
-                <p className="text-[10px] uppercase font-medium text-rose-400 mb-1">Total Violations</p>
-                <p className="text-2xl font-bold text-rose-600 dark:text-rose-400 tabular-nums">{violationCount}</p>
+              <div className="space-y-1">
+                <h2 className="text-base font-bold text-slate-900 dark:text-white">Assessment Terminated</h2>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Your trust score reached <strong className="text-rose-600 dark:text-rose-400">zero</strong> due to persistent infractions.
+                  The test session is being finalized.
+                </p>
               </div>
-              <p className="text-xs text-slate-400">
-                Submitting in <span className="font-bold text-rose-500 tabular-nums">{trustZeroCountdown}s</span>…
+              <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl p-3.5">
+                <p className="text-[10px] uppercase font-bold text-rose-600 dark:text-rose-400 mb-1">Total Violations</p>
+                <p className="text-3xl font-extrabold text-rose-700 dark:text-rose-300 tabular-nums">{violationCount}</p>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Submitting answers in <span className="font-bold text-rose-600 dark:text-rose-400 tabular-nums">{trustZeroCountdown}s</span>…
               </p>
             </div>
           </div>

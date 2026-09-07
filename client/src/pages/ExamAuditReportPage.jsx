@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
+import BackButton from '../components/common/BackButton';
+import Breadcrumbs from '../components/common/Breadcrumbs';
 import api from '../services/api';
 import useAuthStore from '../store/useAuthStore';
 import {
@@ -17,6 +19,9 @@ const VIOLATION_LABELS = {
   NO_FACE: 'No Face Detected',
   MULTI_FACE: 'Multiple Faces',
   NOISE_SPIKE: 'Excessive Noise',
+  CELL_PHONE: 'Mobile Phone Detected',
+  PROHIBITED_BOOK: 'Study Material / Book',
+  PROHIBITED_OBJECT: 'Prohibited Device',
 };
 
 export default function ExamAuditReportPage() {
@@ -104,6 +109,11 @@ export default function ExamAuditReportPage() {
 
   const getBadgeStyle = (type) => {
     switch (type) {
+      case 'CELL_PHONE':
+      case 'PROHIBITED_OBJECT':
+        return 'bg-rose-500/15 text-rose-500 dark:text-rose-400 border-rose-500/40';
+      case 'PROHIBITED_BOOK':
+        return 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/40';
       case 'MULTI_FACE':
         return 'bg-rose-500/10 text-rose-500 dark:text-rose-400 border-rose-500/30';
       case 'NO_FACE':
@@ -122,87 +132,89 @@ export default function ExamAuditReportPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-
-        {/* ── Top Navigation Bar ────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => navigate(`/test/${examId}`)}
-            className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Return to Exam Overview</span>
-          </button>
-
-          <button
-            onClick={fetchData}
-            disabled={isLoading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>Refresh Report</span>
-          </button>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7">
+        {/* Navigation & Breadcrumbs */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <BackButton to={`/test/${examId}`} label="Return to Exam Overview" />
+          <Breadcrumbs
+            items={[
+              { label: 'Assessments', to: '/dashboard' },
+              { label: data?.exam?.title || 'Exam', to: `/test/${examId}` },
+              { label: 'Violation Console & Audit' }
+            ]}
+          />
         </div>
 
         {/* ── Header Banner & Quick Metrics ─────────────────────────────────── */}
-        <section className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-xs">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+        <section className="rounded-2xl bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] p-6 sm:p-7 shadow-xs">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+            <div className="space-y-1.5 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/60">
                   Creator Proctoring Suite
                 </span>
                 {data?.exam?.proctorSettings?.liveNotifications && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/30 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
-                    Live Alerts Enabled
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                    Live Alerts Active
                   </span>
                 )}
               </div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                 {data?.exam?.title || 'Examination Audit & Results'}
               </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Detailed infraction timestamps, photographic evidence snapshots, and student submission performance.
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                Review candidate biometric logs, webcam snapshots, trust scores, and submission records.
               </p>
             </div>
 
             {/* Quick Metrics */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-center">
-                <div className="text-[10px] uppercase text-slate-400 font-semibold">Total Attempts</div>
-                <div className="text-lg font-bold tabular-nums text-slate-900 dark:text-white">
-                  {data?.completionReport?.length || 0}
+            <div className="flex items-center gap-3">
+              <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
+                <div className="bg-slate-50 dark:bg-[#090d16]/70 p-3 rounded-xl border border-slate-200/80 dark:border-[#1f293d] text-center min-w-[84px]">
+                  <div className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Attempts</div>
+                  <div className="text-xl font-bold tabular-nums text-slate-900 dark:text-white mt-0.5">
+                    {data?.completionReport?.length || 0}
+                  </div>
+                </div>
+                <div className="bg-slate-50 dark:bg-[#090d16]/70 p-3 rounded-xl border border-slate-200/80 dark:border-[#1f293d] text-center min-w-[84px]">
+                  <div className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Violations</div>
+                  <div className="text-xl font-bold tabular-nums text-rose-500 mt-0.5">
+                    {data?.totalViolations || 0}
+                  </div>
+                </div>
+                <div className="bg-slate-50 dark:bg-[#090d16]/70 p-3 rounded-xl border border-slate-200/80 dark:border-[#1f293d] text-center min-w-[84px]">
+                  <div className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Avg Trust</div>
+                  <div className="text-xl font-bold tabular-nums text-emerald-500 mt-0.5">
+                    {data?.completionReport?.length > 0
+                      ? `${Math.round(
+                          data.completionReport.reduce((sum, r) => sum + r.trustScore, 0) /
+                            data.completionReport.length
+                        )}%`
+                      : '100%'}
+                  </div>
                 </div>
               </div>
-              <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-center">
-                <div className="text-[10px] uppercase text-slate-400 font-semibold">Violations</div>
-                <div className="text-lg font-bold tabular-nums text-rose-500">
-                  {data?.totalViolations || 0}
-                </div>
-              </div>
-              <div className="bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-center">
-                <div className="text-[10px] uppercase text-slate-400 font-semibold">Avg Trust</div>
-                <div className="text-lg font-bold tabular-nums text-emerald-500">
-                  {data?.completionReport?.length > 0
-                    ? `${Math.round(
-                        data.completionReport.reduce((sum, r) => sum + r.trustScore, 0) /
-                          data.completionReport.length
-                      )}%`
-                    : '100%'}
-                </div>
-              </div>
+
+              <button
+                onClick={fetchData}
+                disabled={isLoading}
+                title="Refresh audit data"
+                className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-slate-700 transition-colors cursor-pointer"
+              >
+                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              </button>
             </div>
           </div>
 
           {/* ── Table Switch Tabs ─────────────────────────────────────────── */}
-          <div className="flex items-center gap-2 mt-6 pt-5 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2 mt-6 pt-5 border-t border-slate-100 dark:border-[#1f293d]">
             <button
               onClick={() => setActiveTab('violations')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'violations'
                   ? 'bg-blue-600 text-white shadow-xs'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -214,7 +226,7 @@ export default function ExamAuditReportPage() {
 
             <button
               onClick={() => setActiveTab('completion')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                 activeTab === 'completion'
                   ? 'bg-blue-600 text-white shadow-xs'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -255,30 +267,30 @@ export default function ExamAuditReportPage() {
                 TAB 1: VIOLATION LOGS TABLE
                ═════════════════════════════════════════════════════════════════════ */}
             {activeTab === 'violations' && (
-              <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden space-y-4 p-5">
+              <section className="bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl shadow-xs overflow-hidden space-y-5 p-6">
                 {/* Filters */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-                    {['ALL', 'NO_FACE', 'MULTI_FACE', 'NOISE_SPIKE', 'TAB_SWITCH', 'FULLSCREEN_EXIT'].map((type) => (
+                  <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                    {['ALL', 'CELL_PHONE', 'PROHIBITED_BOOK', 'NO_FACE', 'MULTI_FACE', 'NOISE_SPIKE', 'TAB_SWITCH', 'FULLSCREEN_EXIT'].map((type) => (
                       <button
                         key={type}
                         onClick={() => setViolationTypeFilter(type)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                           violationTypeFilter === type
-                            ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200/60 dark:border-slate-700/60'
                         }`}
                       >
                         {type === 'ALL' ? 'All Types' : VIOLATION_LABELS[type] || type}
                       </button>
                     ))}
 
-                    <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium cursor-pointer ml-1 select-none">
+                    <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium cursor-pointer ml-1 select-none border border-slate-200/60 dark:border-slate-700/60">
                       <input
                         type="checkbox"
                         checked={onlyWithImages}
                         onChange={(e) => setOnlyWithImages(e.target.checked)}
-                        className="rounded border-slate-300 dark:border-slate-700 text-blue-600"
+                        className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
                       />
                       <span>Only with Images</span>
                     </label>
@@ -291,7 +303,7 @@ export default function ExamAuditReportPage() {
                       value={violationSearch}
                       onChange={(e) => setViolationSearch(e.target.value)}
                       placeholder="Search candidate..."
-                      className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                      className="w-full pl-8 pr-3 py-2 bg-slate-50 dark:bg-[#090d16] border border-slate-200/90 dark:border-[#1f293d] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
                 </div>
@@ -300,13 +312,13 @@ export default function ExamAuditReportPage() {
                 {filteredViolations.length === 0 ? (
                   <div className="py-16 text-center text-slate-400 dark:text-slate-500 space-y-2">
                     <ShieldAlert className="w-8 h-8 mx-auto opacity-40 text-emerald-500" />
-                    <p className="text-xs">No violation logs match the active filters.</p>
+                    <p className="text-xs font-medium">No violation logs match the active filters.</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                  <div className="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-[#1f293d]">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className="bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        <tr className="bg-slate-50 dark:bg-[#090d16]/70 border-b border-slate-200/80 dark:border-[#1f293d] text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                           <th className="py-3 px-4">Timestamp</th>
                           <th className="py-3 px-4">User</th>
                           <th className="py-3 px-4">Violation Type</th>
@@ -314,14 +326,14 @@ export default function ExamAuditReportPage() {
                           <th className="py-3 px-4 text-center">Image Evidence</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                      <tbody className="divide-y divide-slate-100 dark:divide-[#1f293d]">
                         {filteredViolations.map((v, idx) => (
                           <tr
                             key={idx}
                             className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
                           >
                             {/* 1. Timestamp */}
-                            <td className="py-3 px-4 whitespace-nowrap font-mono text-slate-600 dark:text-slate-300">
+                            <td className="py-3 px-4 whitespace-nowrap font-mono tabular-nums text-slate-600 dark:text-slate-300">
                               {v.timestamp ? new Date(v.timestamp).toLocaleString() : '—'}
                             </td>
 
@@ -349,7 +361,7 @@ export default function ExamAuditReportPage() {
 
                             {/* 4. Number of Violations */}
                             <td className="py-3 px-4 whitespace-nowrap text-center">
-                              <span className="inline-block px-2 py-0.5 rounded-full font-bold tabular-nums text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20">
+                              <span className="inline-block px-2.5 py-0.5 rounded-full font-bold tabular-nums text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20">
                                 {v.noOfViolations ?? 1}
                               </span>
                             </td>
@@ -359,9 +371,9 @@ export default function ExamAuditReportPage() {
                               {v.imageUrl ? (
                                 <button
                                   onClick={() => setSelectedSnapshot(v)}
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900 text-white dark:bg-slate-800 dark:hover:bg-slate-700 hover:bg-slate-800 text-[11px] font-medium transition-colors shadow-xs cursor-pointer"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-semibold transition-all shadow-xs cursor-pointer hover:shadow-md"
                                 >
-                                  <Eye className="w-3.5 h-3.5 text-blue-400" />
+                                  <Eye className="w-3.5 h-3.5" />
                                   <span>View Snapshot</span>
                                 </button>
                               ) : (
@@ -381,7 +393,7 @@ export default function ExamAuditReportPage() {
                 TAB 2: COMPLETION REPORT TABLE
                ═════════════════════════════════════════════════════════════════════ */}
             {activeTab === 'completion' && (
-              <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden space-y-4 p-5">
+              <section className="bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl shadow-xs overflow-hidden space-y-5 p-6">
                 {/* Filters & Sorting */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -389,7 +401,7 @@ export default function ExamAuditReportPage() {
                     <select
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
-                      className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 focus:outline-none"
+                      className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#090d16] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#1f293d] focus:outline-none cursor-pointer"
                     >
                       <option value="ALL">All Statuses</option>
                       <option value="SUBMITTED">Submitted</option>
@@ -401,7 +413,7 @@ export default function ExamAuditReportPage() {
                     <select
                       value={trustFilter}
                       onChange={(e) => setTrustFilter(e.target.value)}
-                      className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 focus:outline-none"
+                      className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#090d16] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#1f293d] focus:outline-none cursor-pointer"
                     >
                       <option value="ALL">All Trust Scores</option>
                       <option value="LOW">Low Trust (&lt; 70%)</option>
@@ -412,7 +424,7 @@ export default function ExamAuditReportPage() {
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 focus:outline-none"
+                      className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#090d16] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#1f293d] focus:outline-none cursor-pointer"
                     >
                       <option value="RECENT">Sort: Most Recent</option>
                       <option value="SCORE_DESC">Sort: Highest Score</option>
@@ -428,7 +440,7 @@ export default function ExamAuditReportPage() {
                       value={completionSearch}
                       onChange={(e) => setCompletionSearch(e.target.value)}
                       placeholder="Search candidate..."
-                      className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                      className="w-full pl-8 pr-3 py-2 bg-slate-50 dark:bg-[#090d16] border border-slate-200/90 dark:border-[#1f293d] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                     />
                   </div>
                 </div>
@@ -437,13 +449,13 @@ export default function ExamAuditReportPage() {
                 {filteredCompletion.length === 0 ? (
                   <div className="py-16 text-center text-slate-400 dark:text-slate-500 space-y-2">
                     <FileText className="w-8 h-8 mx-auto opacity-40 text-blue-500" />
-                    <p className="text-xs">No candidate reports match the active filters.</p>
+                    <p className="text-xs font-medium">No candidate reports match the active filters.</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                  <div className="overflow-x-auto rounded-xl border border-slate-200/80 dark:border-[#1f293d]">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className="bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        <tr className="bg-slate-50 dark:bg-[#090d16]/70 border-b border-slate-200/80 dark:border-[#1f293d] text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                           <th className="py-3 px-4">User</th>
                           <th className="py-3 px-4 text-center">Status</th>
                           <th className="py-3 px-4 text-center">Score</th>
@@ -454,7 +466,7 @@ export default function ExamAuditReportPage() {
                           <th className="py-3 px-4 text-right">Submitted At</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                      <tbody className="divide-y divide-slate-100 dark:divide-[#1f293d]">
                         {filteredCompletion.map((item, idx) => (
                           <tr
                             key={idx}
@@ -546,27 +558,27 @@ export default function ExamAuditReportPage() {
         {/* ── High-Resolution Snapshot Modal ─────────────────────────────────── */}
         {selectedSnapshot && (
           <div
-            className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
             onClick={() => setSelectedSnapshot(null)}
           >
             <div
-              className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl p-6 text-slate-100 space-y-4"
+              className="max-w-2xl w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-xl p-6 text-slate-900 dark:text-slate-100 space-y-4"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header with Close Button */}
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${getBadgeStyle(selectedSnapshot.type)}`}>
                     {VIOLATION_LABELS[selectedSnapshot.type] || selectedSnapshot.type}
                   </span>
-                  <span className="text-xs text-slate-400">
-                    Candidate: <strong className="text-white">{selectedSnapshot.userName}</strong>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    Candidate: <strong className="text-slate-900 dark:text-white">{selectedSnapshot.userName}</strong>
                   </span>
                 </div>
 
                 <button
                   onClick={() => setSelectedSnapshot(null)}
-                  className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                  className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
                   title="Close Modal"
                 >
                   <X className="w-5 h-5" />
@@ -574,7 +586,7 @@ export default function ExamAuditReportPage() {
               </div>
 
               {/* Image Container */}
-              <div className="rounded-2xl overflow-hidden bg-black border border-slate-800 max-h-[60vh] flex items-center justify-center">
+              <div className="rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 max-h-[60vh] flex items-center justify-center">
                 <img
                   src={selectedSnapshot.imageUrl}
                   alt="Candidate violation evidence"
@@ -585,11 +597,11 @@ export default function ExamAuditReportPage() {
               {/* Modal Footer Metadata */}
               <div className="flex items-center justify-between text-xs pt-1">
                 <div className="space-y-0.5">
-                  <div className="text-slate-400 font-mono text-[11px]">
+                  <div className="text-slate-500 dark:text-slate-400 font-mono text-[11px]">
                     Timestamp: {selectedSnapshot.timestamp ? new Date(selectedSnapshot.timestamp).toLocaleString() : '—'}
                   </div>
-                  <div className="text-[11px] text-slate-500">
-                    Total violations by user: <strong className="text-rose-400">{selectedSnapshot.noOfViolations}</strong>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Total violations by user: <strong className="text-rose-600 dark:text-rose-400">{selectedSnapshot.noOfViolations}</strong>
                   </div>
                 </div>
 
@@ -598,7 +610,7 @@ export default function ExamAuditReportPage() {
                     href={selectedSnapshot.imageUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs transition-colors shadow-xs"
                   >
                     <span>Full Original</span>
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -606,7 +618,7 @@ export default function ExamAuditReportPage() {
 
                   <button
                     onClick={() => setSelectedSnapshot(null)}
-                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium cursor-pointer transition-colors border border-slate-200 dark:border-slate-700"
                   >
                     Close
                   </button>

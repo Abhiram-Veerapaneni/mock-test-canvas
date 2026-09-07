@@ -5,6 +5,7 @@ import api from '../../services/api';
 import {
   Camera, CameraOff, Volume2, VolumeX, Eye, EyeOff,
   Users, AlertTriangle, Loader2, Mic, MicOff,
+  Smartphone, BookOpen
 } from 'lucide-react';
 
 /**
@@ -39,12 +40,28 @@ export default function CameraMonitor({
   const UPLOAD_COOLDOWN_MS = 10_000;
   const [audioStream, setAudioStream] = useState(externalStream || null);
   const internalStreamRef = useRef(null);
+  const isMountedRef = useRef(true);
+  const activeRef = useRef(active);
+  const hadExternalStreamRef = useRef(Boolean(externalStream));
+
+  useEffect(() => {
+    activeRef.current = active;
+  }, [active]);
 
   const faceCheckEnabled = proctorSettings?.faceCheck !== false;
   const audioCheckEnabled = proctorSettings?.audioCheck !== false;
 
   // ── Setup MediaStream (from externalStream or requested locally) ─────────────
   const setupStream = useCallback((mediaStream, isInternal = false) => {
+    if (!isMountedRef.current) {
+      if (isInternal) {
+        mediaStream.getTracks().forEach((t) => {
+          try { t.stop(); } catch (e) {}
+        });
+      }
+      return;
+    }
+
     if (isInternal) {
       internalStreamRef.current = mediaStream;
     }
@@ -53,17 +70,27 @@ export default function CameraMonitor({
     setPermissionStatus('granted');
 
     if (videoRef.current && faceCheckEnabled) {
-      if (videoRef.current.srcObject !== mediaStream) {
-        videoRef.current.srcObject = mediaStream;
+      const video = videoRef.current;
+      video.muted = true;
+      video.playsInline = true;
+      if (video.srcObject !== mediaStream) {
+        video.srcObject = mediaStream;
       }
-      videoRef.current.play().catch(() => {});
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn('[CameraMonitor] play error:', err?.message);
+        });
+      }
     }
 
     // Monitor for track disconnections
     mediaStream.getTracks().forEach((track) => {
       track.onended = () => {
         console.warn(`[CameraMonitor] ${track.kind} track ended`);
-        setPermissionStatus('lost');
+        if (activeRef.current && isMountedRef.current) {
+          setPermissionStatus('lost');
+        }
       };
       track.onmute = () => {
         console.warn(`[CameraMonitor] ${track.kind} track muted`);
@@ -72,6 +99,11 @@ export default function CameraMonitor({
   }, [faceCheckEnabled]);
 
   const requestMedia = useCallback(async () => {
+    // If externalStream was provided, parent controls stream lifecycle — never run rogue fallback
+    if (hadExternalStreamRef.current || !activeRef.current || !isMountedRef.current) {
+      return;
+    }
+
     if (!navigator.mediaDevices?.getUserMedia) {
       setPermissionStatus('error');
       return;
@@ -82,9 +114,19 @@ export default function CameraMonitor({
         video: faceCheckEnabled ? { facingMode: 'user', width: 320, height: 240 } : false,
         audio: audioCheckEnabled,
       });
+
+      // If unmounted or deactivated while awaiting getUserMedia, release hardware tracks immediately!
+      if (!isMountedRef.current || !activeRef.current) {
+        mediaStream.getTracks().forEach((t) => {
+          try { t.stop(); } catch (e) {}
+        });
+        return;
+      }
+
       setupStream(mediaStream, true);
       console.log('[CameraMonitor] Media access granted via fallback request');
     } catch (err) {
+      if (!isMountedRef.current) return;
       if (err.name === 'NotAllowedError') {
         setPermissionStatus('denied');
         console.warn('[CameraMonitor] Camera/mic permission denied by user');
@@ -101,8 +143,9 @@ export default function CameraMonitor({
   // Handle externalStream changes or fallback request
   useEffect(() => {
     if (externalStream) {
+      hadExternalStreamRef.current = true;
       setupStream(externalStream, false);
-    } else if (active) {
+    } else if (active && !hadExternalStreamRef.current) {
       requestMedia();
     }
   }, [externalStream, active, setupStream, requestMedia]);
@@ -112,29 +155,44 @@ export default function CameraMonitor({
     const video = videoRef.current;
     if (!video || !stream || !faceCheckEnabled) return;
 
+    video.muted = true;
+    video.playsInline = true;
+
     if (video.srcObject !== stream) {
       video.srcObject = stream;
     }
 
     const tryPlay = () => {
-      video.play().catch((err) => {
-        console.warn('[CameraMonitor] video.play() note:', err?.message);
-      });
+      if (videoRef.current) {
+        videoRef.current.muted = true;
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn('[CameraMonitor] video.play() note:', err?.message);
+          });
+        }
+      }
     };
 
     video.addEventListener('loadedmetadata', tryPlay);
+    video.addEventListener('canplay', tryPlay);
     tryPlay();
 
     return () => {
       video.removeEventListener('loadedmetadata', tryPlay);
+      video.removeEventListener('canplay', tryPlay);
     };
   }, [stream, faceCheckEnabled]);
 
-  // Clean up only streams that CameraMonitor created internally (never externalStream)
+  // Clean up ONLY internal streams that CameraMonitor created itself (NEVER parent's externalStream)
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
+      isMountedRef.current = false;
       if (internalStreamRef.current) {
-        internalStreamRef.current.getTracks().forEach((t) => t.stop());
+        internalStreamRef.current.getTracks().forEach((t) => {
+          try { t.stop(); } catch (e) {}
+        });
         internalStreamRef.current = null;
       }
       if (videoRef.current) {
@@ -143,10 +201,18 @@ export default function CameraMonitor({
     };
   }, []);
 
+  // Clean up internal streams if active toggles to false
   useEffect(() => {
-    if (!active && internalStreamRef.current) {
-      internalStreamRef.current.getTracks().forEach((t) => t.stop());
-      internalStreamRef.current = null;
+    if (!active) {
+      if (internalStreamRef.current) {
+        internalStreamRef.current.getTracks().forEach((t) => {
+          try { t.stop(); } catch (e) {}
+        });
+        internalStreamRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
     }
   }, [active]);
 
@@ -209,10 +275,11 @@ export default function CameraMonitor({
     }
   }, [onViolation, attemptId, faceCheckEnabled, captureSnapshot]);
 
-  // ── Vision proctoring (face detection) ────────────────────────────────────
-  const { alertState, isModelLoaded, detectedFaces } = useVisionProctor({
+  // ── Vision proctoring (face & object detection) ───────────────────────────
+  const { alertState, objectAlert, isModelLoaded, detectedFaces } = useVisionProctor({
     videoRef,
     active: active && faceCheckEnabled && permissionStatus === 'granted',
+    objectCheckEnabled: proctorSettings?.objectCheck !== false,
     onViolation: handleViolationWithSnapshot,
   });
 
@@ -228,6 +295,8 @@ export default function CameraMonitor({
 
   // ── Alert indicator color ─────────────────────────────────────────────────
   const getAlertColor = () => {
+    if (objectAlert === 'CELL_PHONE' || objectAlert === 'PROHIBITED_OBJECT') return '#ef4444'; // red
+    if (objectAlert === 'PROHIBITED_BOOK') return '#f97316'; // orange
     if (alertState === 'MULTI_FACE') return '#ef4444'; // red
     if (alertState === 'NO_FACE') return '#f59e0b';    // amber
     if (isNoiseAlert) return '#f97316';                 // orange
@@ -235,6 +304,9 @@ export default function CameraMonitor({
   };
 
   const getAlertIcon = () => {
+    if (objectAlert === 'CELL_PHONE') return <Smartphone size={12} />;
+    if (objectAlert === 'PROHIBITED_BOOK') return <BookOpen size={12} />;
+    if (objectAlert === 'PROHIBITED_OBJECT') return <AlertTriangle size={12} />;
     if (alertState === 'MULTI_FACE') return <Users size={12} />;
     if (alertState === 'NO_FACE') return <EyeOff size={12} />;
     if (isNoiseAlert) return <Volume2 size={12} />;
@@ -242,6 +314,9 @@ export default function CameraMonitor({
   };
 
   const getAlertText = () => {
+    if (objectAlert === 'CELL_PHONE') return 'Phone detected!';
+    if (objectAlert === 'PROHIBITED_BOOK') return 'Book detected!';
+    if (objectAlert === 'PROHIBITED_OBJECT') return 'Prohibited device!';
     if (alertState === 'MULTI_FACE') return 'Multiple faces';
     if (alertState === 'NO_FACE') return 'No face detected';
     if (isNoiseAlert) return 'Noise detected';
@@ -273,10 +348,10 @@ export default function CameraMonitor({
             height: '105px',
             borderRadius: '10px',
             overflow: 'hidden',
-            border: `2px solid ${getAlertColor()}`,
-            boxShadow: `0 0 12px ${getAlertColor()}40, 0 4px 20px rgba(0,0,0,0.4)`,
+            border: `1.5px solid ${getAlertColor()}`,
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
             background: '#0a0a0a',
-            transition: 'border-color 0.3s, box-shadow 0.3s',
+            transition: 'border-color 0.2s',
             pointerEvents: 'auto',
           }}
         >
@@ -345,26 +420,23 @@ export default function CameraMonitor({
           borderRadius: '20px',
           background: 'rgba(0, 0, 0, 0.75)',
           backdropFilter: 'blur(8px)',
-          border: `1px solid ${getAlertColor()}60`,
+          border: '1px solid rgba(255, 255, 255, 0.15)',
           color: getAlertColor(),
           fontSize: '11px',
           fontWeight: 600,
           fontFamily: "'Inter', system-ui, sans-serif",
           letterSpacing: '0.02em',
-          transition: 'all 0.3s',
+          transition: 'color 0.2s',
           pointerEvents: 'auto',
         }}
       >
-        {/* Pulsing dot */}
+        {/* Status dot */}
         <span
           style={{
             width: '6px',
             height: '6px',
             borderRadius: '50%',
             background: getAlertColor(),
-            animation: (alertState || isNoiseAlert)
-              ? 'pulse-dot 1s ease-in-out infinite'
-              : 'none',
             flexShrink: 0,
           }}
         />
@@ -385,7 +457,7 @@ export default function CameraMonitor({
               <div style={{
                 height: '100%',
                 width: `${Math.min(100, Math.max(6, currentRMS))}%`,
-                background: isNoiseAlert ? '#ef4444' : currentRMS > 40 ? '#f59e0b' : '#22c55e',
+                background: isNoiseAlert ? '#ef4444' : currentRMS > 40 ? '#f59e0b' : '#3b82f6',
                 borderRadius: '2px',
                 transition: 'width 0.15s ease-out',
               }} />
@@ -394,12 +466,8 @@ export default function CameraMonitor({
         )}
       </div>
 
-      {/* CSS animation for pulsing dot */}
+      {/* CSS animation */}
       <style>{`
-        @keyframes pulse-dot {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.4; transform: scale(1.5); }
-        }
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }

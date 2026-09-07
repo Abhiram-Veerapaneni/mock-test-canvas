@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, ShieldAlert, X, Eye, EyeOff, Users, Volume2 } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, X, Eye, EyeOff, Users, Volume2, Smartphone, BookOpen } from 'lucide-react';
 
 /**
  * StrikeModal
@@ -17,6 +17,30 @@ import { AlertTriangle, ShieldAlert, X, Eye, EyeOff, Users, Volume2 } from 'luci
  */
 
 const VIOLATION_INFO = {
+  CELL_PHONE: {
+    icon: Smartphone,
+    label: 'Cell Phone / Mobile Device Detected',
+    description: 'A mobile phone or handheld device was detected in your camera view. Using phones or electronic devices is strictly prohibited during the test.',
+    color: '#ef4444',
+    bgColor: 'rgba(239, 68, 68, 0.08)',
+    borderColor: 'rgba(239, 68, 68, 0.25)',
+  },
+  PROHIBITED_BOOK: {
+    icon: BookOpen,
+    label: 'Study Material / Book Detected',
+    description: 'A book, textbook, or printed reference material was detected in camera view. Unauthorized study aids are prohibited.',
+    color: '#f97316',
+    bgColor: 'rgba(249, 115, 22, 0.08)',
+    borderColor: 'rgba(249, 115, 22, 0.25)',
+  },
+  PROHIBITED_OBJECT: {
+    icon: AlertTriangle,
+    label: 'Prohibited Device Detected',
+    description: 'An unauthorized electronic device or secondary display was detected in your workspace.',
+    color: '#ef4444',
+    bgColor: 'rgba(239, 68, 68, 0.08)',
+    borderColor: 'rgba(239, 68, 68, 0.25)',
+  },
   NO_FACE: {
     icon: EyeOff,
     label: 'No Face Detected',
@@ -107,8 +131,8 @@ export default function StrikeModal({ type, strikeCount, trustScore, maxWarnings
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
-        background: 'rgba(2, 6, 23, 0.7)',
-        backdropFilter: 'blur(6px)',
+        background: 'rgba(2, 6, 23, 0.75)',
+        backdropFilter: 'blur(8px)',
         animation: 'strikeModalFadeIn 0.2s ease-out',
       }}
       onClick={onClose}
@@ -116,12 +140,12 @@ export default function StrikeModal({ type, strikeCount, trustScore, maxWarnings
       <div
         style={{
           width: '100%',
-          maxWidth: '380px',
-          background: '#0f172a',
-          border: `1px solid ${info.borderColor}`,
-          borderRadius: '16px',
+          maxWidth: '400px',
+          background: '#111827',
+          border: '1px solid #1f293d',
+          borderRadius: '20px',
           overflow: 'hidden',
-          boxShadow: `0 0 40px ${info.color}15, 0 8px 32px rgba(0,0,0,0.5)`,
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
           animation: 'strikeModalSlideUp 0.25s ease-out',
         }}
         onClick={(e) => e.stopPropagation()}
@@ -129,7 +153,7 @@ export default function StrikeModal({ type, strikeCount, trustScore, maxWarnings
         {/* Top accent bar */}
         <div style={{
           height: '3px',
-          background: `linear-gradient(to right, ${info.color}, ${info.color}80)`,
+          background: info.color,
         }} />
 
         <div style={{ padding: '24px' }}>
@@ -259,7 +283,7 @@ export default function StrikeModal({ type, strikeCount, trustScore, maxWarnings
             width: '100%',
             height: '6px',
             borderRadius: '3px',
-            background: 'rgba(148, 163, 184, 0.1)',
+            background: 'rgba(148, 163, 184, 0.15)',
             overflow: 'hidden',
             marginBottom: '16px',
           }}>
@@ -267,8 +291,8 @@ export default function StrikeModal({ type, strikeCount, trustScore, maxWarnings
               height: '100%',
               width: `${trustScore}%`,
               borderRadius: '3px',
-              background: `linear-gradient(to right, ${getTrustColor()}, ${getTrustColor()}cc)`,
-              transition: 'width 0.5s ease-out, background 0.3s',
+              background: getTrustColor(),
+              transition: 'width 0.5s ease-out',
             }} />
           </div>
 
@@ -276,7 +300,7 @@ export default function StrikeModal({ type, strikeCount, trustScore, maxWarnings
           <p style={{
             margin: '0 0 16px',
             fontSize: '11px',
-            color: '#64748b',
+            color: '#94a3b8',
             textAlign: 'center',
             lineHeight: 1.5,
             fontFamily: "'Inter', system-ui, sans-serif",
@@ -292,17 +316,16 @@ export default function StrikeModal({ type, strikeCount, trustScore, maxWarnings
               padding: '10px',
               borderRadius: '10px',
               border: 'none',
-              background: `linear-gradient(135deg, ${info.color}, ${info.color}cc)`,
+              background: info.color,
               color: '#ffffff',
               fontSize: '13px',
-              fontWeight: 700,
+              fontWeight: 600,
               cursor: 'pointer',
               fontFamily: "'Inter', system-ui, sans-serif",
-              transition: 'transform 0.1s, opacity 0.2s',
+              transition: 'opacity 0.15s ease',
             }}
-            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.97)'}
-            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
           >
             I Understand
           </button>
