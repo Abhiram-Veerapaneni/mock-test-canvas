@@ -14,11 +14,11 @@ import multer from 'multer';
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-  if (allowed.includes(file.mimetype)) {
+  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
+  if (allowed.includes(file.mimetype) || file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new Error(`Unsupported file type: ${file.mimetype}. Only JPEG, PNG, and WebP are accepted.`), false);
+    cb(new Error(`Unsupported file type: ${file.mimetype}. Only image files are accepted.`), false);
   }
 };
 
@@ -26,7 +26,7 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5 MB
+    fileSize: 10 * 1024 * 1024, // 10 MB
   },
 });
 
@@ -35,5 +35,11 @@ const upload = multer({
  * Expects the field name 'snapshot' in the multipart form.
  */
 export const uploadSnapshot = upload.single('snapshot');
+
+/**
+ * Middleware for single question/option image upload.
+ * Expects the field name 'image' in the multipart form.
+ */
+export const uploadImage = upload.single('image');
 
 export default upload;

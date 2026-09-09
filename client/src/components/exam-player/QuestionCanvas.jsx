@@ -70,6 +70,11 @@ export default function QuestionCanvas() {
         </div>
 
         <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+          {currentQ.isEdited && (
+            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-300 dark:border-amber-800">
+              Edited
+            </span>
+          )}
           <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#090d16] px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-[#1f293d] text-[11px] font-medium text-slate-700 dark:text-slate-300">
             <Tag className="w-3 h-3 text-slate-400" />
             <span>{currentQ.subject}</span>
@@ -80,8 +85,17 @@ export default function QuestionCanvas() {
 
       {/* Main Question Statement */}
       <div className="p-6 flex-1 space-y-6 max-w-4xl w-full mx-auto">
-        <div className="p-6 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] text-slate-900 dark:text-slate-100 text-sm sm:text-base leading-relaxed shadow-xs">
-          <MathRenderer text={currentQ.questionText} />
+        <div className="p-6 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] text-slate-900 dark:text-slate-100 text-sm sm:text-base leading-relaxed shadow-xs space-y-4">
+          {currentQ.questionText && <MathRenderer text={currentQ.questionText} />}
+          {currentQ.imageAttachment && (
+            <div className="pt-2">
+              <img
+                src={currentQ.imageAttachment}
+                alt={`Question ${currentIndex + 1} illustration`}
+                className="max-h-72 max-w-full rounded-xl border border-slate-200 dark:border-slate-800 object-contain bg-white/5"
+              />
+            </div>
+          )}
         </div>
 
         {/* Options / Input Container */}
@@ -93,8 +107,11 @@ export default function QuestionCanvas() {
           {/* MCQ Option Tiles */}
           {currentQ.questionType === 'MCQ' && (
             <div className="grid grid-cols-1 gap-3">
-              {currentQ.options?.map((optionText, optIdx) => {
+              {currentQ.options?.map((optionItem, optIdx) => {
                 const isSelected = currentAnswers.includes(optIdx);
+                const optText = typeof optionItem === 'object' && optionItem !== null ? optionItem.text : optionItem;
+                const optImage = typeof optionItem === 'object' && optionItem !== null ? optionItem.image : '';
+
                 return (
                   <button
                     key={optIdx}
@@ -115,8 +132,15 @@ export default function QuestionCanvas() {
                     >
                       {optionLabels[optIdx] || optIdx + 1}
                     </div>
-                    <div className="flex-1 pt-1 text-slate-800 dark:text-slate-200 leading-relaxed">
-                      <MathRenderer text={optionText} />
+                    <div className="flex-1 pt-1 text-slate-800 dark:text-slate-200 leading-relaxed space-y-2">
+                      {optText && <MathRenderer text={optText} />}
+                      {optImage && (
+                        <img
+                          src={optImage}
+                          alt={`Option ${optionLabels[optIdx]} illustration`}
+                          className="max-h-28 max-w-xs rounded-lg border border-slate-200 dark:border-slate-700 object-contain bg-white"
+                        />
+                      )}
                     </div>
                   </button>
                 );
@@ -127,8 +151,11 @@ export default function QuestionCanvas() {
           {/* MSQ Option Tiles */}
           {currentQ.questionType === 'MSQ' && (
             <div className="grid grid-cols-1 gap-3">
-              {currentQ.options?.map((optionText, optIdx) => {
+              {currentQ.options?.map((optionItem, optIdx) => {
                 const isSelected = currentAnswers.includes(optIdx);
+                const optText = typeof optionItem === 'object' && optionItem !== null ? optionItem.text : optionItem;
+                const optImage = typeof optionItem === 'object' && optionItem !== null ? optionItem.image : '';
+
                 return (
                   <button
                     key={optIdx}
@@ -149,8 +176,15 @@ export default function QuestionCanvas() {
                     >
                       {isSelected ? <Check className="w-4 h-4" /> : optionLabels[optIdx] || optIdx + 1}
                     </div>
-                    <div className="flex-1 pt-1 text-slate-800 dark:text-slate-200 leading-relaxed">
-                      <MathRenderer text={optionText} />
+                    <div className="flex-1 pt-1 text-slate-800 dark:text-slate-200 leading-relaxed space-y-2">
+                      {optText && <MathRenderer text={optText} />}
+                      {optImage && (
+                        <img
+                          src={optImage}
+                          alt={`Option ${optionLabels[optIdx]} illustration`}
+                          className="max-h-28 max-w-xs rounded-lg border border-slate-200 dark:border-slate-700 object-contain bg-white"
+                        />
+                      )}
                     </div>
                   </button>
                 );
