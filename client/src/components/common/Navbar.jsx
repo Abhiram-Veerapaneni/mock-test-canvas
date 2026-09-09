@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import ThemeToggle from './ThemeToggle';
 import NotificationBell from './NotificationBell';
-import { LayoutDashboard, PlusCircle, Bell, LogOut, User as UserIcon, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, LogOut, User as UserIcon, ShieldCheck } from 'lucide-react';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -54,17 +54,6 @@ export default function Navbar() {
             >
               <PlusCircle className="w-3.5 h-3.5" />
               <span>Authoring Studio</span>
-            </Link>
-            <Link
-              to="/notifications"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                location.pathname === '/notifications'
-                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200/80 dark:border-slate-700/80 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-              }`}
-            >
-              <Bell className="w-3.5 h-3.5" />
-              <span>Notifications</span>
             </Link>
           </nav>
         )}

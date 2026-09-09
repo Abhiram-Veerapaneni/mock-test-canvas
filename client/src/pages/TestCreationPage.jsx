@@ -4,6 +4,7 @@ import Navbar from '../components/common/Navbar';
 import BackButton from '../components/common/BackButton';
 import Breadcrumbs from '../components/common/Breadcrumbs';
 import ManualQuestionForm from '../components/test-builder/ManualQuestionForm';
+import IngestionReviewModal from '../components/test-builder/IngestionReviewModal';
 import MathRenderer from '../components/common/MathRenderer';
 import api from '../services/api';
 import {
@@ -16,7 +17,10 @@ import {
   Plus,
   Sparkles,
   Sliders,
-  HelpCircle
+  HelpCircle,
+  UploadCloud,
+  FileUp,
+  FileText
 } from 'lucide-react';
 
 export default function TestCreationPage() {
@@ -43,6 +47,67 @@ export default function TestCreationPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  // AI Ingestion pipeline state
+  const [isIngesting, setIsIngesting] = useState(false);
+  const [ingestionStep, setIngestionStep] = useState('');
+  const [ingestionError, setIngestionError] = useState('');
+  const [ingestionModalOpen, setIngestionModalOpen] = useState(false);
+  const [ingestedQuestions, setIngestedQuestions] = useState([]);
+  const [uploadedFileName, setUploadedFileName] = useState('');
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = React.useRef(null);
+
+  const handleFileUpload = async (file) => {
+    if (!file) return;
+    setIsIngesting(true);
+    setIngestionError('');
+    setIngestionStep('Uploading file to AI pipeline...');
+
+    const formData = new FormData();
+    formData.append('document', file);
+
+    try {
+      setIngestionStep('Gemini AI is parsing questions & LaTeX formulas...');
+      const res = await api.post('/ai/ingest', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 90000,
+      });
+
+      if (res.data?.success && res.data?.questions?.length > 0) {
+        setIngestedQuestions(res.data.questions);
+        setUploadedFileName(file.name);
+        setIngestionModalOpen(true);
+      } else {
+        throw new Error(res.data?.message || 'No questions could be extracted from document.');
+      }
+    } catch (err) {
+      console.error('Ingestion error:', err);
+      setIngestionError(
+        err.response?.data?.message || err.message || 'Failed to ingest document.'
+      );
+    } finally {
+      setIsIngesting(false);
+      setIngestionStep('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleFileDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleConfirmIngestedQuestions = (approvedQuestions) => {
+    setQuestions((prev) => [...prev, ...approvedQuestions]);
+    setIngestionModalOpen(false);
+    setIngestedQuestions([]);
+    setSuccessMsg(`Successfully imported ${approvedQuestions.length} questions from AI document extraction!`);
+  };
 
   const handleAddQuestion = (newQuestion) => {
     setQuestions([...questions, newQuestion]);
@@ -362,6 +427,101 @@ export default function TestCreationPage() {
 
           {/* Right Column: Authoring & Question Drafts */}
           <div className="lg:col-span-2 space-y-5">
+            {/* AI Document & Scanned Paper Ingestion Card */}
+            <div className="bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <span>Automated AI Question Paper Ingestion</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-900/60">
+                        Gemini 2.5
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Upload PDF (.pdf), Word (.docx), or question paper image (.png, .jpg). Gemini extracts questions and LaTeX formulas automatically.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Drag and Drop Zone */}
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDragActive(true);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDragActive(false);
+                }}
+                onDrop={handleFileDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`relative border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer ${
+                  dragActive
+                    ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20 scale-[1.01]'
+                    : isIngesting
+                    ? 'border-indigo-300 dark:border-indigo-800 bg-indigo-50/20 dark:bg-indigo-950/10 cursor-wait'
+                    : 'border-slate-200 dark:border-[#1f293d] hover:border-blue-400 dark:hover:border-blue-600 bg-slate-50/50 dark:bg-[#090d16]/40'
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.docx,.doc,image/png,image/jpeg,image/webp,image/jpg,application/pdf"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleFileUpload(e.target.files[0]);
+                    }
+                  }}
+                  className="hidden"
+                />
+
+                {isIngesting ? (
+                  <div className="py-3 space-y-3">
+                    <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin mx-auto" />
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold text-slate-900 dark:text-white">
+                        {ingestionStep || 'Processing document with Gemini AI...'}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Extracting questions, options, and formatting LaTeX formulas...
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-2 space-y-2">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200/80 dark:border-blue-900/60 flex items-center justify-center text-blue-600 dark:text-blue-400 mx-auto">
+                      <UploadCloud className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        <span className="text-blue-600 dark:text-blue-400 underline underline-offset-2">Click to browse</span> or drag and drop document here
+                      </p>
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                        Supports PDF (.pdf), Word (.docx) & Images (.png, .jpg, .webp) up to 15 MB
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {ingestionError && (
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold">Document Ingestion Failed</p>
+                    <p className="text-[11px] mt-0.5">{ingestionError}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <ManualQuestionForm onAddQuestion={handleAddQuestion} />
 
             {/* Questions Draft Card */}
@@ -423,6 +583,20 @@ export default function TestCreationPage() {
           </div>
         </div>
       </main>
+
+      {/* Ingestion Review Studio Modal */}
+      {ingestionModalOpen && (
+        <IngestionReviewModal
+          isOpen={ingestionModalOpen}
+          fileName={uploadedFileName}
+          initialQuestions={ingestedQuestions}
+          onConfirm={handleConfirmIngestedQuestions}
+          onClose={() => {
+            setIngestionModalOpen(false);
+            setIngestedQuestions([]);
+          }}
+        />
+      )}
     </div>
   );
 }

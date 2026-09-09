@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes.js';
 import examRoutes from './routes/exam.routes.js';
 import submissionRoutes from './routes/submission.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import aiRoutes from './routes/ai.routes.js';
 import { apiLimiter } from './middleware/rateLimiter.middleware.js';
 
 dotenv.config();
@@ -119,6 +120,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/exams', examRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Global 404 Handler
 app.use((req, res) => {
