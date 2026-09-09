@@ -17,6 +17,11 @@ const examSchema = new mongoose.Schema(
       enum: ['JEE', 'NEET', 'GATE', 'APTITUDE', 'CUSTOM'],
       default: 'JEE'
     },
+    status: {
+      type: String,
+      enum: ['draft', 'published'],
+      default: 'published'
+    },
     creatorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'

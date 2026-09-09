@@ -2,9 +2,78 @@ import { Exam } from '../models/Exam.model.js';
 import { Question } from '../models/Question.model.js';
 import { User } from '../models/User.model.js';
 import { Attempt } from '../models/Attempt.model.js';
+import cloudinary, { isCloudinaryConfigured } from '../config/cloudinary.js';
 
 /**
- * @desc    Create a new exam with bulk questions
+ * @desc   Upload a question or option image to Cloudinary
+ * @route  POST /api/exams/upload-media
+ * @access Private
+ */
+export const uploadExamMedia = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image file uploaded' });
+    }
+
+    if (!isCloudinaryConfigured()) {
+      return res.status(500).json({
+        success: false,
+        message: 'Cloudinary credentials are not configured on the server.'
+      });
+    }
+
+    const { examId = 'draft', examTitle = 'exam', type = 'question' } = req.body;
+
+    // Clean examTitle for folder and public_id slug
+    const cleanTitle = (examTitle || 'exam')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '') || 'exam';
+
+    const cleanExamId = (examId || 'draft')
+      .toString()
+      .trim()
+      .replace(/[^a-z0-9_-]+/g, '_');
+
+    // Folder format: mock-test-canvas/questions-and-options/{examtitle}_{examid}
+    const folder = `mock-test-canvas/questions-and-options/${cleanTitle}_${cleanExamId}`;
+
+    // Public ID format: {question|option}_timestamp_examtitle
+    const mediaType = type === 'option' ? 'option' : 'question';
+    const publicId = `${mediaType}_${Date.now()}_${cleanTitle}`;
+
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        public_id: publicId,
+        resource_type: 'image'
+      },
+      (error, result) => {
+        if (error) {
+          console.error('[uploadExamMedia] Cloudinary error:', error);
+          return res.status(500).json({ success: false, message: error.message });
+        }
+        return res.status(200).json({
+          success: true,
+          url: result.secure_url,
+          public_id: result.public_id,
+          width: result.width,
+          height: result.height,
+          format: result.format
+        });
+      }
+    );
+
+    uploadStream.end(req.file.buffer);
+  } catch (err) {
+    console.error('[uploadExamMedia] Server error:', err);
+    return res.status(500).json({ success: false, message: err.message || 'Error uploading media' });
+  }
+};
+
+/**
+ * @desc    Create a new exam with bulk questions (Draft or Published)
  * @route   POST /api/exams
  * @access  Private
  */
@@ -14,6 +83,7 @@ export const createExam = async (req, res) => {
       title,
       description,
       category,
+      status = 'published',
       durationMinutes,
       maxAttempts,
       markingScheme,
@@ -21,28 +91,49 @@ export const createExam = async (req, res) => {
       questions
     } = req.body;
 
-    if (!title || !questions || !Array.isArray(questions) || questions.length === 0) {
+    if (!title || !title.trim()) {
       return res.status(400).json({
         success: false,
-        message: 'Exam title and at least one question are required'
+        message: 'Exam title is required'
       });
     }
 
-    // Validate and format questions for insertion
-    const questionDocs = questions.map((q) => ({
-      questionText: q.questionText,
-      questionType: q.questionType || 'MCQ',
-      imageAttachment: q.imageAttachment || '',
-      options: Array.isArray(q.options) ? q.options : [],
-      correctAnswers: Array.isArray(q.correctAnswers) ? q.correctAnswers : [],
-      explanation: q.explanation || '',
-      subject: q.subject || 'General',
-      topic: q.topic || 'General'
-    }));
+    const isDraft = status === 'draft';
+    const questionsArray = Array.isArray(questions) ? questions : [];
 
-    // Bulk insert questions to obtain IDs
-    const insertedQuestions = await Question.insertMany(questionDocs);
-    const questionIds = insertedQuestions.map((doc) => doc._id);
+    if (!isDraft && questionsArray.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'At least one question is required to publish an examination'
+      });
+    }
+
+    let questionIds = [];
+    if (questionsArray.length > 0) {
+      // Validate and format questions for insertion
+      const questionDocs = questionsArray.map((q) => ({
+        questionText: q.questionText || '',
+        questionType: q.questionType || 'MCQ',
+        imageAttachment: q.imageAttachment || '',
+        options: Array.isArray(q.options)
+          ? q.options.map((opt) => {
+              if (typeof opt === 'object' && opt !== null) {
+                return { text: opt.text || '', image: opt.image || '' };
+              }
+              return opt;
+            })
+          : [],
+        correctAnswers: Array.isArray(q.correctAnswers) ? q.correctAnswers : [],
+        explanation: q.explanation || '',
+        subject: q.subject || 'General',
+        topic: q.topic || 'General',
+        isEdited: false
+      }));
+
+      // Bulk insert questions to obtain IDs
+      const insertedQuestions = await Question.insertMany(questionDocs);
+      questionIds = insertedQuestions.map((doc) => doc._id);
+    }
 
     // Calculate total marks based on markingScheme and question count
     const correctMark = markingScheme?.correct ?? 4;
@@ -54,6 +145,7 @@ export const createExam = async (req, res) => {
       title: title.trim(),
       description: description || '',
       category: category || 'JEE',
+      status: isDraft ? 'draft' : 'published',
       creatorId: req.user?._id,
       durationMinutes: durationMinutes ? Number(durationMinutes) : 180,
       totalMarks,
@@ -84,10 +176,11 @@ export const createExam = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Exam created successfully',
+      message: isDraft ? 'Draft saved successfully' : 'Exam published successfully',
       exam: {
         _id: exam._id,
         title: exam.title,
+        status: exam.status,
         category: exam.category,
         durationMinutes: exam.durationMinutes,
         totalMarks: exam.totalMarks,
@@ -111,7 +204,7 @@ export const createExam = async (req, res) => {
  */
 export const getAllExams = async (req, res) => {
   try {
-    const { category, search, page = 1, limit = 12 } = req.query;
+    const { category, search, status, page = 1, limit = 12 } = req.query;
 
     const query = {};
 
@@ -123,13 +216,31 @@ export const getAllExams = async (req, res) => {
       query.title = { $regex: search, $options: 'i' };
     }
 
+    // Status filter:
+    // If status parameter is explicitly passed, use it.
+    // Otherwise, show published exams + any drafts created by the current authenticated user.
+    if (status) {
+      query.status = status;
+    } else if (req.user?._id) {
+      query.$or = [
+        { status: 'published' },
+        { status: { $exists: false } },
+        { creatorId: req.user._id }
+      ];
+    } else {
+      query.$or = [
+        { status: 'published' },
+        { status: { $exists: false } }
+      ];
+    }
+
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
     const skip = (pageNumber - 1) * limitNumber;
 
     const total = await Exam.countDocuments(query);
     const exams = await Exam.find(query)
-      .select('title description category durationMinutes totalMarks maxAttempts markingScheme proctorSettings questions createdAt')
+      .select('title description category status durationMinutes totalMarks maxAttempts markingScheme proctorSettings questions createdAt creatorId')
       .populate('creatorId', 'name')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -153,13 +264,15 @@ export const getAllExams = async (req, res) => {
       title: exam.title,
       description: exam.description,
       category: exam.category,
+      status: exam.status || 'published',
+      isCreator: req.user?._id ? (exam.creatorId?._id?.toString() === req.user._id.toString()) : false,
       creatorName: exam.creatorId?.name || 'Academic Administrator',
       durationMinutes: exam.durationMinutes,
       totalMarks: exam.totalMarks,
       maxAttempts: exam.maxAttempts ?? null, // null = unlimited
       markingScheme: exam.markingScheme,
       proctorSettings: exam.proctorSettings,
-      questionCount: exam.questions.length,
+      questionCount: exam.questions?.length || 0,
       userAttemptCount: userAttemptMap[exam._id.toString()] || 0,
       createdAt: exam.createdAt
     }));
@@ -181,29 +294,44 @@ export const getAllExams = async (req, res) => {
 };
 
 /**
- * @desc    Get exam by ID and populated questions (excluding correctAnswers and explanation for test-takers)
+ * @desc    Get exam by ID and populated questions
+ *          (Includes correctAnswers and explanation for the creator; excludes them for candidates)
  * @route   GET /api/exams/:id
  * @access  Public / Protected
  */
 export const getExamById = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user?._id;
 
-    const exam = await Exam.findById(id).populate({
-      path: 'questions',
-      // Explicitly exclude correctAnswers and explanation to prevent client-side answer inspection
-      select: '-correctAnswers -explanation'
-    });
-
-    if (!exam) {
+    // First fetch creatorId to check authorization
+    const metaExam = await Exam.findById(id).select('creatorId');
+    if (!metaExam) {
       return res.status(404).json({
         success: false,
         message: 'Exam not found'
       });
     }
 
+    const isCreator = Boolean(
+      userId && metaExam.creatorId && metaExam.creatorId.toString() === userId.toString()
+    );
+
+    let exam;
+    if (isCreator) {
+      // Creator gets all question details (including correct answers, explanation, isEdited)
+      exam = await Exam.findById(id).populate('questions');
+    } else {
+      // Candidates do not receive correctAnswers or explanation
+      exam = await Exam.findById(id).populate({
+        path: 'questions',
+        select: '-correctAnswers -explanation'
+      });
+    }
+
     return res.status(200).json({
       success: true,
+      isCreator,
       exam
     });
   } catch (error) {
@@ -211,6 +339,163 @@ export const getExamById = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message || 'Server error fetching exam'
+    });
+  }
+};
+
+/**
+ * @desc    Update an existing exam and its questions (draft or published)
+ *          Preserves question re-ordering and marks questions as isEdited: true if exam was already published
+ * @route   PUT /api/exams/:id
+ * @access  Private (Creator only)
+ */
+export const updateExam = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const existingExam = await Exam.findById(id).populate('questions');
+    if (!existingExam) {
+      return res.status(404).json({ success: false, message: 'Exam not found' });
+    }
+
+    if (existingExam.creatorId && existingExam.creatorId.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access restricted: Only the creator of this exam can edit it.'
+      });
+    }
+
+    const {
+      title,
+      description,
+      category,
+      status,
+      durationMinutes,
+      maxAttempts,
+      markingScheme,
+      proctorSettings,
+      questions
+    } = req.body;
+
+    const wasPublished = existingExam.status === 'published';
+
+    if (title && title.trim()) existingExam.title = title.trim();
+    if (description !== undefined) existingExam.description = description.trim();
+    if (category) existingExam.category = category;
+    if (status) existingExam.status = status;
+    if (durationMinutes) existingExam.durationMinutes = Number(durationMinutes);
+    if (maxAttempts !== undefined) {
+      existingExam.maxAttempts = (maxAttempts === null || maxAttempts === 0 || maxAttempts === 'unlimited')
+        ? null
+        : Math.max(1, Number(maxAttempts)) || 1;
+    }
+    if (markingScheme) {
+      existingExam.markingScheme = {
+        correct: markingScheme.correct ?? existingExam.markingScheme?.correct ?? 4,
+        incorrect: markingScheme.incorrect ?? existingExam.markingScheme?.incorrect ?? -1
+      };
+    }
+    if (proctorSettings) {
+      existingExam.proctorSettings = {
+        ...existingExam.proctorSettings?.toObject?.(),
+        ...proctorSettings
+      };
+    }
+
+    // Process questions array and preserve order
+    if (Array.isArray(questions)) {
+      const existingQuestionsMap = new Map();
+      existingExam.questions.forEach((q) => {
+        existingQuestionsMap.set(q._id.toString(), q);
+      });
+
+      const updatedQuestionIds = [];
+
+      for (const q of questions) {
+        const qId = q._id ? q._id.toString() : null;
+        const existingQ = qId ? existingQuestionsMap.get(qId) : null;
+
+        const formattedOptions = Array.isArray(q.options)
+          ? q.options.map((opt) => {
+              if (typeof opt === 'object' && opt !== null) {
+                return { text: opt.text || '', image: opt.image || '' };
+              }
+              return opt;
+            })
+          : [];
+
+        if (existingQ) {
+          // Detect changes in fields
+          const textChanged = (q.questionText || '') !== (existingQ.questionText || '');
+          const imageChanged = (q.imageAttachment || '') !== (existingQ.imageAttachment || '');
+          const typeChanged = (q.questionType || 'MCQ') !== existingQ.questionType;
+          const subjectChanged = (q.subject || 'General') !== existingQ.subject;
+          const topicChanged = (q.topic || 'General') !== existingQ.topic;
+          const explanationChanged = (q.explanation || '') !== (existingQ.explanation || '');
+          const optionsChanged = JSON.stringify(formattedOptions) !== JSON.stringify(existingQ.options);
+          const answersChanged = JSON.stringify(q.correctAnswers || []) !== JSON.stringify(existingQ.correctAnswers || []);
+
+          const isModified = textChanged || imageChanged || typeChanged || subjectChanged || topicChanged || explanationChanged || optionsChanged || answersChanged;
+
+          // If the exam was published and question was edited, tag it
+          const shouldTagEdited = existingQ.isEdited || (wasPublished && isModified) || q.isEdited;
+
+          existingQ.questionText = q.questionText || '';
+          existingQ.questionType = q.questionType || 'MCQ';
+          existingQ.imageAttachment = q.imageAttachment || '';
+          existingQ.options = formattedOptions;
+          existingQ.correctAnswers = Array.isArray(q.correctAnswers) ? q.correctAnswers : [];
+          existingQ.explanation = q.explanation || '';
+          existingQ.subject = q.subject || 'General';
+          existingQ.topic = q.topic || 'General';
+
+          if (shouldTagEdited) {
+            existingQ.isEdited = true;
+            existingQ.editedAt = new Date();
+          }
+
+          await existingQ.save();
+          updatedQuestionIds.push(existingQ._id);
+        } else {
+          // Brand new question added during edit
+          const isNewEdited = wasPublished || q.isEdited;
+          const newQ = await Question.create({
+            questionText: q.questionText || '',
+            questionType: q.questionType || 'MCQ',
+            imageAttachment: q.imageAttachment || '',
+            options: formattedOptions,
+            correctAnswers: Array.isArray(q.correctAnswers) ? q.correctAnswers : [],
+            explanation: q.explanation || '',
+            subject: q.subject || 'General',
+            topic: q.topic || 'General',
+            isEdited: isNewEdited,
+            editedAt: isNewEdited ? new Date() : undefined
+          });
+          updatedQuestionIds.push(newQ._id);
+        }
+      }
+
+      existingExam.questions = updatedQuestionIds;
+    }
+
+    const correctMark = existingExam.markingScheme?.correct ?? 4;
+    existingExam.totalMarks = existingExam.questions.length * correctMark;
+
+    await existingExam.save();
+
+    const populatedExam = await Exam.findById(existingExam._id).populate('questions');
+
+    return res.status(200).json({
+      success: true,
+      message: 'Examination updated successfully',
+      exam: populatedExam
+    });
+  } catch (error) {
+    console.error('Update exam error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error updating exam'
     });
   }
 };

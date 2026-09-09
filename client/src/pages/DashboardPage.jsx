@@ -17,7 +17,8 @@ import {
   HelpCircle,
   CheckCircle2,
   ArrowUpRight,
-  Sparkles
+  Sparkles,
+  Edit3
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -237,9 +238,16 @@ export default function DashboardPage() {
                     <div className="space-y-4">
                       {/* Top Badges */}
                       <div className="flex items-center justify-between gap-2">
-                        <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-900/60">
-                          {exam.category}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-900/60">
+                            {exam.category}
+                          </span>
+                          {exam.status === 'draft' && (
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-900/60">
+                              Draft
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                           <Clock className="w-3.5 h-3.5 text-slate-400" />
                           <span className="tabular-nums font-medium">{exam.durationMinutes} mins</span>
@@ -283,7 +291,18 @@ export default function DashboardPage() {
 
                     {/* Action Button firmly pinned to bottom */}
                     <div className="pt-5 mt-auto">
-                      {isExhausted ? (
+                      {exam.status === 'draft' ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/create-test?examId=${exam._id}`);
+                          }}
+                          className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Continue Editing Draft</span>
+                        </button>
+                      ) : isExhausted ? (
                         <button
                           disabled
                           className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-medium text-xs flex items-center justify-center gap-1.5 cursor-not-allowed"
