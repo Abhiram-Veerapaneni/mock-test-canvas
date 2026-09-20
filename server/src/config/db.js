@@ -28,6 +28,7 @@ mongoose.connection.on('error', (err) => {
   console.error('[MongoDB] Connection error:', err);
 });
 
+// On signal interrupt
 process.on('SIGINT', async () => {
   try {
     await mongoose.connection.close();

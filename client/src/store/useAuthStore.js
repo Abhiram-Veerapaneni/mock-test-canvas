@@ -29,15 +29,26 @@ export const useAuthStore = create((set, get) => ({
         throw new Error('Invalid user payload');
       }
     } catch (err) {
-      console.warn('fetchMe failed:', err.response?.data?.message || err.message);
-      localStorage.removeItem('token');
-      set({
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: err.response?.data?.message || 'Session expired'
-      });
+      const status = err.response?.status;
+      // Only wipe token if the server explicitly rejected the JWT as invalid/expired (401)
+      if (status === 401) {
+        console.warn('Session expired or invalid token');
+        localStorage.removeItem('token');
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+          error: err.response?.data?.message || 'Session expired'
+        });
+      } else {
+        // Server is restarting (Render deploy), network drop, 502/503: Keep the token!
+        console.warn('Server temporarily unavailable, preserving token:', err.message);
+        set({
+          isLoading: false,
+          error: 'Unable to reach the server. Please try again in a moment.'
+        });
+      }
     }
   },
 

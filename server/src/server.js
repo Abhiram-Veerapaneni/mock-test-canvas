@@ -40,7 +40,10 @@ const corsOptions = {
     ) {
       return callback(null, true);
     }
-    return callback(null, true);
+    // allows everything (dev mode)
+    // return callback(null, true);
+    // strict (Blocks unapproved origins)
+    return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -48,7 +51,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+app.options('*', cors(corsOptions)); // To handle preflight requests
 
 // Create HTTP Server & Initialize Socket.IO
 const httpServer = http.createServer(app);
