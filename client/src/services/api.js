@@ -9,20 +9,13 @@ const api = axios.create({
   timeout: 65000, // 65 seconds to comfortably tolerate Render free-tier cold boots (~30-50s)
 });
 
-// Request interceptor appending JWT Bearer token & tracking slow requests
+// Request interceptor appending JWT Bearer token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
-    // Attach slow request detector for cold start feedback
-    config._slowTimer = setTimeout(() => {
-      // If request has been pending for over 2.5s, signal server might be waking up
-      useServerStatusStore.getState().notifyColdStart();
-    }, 2500);
-
     return config;
   },
   (error) => {
@@ -30,31 +23,28 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for cold start detection & unified error handling
+// Response interceptor for cold start recovery & error handling
 api.interceptors.response.use(
   (response) => {
-    if (response.config?._slowTimer) {
-      clearTimeout(response.config._slowTimer);
+    // Whenever any data is fetched successfully, ensure waking indicator is dismissed
+    const serverStore = useServerStatusStore.getState();
+    if (serverStore.isWaking) {
+      serverStore.markOnline();
     }
     return response;
   },
   (error) => {
-    if (error.config?._slowTimer) {
-      clearTimeout(error.config._slowTimer);
-    }
-
     const status = error.response?.status;
     const isTimeout = error.code === 'ECONNABORTED';
     const isNetworkError = !error.response && error.message?.includes('Network Error');
     const isColdStartCode = status === 502 || status === 503 || status === 504;
 
+    // Trigger waking card ONLY on genuine cold boot signals (502, 503, 504, timeout, disconnect)
     if (isColdStartCode || isTimeout || isNetworkError) {
-      // Render free-tier container cold start or spinning up
       useServerStatusStore.getState().notifyColdStart();
     }
 
     if (status === 401) {
-      // Clear token if expired or explicitly unauthorized
       localStorage.removeItem('token');
     }
 
