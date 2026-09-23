@@ -13,15 +13,20 @@ import LiveViolationToast from './components/proctoring/LiveViolationToast';
 import { getSocket, joinCreatorRoom, joinUserRoom } from './services/socket';
 import useNotificationStore from './store/useNotificationStore';
 import { X, ExternalLink } from 'lucide-react';
+import ServerBootIndicator from './components/common/ServerBootIndicator';
+import useServerStatusStore from './store/useServerStatusStore';
 
 export default function App() {
   const { user, fetchMe } = useAuthStore();
+  const { checkHealth } = useServerStatusStore();
   const [activeAlert, setActiveAlert] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
   useEffect(() => {
+    // Proactively pre-warm backend instance on Render free tier
+    checkHealth();
     fetchMe();
-  }, [fetchMe]);
+  }, [fetchMe, checkHealth]);
 
   // Connect user and creator to personal Socket.IO rooms to receive live notifications across tests
   useEffect(() => {
@@ -202,6 +207,9 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Global Render Free-Tier Server Cold Boot Notification */}
+      <ServerBootIndicator />
     </BrowserRouter>
   );
 }
