@@ -17,6 +17,11 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Reset any cold-start waking indicator when visiting or refreshing auth page
+  useEffect(() => {
+    useServerStatusStore.getState().reset();
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated) {
       const origin = location.state?.from?.pathname || '/dashboard';
@@ -96,16 +101,27 @@ export default function AuthPage() {
       return;
     }
 
-    if (isRegister) {
-      const res = await register(name, email, password);
-      if (res.success) {
-        navigate('/dashboard');
+    // If login is currently processing and takes longer than 4.5s (meaning server is in cold sleep), show indicator
+    const coldTimer = setTimeout(() => {
+      useServerStatusStore.getState().notifyColdStart();
+    }, 4500);
+
+    try {
+      if (isRegister) {
+        const res = await register(name, email, password);
+        if (res.success) {
+          useServerStatusStore.getState().markOnline();
+          navigate('/dashboard');
+        }
+      } else {
+        const res = await login(email, password);
+        if (res.success) {
+          useServerStatusStore.getState().markOnline();
+          navigate('/dashboard');
+        }
       }
-    } else {
-      const res = await login(email, password);
-      if (res.success) {
-        navigate('/dashboard');
-      }
+    } finally {
+      clearTimeout(coldTimer);
     }
   };
 
@@ -168,12 +184,27 @@ export default function AuthPage() {
             </button>
           </div>
 
-          {(localError || error) && (
+          {isWaking ? (
+            <div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                <span className="font-medium">
+                  Backend is booting up, please wait ~30s...
+                </span>
+              </div>
+              <span className="shrink-0 font-mono text-[11px] font-semibold px-2 py-0.5 rounded bg-amber-500/20 text-amber-900 dark:text-amber-200 border border-amber-500/30">
+                {elapsedSeconds}s
+              </span>
+            </div>
+          ) : (localError || error) ? (
             <div className="mb-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
               <span>{localError || error}</span>
             </div>
-          )}
+          ) : null}
 
           <form onSubmit={handleSubmit} className="space-y-3.5">
             {isRegister && (
@@ -263,19 +294,6 @@ export default function AuthPage() {
               )}
             </button>
           </form>
-
-          {/* Inline cold-start notification inside auth card */}
-          {isWaking && (
-            <div className="mt-3.5 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-[11px] flex items-center gap-2">
-              <span className="relative flex h-2 w-2 shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-              </span>
-              <span>
-                Backend waking up from Render free-tier sleep (~30–45s). Please hold on...
-              </span>
-            </div>
-          )}
 
           {/* Social Sign In Divider */}
           <div className="relative my-4">
