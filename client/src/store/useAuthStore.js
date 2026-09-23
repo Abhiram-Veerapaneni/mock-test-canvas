@@ -69,7 +69,16 @@ export const useAuthStore = create((set, get) => ({
       });
       return { success: true, user };
     } catch (err) {
-      const message = err.response?.data?.message || 'Login failed. Please check credentials.';
+      const isColdStart =
+        err.response?.status === 502 ||
+        err.response?.status === 503 ||
+        err.code === 'ECONNABORTED' ||
+        (!err.response && err.message?.includes('Network Error'));
+
+      const message = isColdStart
+        ? 'Backend is booting up from sleep mode (Render cold start). Please wait ~30s...'
+        : err.response?.data?.message || 'Login failed. Please check credentials.';
+
       set({ isLoading: false, error: message });
       return { success: false, message };
     }
@@ -92,7 +101,16 @@ export const useAuthStore = create((set, get) => ({
       });
       return { success: true, user };
     } catch (err) {
-      const message = err.response?.data?.message || 'Registration failed.';
+      const isColdStart =
+        err.response?.status === 502 ||
+        err.response?.status === 503 ||
+        err.code === 'ECONNABORTED' ||
+        (!err.response && err.message?.includes('Network Error'));
+
+      const message = isColdStart
+        ? 'Backend is booting up from sleep mode (Render cold start). Please wait ~30s...'
+        : err.response?.data?.message || 'Registration failed.';
+
       set({ isLoading: false, error: message });
       return { success: false, message };
     }

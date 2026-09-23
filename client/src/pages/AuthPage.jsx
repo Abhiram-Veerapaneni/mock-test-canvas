@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
-import { Lock, Mail, User, ShieldCheck, AlertCircle, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
+import useServerStatusStore from '../store/useServerStatusStore';
+import { Lock, Mail, User, ShieldCheck, AlertCircle, ArrowRight, Loader2, Eye, EyeOff, Server } from 'lucide-react';
 
 export default function AuthPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -12,6 +13,7 @@ export default function AuthPage() {
   const [localError, setLocalError] = useState('');
 
   const { login, register, loginWithGoogle, isAuthenticated, isLoading, error, clearError } = useAuthStore();
+  const { isWaking, elapsedSeconds } = useServerStatusStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -236,12 +238,22 @@ export default function AuthPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 py-2.5 rounded-lg font-medium text-xs text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none flex items-center justify-center gap-1.5 transition-colors disabled:opacity-60"
+              className={`w-full mt-2 py-2.5 rounded-lg font-medium text-xs text-white shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none flex items-center justify-center gap-1.5 transition-all disabled:opacity-75 ${
+                isWaking
+                  ? 'bg-amber-600 hover:bg-amber-700'
+                  : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
+              }`}
             >
               {isLoading ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Signing in...</span>
+                  <span>
+                    {isWaking
+                      ? `Waking server (${elapsedSeconds}s)...`
+                      : isRegister
+                      ? 'Creating Account...'
+                      : 'Signing In...'}
+                  </span>
                 </>
               ) : (
                 <>
@@ -251,6 +263,19 @@ export default function AuthPage() {
               )}
             </button>
           </form>
+
+          {/* Inline cold-start notification inside auth card */}
+          {isWaking && (
+            <div className="mt-3.5 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-[11px] flex items-center gap-2">
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              <span>
+                Backend waking up from Render free-tier sleep (~30–45s). Please hold on...
+              </span>
+            </div>
+          )}
 
           {/* Social Sign In Divider */}
           <div className="relative my-4">
