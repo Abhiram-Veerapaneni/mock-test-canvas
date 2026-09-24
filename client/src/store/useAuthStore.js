@@ -229,6 +229,9 @@ export const useAuthStore = create((set, get) => ({
   // Logout method
   logout: () => {
     localStorage.removeItem('token');
+    try {
+      sessionStorage.removeItem('dismissedGoogleOneTap');
+    } catch (_) {}
     set({
       user: null,
       token: null,

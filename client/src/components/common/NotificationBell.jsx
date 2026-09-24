@@ -120,14 +120,14 @@ export default function NotificationBell() {
         aria-label="Open notifications"
         aria-expanded={isOpen}
         title="Notifications"
-        className="relative w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 transition-colors cursor-pointer"
+        className="relative inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100/80 dark:bg-[#151f32] hover:bg-slate-200/80 dark:hover:bg-[#243147] border border-slate-200/80 dark:border-[#334155] transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
       >
         <Bell className="w-4 h-4" />
 
         {/* Unread Counter Badge */}
         {unreadCount > 0 && (
           <>
-            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-600 text-[9px] font-bold text-white shadow-xs ring-2 ring-white dark:ring-[#090d16] animate-in zoom-in">
+            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-600 text-[9px] font-bold text-white shadow-xs ring-2 ring-white dark:ring-[#0f172a] animate-in zoom-in">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
             <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-rose-500 animate-ping opacity-40 pointer-events-none" />
@@ -137,9 +137,9 @@ export default function NotificationBell() {
 
       {/* Dropdown Panel */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150">
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-[#1e293b] border border-slate-200/90 dark:border-[#334155] shadow-2xl elevation-card z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150">
           {/* Header */}
-          <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/70 dark:bg-slate-900/50">
+          <div className="px-4 py-3 border-b border-slate-100 dark:border-[#334155] flex items-center justify-between bg-slate-50/70 dark:bg-[#151f32]">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
                 Notifications
@@ -163,10 +163,10 @@ export default function NotificationBell() {
           </div>
 
           {/* List */}
-          <div className="max-h-[340px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/50">
+          <div className="max-h-[340px] overflow-y-auto divide-y divide-slate-100 dark:divide-[#334155]">
             {recentNotifications.length === 0 ? (
               <div className="py-8 text-center px-4">
-                <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-slate-100 dark:bg-[#151f32] flex items-center justify-center text-slate-400">
                   <Bell className="w-5 h-5 opacity-60" />
                 </div>
                 <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
@@ -242,7 +242,7 @@ export default function NotificationBell() {
           </div>
 
           {/* Footer */}
-          <div className="p-2 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/50 text-center">
+          <div className="p-2 border-t border-slate-100 dark:border-[#334155] bg-slate-50/70 dark:bg-[#151f32] text-center">
             <Link
               to="/notifications"
               onClick={() => setIsOpen(false)}
