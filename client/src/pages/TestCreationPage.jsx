@@ -8,6 +8,7 @@ import IngestionReviewModal from '../components/test-builder/IngestionReviewModa
 import QuestionEditModal from '../components/test-builder/QuestionEditModal';
 import MathRenderer from '../components/common/MathRenderer';
 import api from '../services/api';
+import useAuthStore from '../store/useAuthStore';
 import {
   CheckCircle2,
   AlertCircle,
@@ -37,6 +38,8 @@ export default function TestCreationPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const examIdParam = searchParams.get('examId');
+
+  const { isAuthenticated, openAuthModal } = useAuthStore();
 
   const [existingExamId, setExistingExamId] = useState(examIdParam || null);
   const [examStatus, setExamStatus] = useState('draft');
@@ -127,6 +130,14 @@ export default function TestCreationPage() {
 
   const handleFileUpload = async (file) => {
     if (!file) return;
+    if (!isAuthenticated) {
+      openAuthModal({
+        title: 'Sign In for AI Ingestion',
+        subtitle: 'Log in or verify your account to parse exams and documents with AI.',
+        onSuccess: () => handleFileUpload(file)
+      });
+      return;
+    }
     setIsIngesting(true);
     setIngestionError('');
     setIngestionStep('Uploading file to AI pipeline...');
@@ -223,6 +234,15 @@ export default function TestCreationPage() {
     if (e) e.preventDefault();
     setError('');
     setSuccessMsg('');
+
+    if (!isAuthenticated) {
+      openAuthModal({
+        title: targetStatus === 'draft' ? 'Sign In to Save Draft' : 'Sign In to Publish Exam',
+        subtitle: 'Log in or create a candidate account to save and publish your assessments.',
+        onSuccess: () => handleSaveExam(null, targetStatus)
+      });
+      return;
+    }
 
     if (!title.trim()) {
       setError('Please provide an assessment title.');

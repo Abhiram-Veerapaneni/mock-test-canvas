@@ -72,6 +72,9 @@ export const useServerStatusStore = create((set, get) => {
           pollTimeout = setTimeout(() => {
             get().checkHealth();
           }, 3500);
+        } else if (err.response) {
+          // Received a response from the server (even if 4xx) -> container is awake!
+          get().markOnline();
         }
 
         return false;

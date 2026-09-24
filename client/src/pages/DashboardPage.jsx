@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
 
   const [exams, setExams] = useState([]);
@@ -51,7 +51,7 @@ export default function DashboardPage() {
       }
     } catch (err) {
       console.error('Failed to load exams:', err);
-      setError('Unable to load available exams. Please check your backend connection.');
+      setError('Unable to load available exams. Please try again later.');
     } finally {
       setIsLoading(false);
     }
@@ -60,6 +60,10 @@ export default function DashboardPage() {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     fetchExams();
+  };
+
+  const handleAuthorExamClick = () => {
+    navigate('/create-test');
   };
 
   return (
@@ -83,13 +87,17 @@ export default function DashboardPage() {
               Assessment Dashboard
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
-              Welcome back, <span className="font-semibold text-slate-900 dark:text-slate-200">{user?.name || 'User'}</span>. Select an assessment below or author new examination material.
+              {isAuthenticated ? (
+                <>Welcome back, <span className="font-semibold text-slate-900 dark:text-slate-200">{user?.name || 'User'}</span>. Select an assessment below or author new examination material.</>
+              ) : (
+                <>Welcome! Browse our collection of proctored assessments below or view detailed exam blueprints.</>
+              )}
             </p>
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
             <button
-              onClick={() => navigate('/create-test')}
+              onClick={handleAuthorExamClick}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all cursor-pointer hover:shadow-md"
             >
               <PlusCircle className="w-4 h-4" />
@@ -159,11 +167,10 @@ export default function DashboardPage() {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCategory === cat
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap cursor-pointer ${selectedCategory === cat
                     ? 'bg-blue-600 text-white shadow-xs font-semibold'
                     : 'bg-white dark:bg-[#111827] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200/90 dark:border-[#1f293d] hover:border-slate-300 dark:hover:border-slate-700'
-                }`}
+                  }`}
               >
                 {cat}
               </button>
@@ -274,15 +281,13 @@ export default function DashboardPage() {
                           <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500 block">Total Marks</span>
                           <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{exam.totalMarks || 100} pts</span>
                         </div>
-                        <div className={`p-2.5 rounded-xl border text-xs ${
-                          isExhausted
+                        <div className={`p-2.5 rounded-xl border text-xs ${isExhausted
                             ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/50'
                             : 'bg-slate-50 dark:bg-[#090d16]/70 border-slate-200/60 dark:border-[#1f293d]'
-                        }`}>
-                          <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500 block">Attempts</span>
-                          <span className={`font-bold tabular-nums ${
-                            isExhausted ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'
                           }`}>
+                          <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500 block">Attempts</span>
+                          <span className={`font-bold tabular-nums ${isExhausted ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'
+                            }`}>
                             {isUnlimited ? `${attemptsUsed} / ∞` : `${attemptsUsed}/${maxAttempts}`}
                           </span>
                         </div>

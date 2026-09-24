@@ -35,11 +35,20 @@ api.interceptors.response.use(
   },
   (error) => {
     const status = error.response?.status;
-    const isTimeout = error.code === 'ECONNABORTED';
+    const isTimeout = !error.response && error.code === 'ECONNABORTED';
     const isNetworkError = !error.response && error.message?.includes('Network Error');
     const isColdStartCode = status === 502 || status === 503 || status === 504;
 
-    // Trigger waking card ONLY on genuine cold boot signals (502, 503, 504, timeout, disconnect)
+    // If server returned an HTTP response (400, 401, 403, 404, 409, 422, etc.),
+    // the server is definitely awake and active -> dismiss cold start indicator immediately!
+    if (error.response && !isColdStartCode) {
+      const serverStore = useServerStatusStore.getState();
+      if (serverStore.isWaking) {
+        serverStore.markOnline();
+      }
+    }
+
+    // Trigger waking card ONLY on genuine cold boot signals (502, 503, 504, timeout without response, network drop)
     if (isColdStartCode || isTimeout || isNetworkError) {
       useServerStatusStore.getState().notifyColdStart();
     }

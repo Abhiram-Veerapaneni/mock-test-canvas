@@ -2,30 +2,45 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import useServerStatusStore from '../store/useServerStatusStore';
-import { Lock, Mail, User, ShieldCheck, AlertCircle, ArrowRight, Loader2, Eye, EyeOff, Server } from 'lucide-react';
+import { Lock, Mail, User, ShieldCheck, AlertCircle, ArrowRight, Loader2, Eye, EyeOff, Server, KeyRound, RefreshCw, ArrowLeft } from 'lucide-react';
 
 export default function AuthPage() {
   const [isRegister, setIsRegister] = useState(false);
+  const [regStep, setRegStep] = useState('details'); // 'details' | 'otp'
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
+  const [resendTimer, setResendTimer] = useState(0);
 
-  const { login, register, loginWithGoogle, isAuthenticated, isLoading, error, clearError } = useAuthStore();
+  const { login, register, sendOtp, loginWithGoogle, isAuthenticated, isLoading, error, clearError } = useAuthStore();
   const { isWaking, elapsedSeconds } = useServerStatusStore();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Reset any cold-start waking indicator when visiting or refreshing auth page
+  // Reset cold start timer
   useEffect(() => {
     useServerStatusStore.getState().reset();
   }, []);
 
+  // Countdown timer for OTP resend
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer]);
+
   useEffect(() => {
     if (isAuthenticated) {
-      const origin = location.state?.from?.pathname || '/dashboard';
-      navigate(origin, { replace: true });
+      const fromState = location.state?.from;
+      const targetOrigin = typeof fromState === 'string' 
+        ? fromState 
+        : (fromState?.pathname || '/dashboard');
+      navigate(targetOrigin, { replace: true });
     }
   }, [isAuthenticated, navigate, location]);
 
@@ -68,7 +83,6 @@ export default function AuthPage() {
           });
         }
 
-        // Display Google One Tap floating prompt (top-right card)
         window.google.accounts.id.prompt();
       }
     };
@@ -86,7 +100,58 @@ export default function AuthPage() {
     }
   }, [navigate, loginWithGoogle, clearError]);
 
-  const handleSubmit = async (e) => {
+  const handleSendOtp = async (e) => {
+    if (e) e.preventDefault();
+    setLocalError('');
+    clearError();
+
+    if (!name.trim() || !email.trim() || !password || !confirmPassword) {
+      setLocalError('Please fill in all required fields.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim().toLowerCase())) {
+      setLocalError('Please enter a valid email address (e.g. name@domain.com).');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setLocalError('Passwords do not match.');
+      return;
+    }
+
+    const result = await sendOtp(email.trim());
+    if (result.success) {
+      setRegStep('otp');
+      setResendTimer(30);
+    } else {
+      useServerStatusStore.getState().dismiss();
+      setLocalError(result.message || 'Failed to send verification code.');
+    }
+  };
+
+  const handleVerifyAndRegister = async (e) => {
+    if (e) e.preventDefault();
+    setLocalError('');
+    clearError();
+
+    if (!otp.trim() || otp.trim().length !== 6) {
+      setLocalError('Please enter the 6-digit verification code.');
+      return;
+    }
+
+    const res = await register(name.trim(), email.trim(), password, otp.trim());
+    if (res.success) {
+      useServerStatusStore.getState().markOnline();
+      navigate('/dashboard');
+    } else {
+      useServerStatusStore.getState().dismiss();
+      setLocalError(res.message || 'Registration failed.');
+    }
+  };
+
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
     clearError();
@@ -96,40 +161,11 @@ export default function AuthPage() {
       return;
     }
 
-    if (isRegister && !name.trim()) {
-      setLocalError('Please enter your full name.');
-      return;
+    const res = await login(email.trim(), password);
+    if (res.success) {
+      useServerStatusStore.getState().markOnline();
+      navigate('/dashboard');
     }
-
-    // If login is currently processing and takes longer than 4.5s (meaning server is in cold sleep), show indicator
-    const coldTimer = setTimeout(() => {
-      useServerStatusStore.getState().notifyColdStart();
-    }, 4500);
-
-    try {
-      if (isRegister) {
-        const res = await register(name, email, password);
-        if (res.success) {
-          useServerStatusStore.getState().markOnline();
-          navigate('/dashboard');
-        }
-      } else {
-        const res = await login(email, password);
-        if (res.success) {
-          useServerStatusStore.getState().markOnline();
-          navigate('/dashboard');
-        }
-      }
-    } finally {
-      clearTimeout(coldTimer);
-    }
-  };
-
-  const handleFillDemo = (demoEmail, demoPassword) => {
-    setIsRegister(false);
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setLocalError('');
   };
 
   return (
@@ -156,6 +192,7 @@ export default function AuthPage() {
               type="button"
               onClick={() => {
                 setIsRegister(false);
+                setRegStep('details');
                 setLocalError('');
                 clearError();
               }}
@@ -171,6 +208,7 @@ export default function AuthPage() {
               type="button"
               onClick={() => {
                 setIsRegister(true);
+                setRegStep('details');
                 setLocalError('');
                 clearError();
               }}
@@ -184,7 +222,8 @@ export default function AuthPage() {
             </button>
           </div>
 
-          {isWaking ? (
+          {/* Cold Start Indicator - only show when waking and NO specific form/api error is active */}
+          {isWaking && !localError && !error && (
             <div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="relative flex h-2 w-2 shrink-0">
@@ -199,15 +238,84 @@ export default function AuthPage() {
                 {elapsedSeconds}s
               </span>
             </div>
-          ) : (localError || error) ? (
+          )}
+
+          {/* Error Message */}
+          {(localError || error) && (
             <div className="mb-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
               <span>{localError || error}</span>
             </div>
-          ) : null}
+          )}
 
-          <form onSubmit={handleSubmit} className="space-y-3.5">
-            {isRegister && (
+          {/* LOGIN FORM */}
+          {!isRegister && (
+            <form onSubmit={handleLoginSubmit} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Email Address
+                </label>
+                <div className="relative group">
+                  <Mail className="w-4 h-4 text-slate-400 group-focus-within:text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 transition-all duration-150 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Password
+                </label>
+                <div className="relative group">
+                  <Lock className="w-4 h-4 text-slate-400 group-focus-within:text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 transition-all duration-150 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full mt-2 py-2.5 rounded-lg font-medium text-xs text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-75"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Signing In...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* REGISTER STEP 1: Details */}
+          {isRegister && regStep === 'details' && (
+            <form onSubmit={handleSendOtp} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Full Name
@@ -216,6 +324,7 @@ export default function AuthPage() {
                   <User className="w-4 h-4 text-slate-400 group-focus-within:text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
                   <input
                     type="text"
+                    required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Candidate Name"
@@ -223,77 +332,154 @@ export default function AuthPage() {
                   />
                 </div>
               </div>
-            )}
 
-            <div>
-              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Email Address
-              </label>
-              <div className="relative group">
-                <Mail className="w-4 h-4 text-slate-400 group-focus-within:text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 transition-all duration-150 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15"
-                />
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Email Address
+                </label>
+                <div className="relative group">
+                  <Mail className="w-4 h-4 text-slate-400 group-focus-within:text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 transition-all duration-150 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Password
-              </label>
-              <div className="relative group">
-                <Lock className="w-4 h-4 text-slate-400 group-focus-within:text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 transition-all duration-150 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15"
-                />
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Password
+                </label>
+                <div className="relative group">
+                  <Lock className="w-4 h-4 text-slate-400 group-focus-within:text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 transition-all duration-150 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Confirm Password
+                </label>
+                <div className="relative group">
+                  <Lock className="w-4 h-4 text-slate-400 group-focus-within:text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 transition-all duration-150 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full mt-2 py-2.5 rounded-lg font-medium text-xs text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-75"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Sending Code...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Create Account</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* REGISTER STEP 2: OTP Verification */}
+          {isRegister && regStep === 'otp' && (
+            <form onSubmit={handleVerifyAndRegister} className="space-y-4">
+              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+                <div>
+                  <span className="text-slate-500 dark:text-slate-400">Verifying:</span>
+                  <span className="font-semibold text-slate-900 dark:text-white ml-1.5">{email}</span>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                  onClick={() => setRegStep('details')}
+                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 font-semibold text-xs flex items-center gap-1 cursor-pointer"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  <ArrowLeft className="w-3 h-3" />
+                  <span>Edit</span>
                 </button>
               </div>
-            </div>
 
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  6-Digit Verification Code
+                </label>
+                <div className="relative">
+                  <KeyRound className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                    placeholder="Enter 6-digit OTP"
+                    className="w-full pl-9 pr-3.5 py-2.5 text-sm font-mono tracking-widest rounded-lg bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-center focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15 outline-none transition-all"
+                  />
+                </div>
+              </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full mt-2 py-2.5 rounded-lg font-medium text-xs text-white shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none flex items-center justify-center gap-1.5 transition-all disabled:opacity-75 ${
-                isWaking
-                  ? 'bg-amber-600 hover:bg-amber-700'
-                  : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
-              }`}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>
-                    {isWaking
-                      ? `Waking server (${elapsedSeconds}s)...`
-                      : isRegister
-                      ? 'Creating Account...'
-                      : 'Signing In...'}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span>{isRegister ? 'Create Account' : 'Sign In'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </>
-              )}
-            </button>
-          </form>
+              <div className="flex items-center justify-between text-xs pt-1">
+                <span className="text-slate-500 dark:text-slate-400">Didn't receive code?</span>
+                <button
+                  type="button"
+                  disabled={resendTimer > 0 || isLoading}
+                  onClick={() => handleSendOtp()}
+                  className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 disabled:opacity-50 flex items-center gap-1 cursor-pointer"
+                >
+                  <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+                  <span>{resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend Code'}</span>
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading || otp.length !== 6}
+                className="w-full py-2.5 rounded-lg font-medium text-xs text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-75"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Verifying...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Verify</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </button>
+            </form>
+          )}
 
           {/* Social Sign In Divider */}
           <div className="relative my-4">
@@ -312,27 +498,16 @@ export default function AuthPage() {
             <div id="googleSignInButton" className="w-full flex justify-center"></div>
           </div>
 
-          {/* Quick Demo Access Bar */}
-          <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-800">
-            <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-500 block mb-2 text-center">
-              Quick Demo Access
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleFillDemo('candidate@mockcanvas.com', 'Password123!')}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300 transition-colors text-center"
-              >
-                Demo User 1
-              </button>
-              <button
-                type="button"
-                onClick={() => handleFillDemo('admin@mockcanvas.com', 'AdminPassword123!')}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200 dark:border-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300 transition-colors text-center"
-              >
-                Demo User 2
-              </button>
-            </div>
+          {/* Continue Without Login Section */}
+          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard')}
+              className="w-full py-2.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <span>Continue Without Login</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </div>

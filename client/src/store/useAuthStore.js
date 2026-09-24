@@ -8,6 +8,35 @@ export const useAuthStore = create((set, get) => ({
   isLoading: false,
   error: null,
 
+  // Global Auth Modal state
+  isAuthModalOpen: false,
+  authModalConfig: {
+    title: 'Sign In to Continue',
+    subtitle: 'Access your account or create a new one in seconds.',
+    defaultTab: 'login', // 'login' | 'register'
+    onSuccess: null
+  },
+
+  openAuthModal: (config = {}) => {
+    set({
+      isAuthModalOpen: true,
+      authModalConfig: {
+        title: config.title || 'Sign In to Continue',
+        subtitle: config.subtitle || 'Access your account or create a new one in seconds.',
+        defaultTab: config.defaultTab || 'login',
+        onSuccess: config.onSuccess || null
+      },
+      error: null
+    });
+  },
+
+  closeAuthModal: () => {
+    set({
+      isAuthModalOpen: false,
+      error: null
+    });
+  },
+
   // Initialize auth session on app start
   fetchMe: async () => {
     const token = localStorage.getItem('token');
@@ -69,15 +98,70 @@ export const useAuthStore = create((set, get) => ({
       });
       return { success: true, user };
     } catch (err) {
-      const isColdStart =
+      const apiMessage = err.response?.data?.message;
+      const isColdStart = !apiMessage && (
         err.response?.status === 502 ||
         err.response?.status === 503 ||
+        err.response?.status === 504 ||
         err.code === 'ECONNABORTED' ||
-        (!err.response && err.message?.includes('Network Error'));
+        (!err.response && err.message?.includes('Network Error'))
+      );
 
-      const message = isColdStart
+      const message = apiMessage || (isColdStart
         ? 'Backend is booting up from sleep mode (Render cold start). Please wait ~30s...'
-        : err.response?.data?.message || 'Login failed. Please check credentials.';
+        : 'Login failed. Please check credentials.');
+
+      set({ isLoading: false, error: message });
+      return { success: false, message };
+    }
+  },
+
+  // Send OTP method
+  sendOtp: async (email) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await api.post('/auth/send-otp', { email });
+      set({ isLoading: false, error: null });
+      return { success: true, message: response.data?.message };
+    } catch (err) {
+      const apiMessage = err.response?.data?.message;
+      const isColdStart = !apiMessage && (
+        err.response?.status === 502 ||
+        err.response?.status === 503 ||
+        err.response?.status === 504 ||
+        err.code === 'ECONNABORTED' ||
+        (!err.response && err.message?.includes('Network Error'))
+      );
+
+      const message = apiMessage || (isColdStart
+        ? 'Backend is booting up from sleep mode (Render cold start). Please wait ~30s...'
+        : 'Failed to send verification code.');
+
+      set({ isLoading: false, error: message });
+      return { success: false, message };
+    }
+  },
+
+  // Verify OTP method
+  verifyOtp: async (email, otp) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await api.post('/auth/verify-otp', { email, otp });
+      set({ isLoading: false, error: null });
+      return { success: true, message: response.data?.message };
+    } catch (err) {
+      const apiMessage = err.response?.data?.message;
+      const isColdStart = !apiMessage && (
+        err.response?.status === 502 ||
+        err.response?.status === 503 ||
+        err.response?.status === 504 ||
+        err.code === 'ECONNABORTED' ||
+        (!err.response && err.message?.includes('Network Error'))
+      );
+
+      const message = apiMessage || (isColdStart
+        ? 'Backend is booting up from sleep mode (Render cold start). Please wait ~30s...'
+        : 'Invalid verification code.');
 
       set({ isLoading: false, error: message });
       return { success: false, message };
@@ -85,10 +169,10 @@ export const useAuthStore = create((set, get) => ({
   },
 
   // Register method
-  register: async (name, email, password) => {
+  register: async (name, email, password, otp) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await api.post('/auth/register', { name, email, password });
+      const response = await api.post('/auth/register', { name, email, password, otp });
       const { token, user } = response.data;
 
       localStorage.setItem('token', token);
@@ -101,15 +185,18 @@ export const useAuthStore = create((set, get) => ({
       });
       return { success: true, user };
     } catch (err) {
-      const isColdStart =
+      const apiMessage = err.response?.data?.message;
+      const isColdStart = !apiMessage && (
         err.response?.status === 502 ||
         err.response?.status === 503 ||
+        err.response?.status === 504 ||
         err.code === 'ECONNABORTED' ||
-        (!err.response && err.message?.includes('Network Error'));
+        (!err.response && err.message?.includes('Network Error'))
+      );
 
-      const message = isColdStart
+      const message = apiMessage || (isColdStart
         ? 'Backend is booting up from sleep mode (Render cold start). Please wait ~30s...'
-        : err.response?.data?.message || 'Registration failed.';
+        : 'Registration failed.');
 
       set({ isLoading: false, error: message });
       return { success: false, message };
