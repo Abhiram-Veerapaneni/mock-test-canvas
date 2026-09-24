@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import useServerStatusStore from '../store/useServerStatusStore';
+import useThemeStore from '../store/useThemeStore';
+import ThemeToggle from '../components/common/ThemeToggle';
 import { Lock, Mail, User, ShieldCheck, AlertCircle, ArrowRight, Loader2, Eye, EyeOff, Server, KeyRound, RefreshCw, ArrowLeft } from 'lucide-react';
 
 export default function AuthPage() {
@@ -18,6 +20,7 @@ export default function AuthPage() {
 
   const { login, register, sendOtp, loginWithGoogle, isAuthenticated, isLoading, error, clearError } = useAuthStore();
   const { isWaking, elapsedSeconds } = useServerStatusStore();
+  const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -74,7 +77,7 @@ export default function AuthPage() {
           btnContainer.innerHTML = '';
           window.google.accounts.id.renderButton(btnContainer, {
             type: 'standard',
-            theme: 'outline',
+            theme: resolvedTheme === 'dark' ? 'filled_black' : 'outline',
             size: 'large',
             width: '334',
             text: 'continue_with',
@@ -82,8 +85,6 @@ export default function AuthPage() {
             logo_alignment: 'left'
           });
         }
-
-        window.google.accounts.id.prompt();
       }
     };
 
@@ -98,7 +99,7 @@ export default function AuthPage() {
       }, 200);
       return () => clearInterval(interval);
     }
-  }, [navigate, loginWithGoogle, clearError]);
+  }, [navigate, loginWithGoogle, clearError, resolvedTheme]);
 
   const handleSendOtp = async (e) => {
     if (e) e.preventDefault();
@@ -169,14 +170,19 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-[#edf2f9] dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 flex flex-col items-center justify-center p-4 relative transition-colors duration-200">
+      {/* Top Bar Controls: Theme Switcher */}
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-sm">
         {/* Brand Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-blue-600 text-white shadow-xs mb-3">
+          <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-500/20 mb-3.5">
             <ShieldCheck className="w-5 h-5" />
           </div>
-          <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
             Mock Test Canvas
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -185,9 +191,9 @@ export default function AuthPage() {
         </div>
 
         {/* Auth Card */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+        <div className="bg-white dark:bg-[#1e293b] border border-slate-200/90 dark:border-[#334155] rounded-2xl p-6 sm:p-7 shadow-xl elevation-card transition-colors duration-200">
           {/* Segmented Control / Tabs */}
-          <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800 mb-5">
+          <div className="flex bg-slate-100 dark:bg-[#151f32] p-1 rounded-xl border border-slate-200/80 dark:border-[#334155] mb-5">
             <button
               type="button"
               onClick={() => {
@@ -196,10 +202,10 @@ export default function AuthPage() {
                 setLocalError('');
                 clearError();
               }}
-              className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${
+              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 !isRegister
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'bg-white dark:bg-[#243147] text-blue-600 dark:text-blue-300 border border-slate-200/60 dark:border-[#334155] shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
               }`}
             >
               Sign In
@@ -212,25 +218,25 @@ export default function AuthPage() {
                 setLocalError('');
                 clearError();
               }}
-              className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-all ${
+              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 isRegister
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'bg-white dark:bg-[#243147] text-blue-600 dark:text-blue-300 border border-slate-200/60 dark:border-[#334155] shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
               }`}
             >
               Register
             </button>
           </div>
 
-          {/* Cold Start Indicator - only show when waking and NO specific form/api error is active */}
+          {/* Cold Start Indicator */}
           {isWaking && !localError && !error && (
-            <div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200">
+            <div className="mb-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="relative flex h-2 w-2 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                 </span>
-                <span className="font-medium">
+                <span className="font-medium truncate">
                   Backend is booting up, please wait ~30s...
                 </span>
               </div>
@@ -242,7 +248,7 @@ export default function AuthPage() {
 
           {/* Error Message */}
           {(localError || error) && (
-            <div className="mb-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+            <div className="mb-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
               <span>{localError || error}</span>
             </div>
@@ -252,35 +258,35 @@ export default function AuthPage() {
           {!isRegister && (
             <form onSubmit={handleLoginSubmit} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Email Address
                 </label>
                 <div className="relative group">
-                  <Mail className="w-4 h-4 text-slate-400 group-focus-within:text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
+                  <Mail className="w-4 h-4 text-slate-400 group-focus-within:text-blue-500 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 transition-all duration-150 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15"
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 dark:bg-[#151f32] border border-slate-200 dark:border-[#334155] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-150 outline-none focus:bg-white dark:focus:bg-[#151f32] focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Password
                 </label>
                 <div className="relative group">
-                  <Lock className="w-4 h-4 text-slate-400 group-focus-within:text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
+                  <Lock className="w-4 h-4 text-slate-400 group-focus-within:text-blue-500 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 transition-all duration-150 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15"
+                    className="w-full pl-9 pr-10 py-2.5 bg-slate-50 dark:bg-[#151f32] border border-slate-200 dark:border-[#334155] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-150 outline-none focus:bg-white dark:focus:bg-[#151f32] focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                   <button
                     type="button"
@@ -296,7 +302,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full mt-2 py-2.5 rounded-lg font-medium text-xs text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-75"
+                className="w-full mt-2 py-2.5 rounded-xl font-semibold text-xs text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-md shadow-blue-500/15 focus:ring-2 focus:ring-blue-500/20 focus:outline-none flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-75"
               >
                 {isLoading ? (
                   <>
@@ -317,52 +323,52 @@ export default function AuthPage() {
           {isRegister && regStep === 'details' && (
             <form onSubmit={handleSendOtp} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Full Name
                 </label>
                 <div className="relative group">
-                  <User className="w-4 h-4 text-slate-400 group-focus-within:text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
+                  <User className="w-4 h-4 text-slate-400 group-focus-within:text-blue-500 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Candidate Name"
-                    className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 transition-all duration-150 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15"
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 dark:bg-[#151f32] border border-slate-200 dark:border-[#334155] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-150 outline-none focus:bg-white dark:focus:bg-[#151f32] focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Email Address
                 </label>
                 <div className="relative group">
-                  <Mail className="w-4 h-4 text-slate-400 group-focus-within:text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
+                  <Mail className="w-4 h-4 text-slate-400 group-focus-within:text-blue-500 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full pl-9 pr-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 transition-all duration-150 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15"
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 dark:bg-[#151f32] border border-slate-200 dark:border-[#334155] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-150 outline-none focus:bg-white dark:focus:bg-[#151f32] focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Password
                 </label>
                 <div className="relative group">
-                  <Lock className="w-4 h-4 text-slate-400 group-focus-within:text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
+                  <Lock className="w-4 h-4 text-slate-400 group-focus-within:text-blue-500 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 transition-all duration-150 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15"
+                    className="w-full pl-9 pr-10 py-2.5 bg-slate-50 dark:bg-[#151f32] border border-slate-200 dark:border-[#334155] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-150 outline-none focus:bg-white dark:focus:bg-[#151f32] focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                   <button
                     type="button"
@@ -376,18 +382,18 @@ export default function AuthPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Confirm Password
                 </label>
                 <div className="relative group">
-                  <Lock className="w-4 h-4 text-slate-400 group-focus-within:text-blue-600 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
+                  <Lock className="w-4 h-4 text-slate-400 group-focus-within:text-blue-500 absolute left-3 top-1/2 -translate-y-1/2 transition-colors duration-150" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 transition-all duration-150 outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15"
+                    className="w-full pl-9 pr-10 py-2.5 bg-slate-50 dark:bg-[#151f32] border border-slate-200 dark:border-[#334155] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-150 outline-none focus:bg-white dark:focus:bg-[#151f32] focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
               </div>
@@ -395,7 +401,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full mt-2 py-2.5 rounded-lg font-medium text-xs text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-75"
+                className="w-full mt-2 py-2.5 rounded-xl font-semibold text-xs text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-md shadow-blue-500/15 focus:ring-2 focus:ring-blue-500/20 focus:outline-none flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-75"
               >
                 {isLoading ? (
                   <>
@@ -415,7 +421,7 @@ export default function AuthPage() {
           {/* REGISTER STEP 2: OTP Verification */}
           {isRegister && regStep === 'otp' && (
             <form onSubmit={handleVerifyAndRegister} className="space-y-4">
-              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200 dark:border-[#334155] flex items-center justify-between text-xs">
                 <div>
                   <span className="text-slate-500 dark:text-slate-400">Verifying:</span>
                   <span className="font-semibold text-slate-900 dark:text-white ml-1.5">{email}</span>
@@ -431,7 +437,7 @@ export default function AuthPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   6-Digit Verification Code
                 </label>
                 <div className="relative">
@@ -443,7 +449,7 @@ export default function AuthPage() {
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                     placeholder="Enter 6-digit OTP"
-                    className="w-full pl-9 pr-3.5 py-2.5 text-sm font-mono tracking-widest rounded-lg bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 text-slate-900 dark:text-white text-center focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15 outline-none transition-all"
+                    className="w-full pl-9 pr-3.5 py-2.5 text-sm font-mono tracking-widest rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200 dark:border-[#334155] text-slate-900 dark:text-white text-center focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                   />
                 </div>
               </div>
@@ -464,7 +470,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={isLoading || otp.length !== 6}
-                className="w-full py-2.5 rounded-lg font-medium text-xs text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-75"
+                className="w-full py-2.5 rounded-xl font-semibold text-xs text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-md shadow-blue-500/15 focus:ring-2 focus:ring-blue-500/20 focus:outline-none flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-75"
               >
                 {isLoading ? (
                   <>
@@ -473,7 +479,7 @@ export default function AuthPage() {
                   </>
                 ) : (
                   <>
-                    <span>Verify</span>
+                    <span>Verify & Continue</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </>
                 )}
@@ -484,10 +490,10 @@ export default function AuthPage() {
           {/* Social Sign In Divider */}
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200 dark:border-slate-800"></div>
+              <div className="w-full border-t border-slate-200 dark:border-[#334155]"></div>
             </div>
             <div className="relative flex justify-center text-[10px] uppercase tracking-wider font-semibold">
-              <span className="px-2.5 bg-white dark:bg-slate-900 text-slate-400 dark:text-slate-500">
+              <span className="px-2.5 bg-white dark:bg-[#1e293b] text-slate-400 dark:text-slate-400">
                 or continue with
               </span>
             </div>
@@ -499,11 +505,17 @@ export default function AuthPage() {
           </div>
 
           {/* Continue Without Login Section */}
-          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-[#334155]">
             <button
               type="button"
-              onClick={() => navigate('/dashboard')}
-              className="w-full py-2.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              onClick={() => {
+                try {
+                  sessionStorage.setItem('dismissedGoogleOneTap', 'true');
+                  window.google?.accounts?.id?.cancel();
+                } catch (_) {}
+                navigate('/dashboard');
+              }}
+              className="w-full py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-[#243147] dark:hover:bg-[#2e3e59] border border-slate-200/90 dark:border-[#334155] transition-all cursor-pointer flex items-center justify-center gap-1.5"
             >
               <span>Continue Without Login</span>
               <ArrowRight className="w-3.5 h-3.5" />

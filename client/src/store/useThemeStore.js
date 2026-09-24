@@ -2,59 +2,92 @@ import { create } from 'zustand';
 
 const THEME_STORAGE_KEY = 'pmt_theme_mode';
 
-// Resolve initial theme: default is 'light' unless explicitly saved by user
-const getInitialTheme = () => {
+// Detect OS system dark mode preference
+const getSystemTheme = () => {
   if (typeof window === 'undefined') return 'light';
-  try {
-    // Clear legacy key if present to prevent stale auto-dark from previous session
-    localStorage.removeItem('pmt_theme');
-    const saved = localStorage.getItem(THEME_STORAGE_KEY);
-    if (saved === 'dark' || saved === 'light') {
-      return saved;
-    }
-  } catch {
-    // ignore storage access errors
-  }
-  return 'light';
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
 };
 
-const applyThemeToDocument = (theme) => {
+// Resolve whether document should have .dark class
+const resolveEffectiveTheme = (mode) => {
+  if (mode === 'system') return getSystemTheme();
+  return mode === 'dark' ? 'dark' : 'light';
+};
+
+const applyThemeToDocument = (resolvedTheme) => {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;
-  if (theme === 'dark') {
+  if (resolvedTheme === 'dark') {
     root.classList.add('dark');
   } else {
     root.classList.remove('dark');
   }
 };
 
-// Initial theme application on module load
-const initialTheme = getInitialTheme();
-applyThemeToDocument(initialTheme);
+// Resolve initial theme mode: defaults to 'system' unless user previously chose 'light' or 'dark'
+const getInitialThemeMode = () => {
+  if (typeof window === 'undefined') return 'system';
+  try {
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    if (saved === 'dark' || saved === 'light' || saved === 'system') {
+      return saved;
+    }
+  } catch {
+    // ignore storage access errors
+  }
+  return 'system';
+};
 
-export const useThemeStore = create((set) => ({
-  theme: initialTheme,
+const initialMode = getInitialThemeMode();
+const initialEffective = resolveEffectiveTheme(initialMode);
+applyThemeToDocument(initialEffective);
 
-  toggleTheme: () => {
-    set((state) => {
-      const nextTheme = state.theme === 'dark' ? 'light' : 'dark';
-      applyThemeToDocument(nextTheme);
-      try {
-        localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-      } catch {}
-      return { theme: nextTheme };
-    });
-  },
+export const useThemeStore = create((set, get) => ({
+  theme: initialMode, // 'light' | 'dark' | 'system'
+  resolvedTheme: initialEffective, // 'light' | 'dark'
 
   setTheme: (newTheme) => {
-    if (newTheme !== 'dark' && newTheme !== 'light') return;
-    applyThemeToDocument(newTheme);
+    if (newTheme !== 'dark' && newTheme !== 'light' && newTheme !== 'system') return;
+    const effective = resolveEffectiveTheme(newTheme);
+    applyThemeToDocument(effective);
     try {
       localStorage.setItem(THEME_STORAGE_KEY, newTheme);
     } catch {}
-    set({ theme: newTheme });
+    set({ theme: newTheme, resolvedTheme: effective });
+  },
+
+  // Cycles sequentially: light -> dark -> system -> light
+  cycleTheme: () => {
+    const current = get().theme;
+    const nextTheme = current === 'light' ? 'dark' : current === 'dark' ? 'system' : 'light';
+    get().setTheme(nextTheme);
+  },
+
+  // Backwards-compatible toggle: if light goes to dark, else goes to light
+  toggleTheme: () => {
+    get().cycleTheme();
   }
 }));
 
-export default useThemeStore;
+// Listen to OS system color scheme changes if user is in 'system' mode
+if (typeof window !== 'undefined' && window.matchMedia) {
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const handleSystemChange = () => {
+    const currentMode = useThemeStore.getState().theme;
+    if (currentMode === 'system') {
+      const effective = getSystemTheme();
+      applyThemeToDocument(effective);
+      useThemeStore.setState({ resolvedTheme: effective });
+    }
+  };
 
+  if (mediaQuery.addEventListener) {
+    mediaQuery.addEventListener('change', handleSystemChange);
+  } else if (mediaQuery.addListener) {
+    mediaQuery.addListener(handleSystemChange);
+  }
+}
+
+export default useThemeStore;

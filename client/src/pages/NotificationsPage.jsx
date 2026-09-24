@@ -138,7 +138,7 @@ export default function NotificationsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070b12] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-[#edf2f9] dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       <Navbar />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -151,7 +151,7 @@ export default function NotificationsPage() {
         />
 
         {/* Page Header Banner */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-[#1e293b] shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-[#334155] shadow-xs">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 border border-blue-200/80 dark:border-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-xs">
@@ -204,24 +204,24 @@ export default function NotificationsPage() {
         {/* Filters and Search Bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           {/* Tab Filter Pills */}
-          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-200/70 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 w-full sm:w-auto overflow-x-auto">
+          <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] w-full sm:w-auto overflow-x-auto">
             <button
               onClick={() => setActiveTab('ALL')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'ALL'
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
+                  ? 'bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <span>All</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400">
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200/70 dark:bg-[#334155] text-slate-600 dark:text-slate-300 font-mono">
                 {notifications.length}
               </span>
             </button>
 
             <button
               onClick={() => setActiveTab('VIOLATION')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'VIOLATION'
                   ? 'bg-rose-600 text-white shadow-xs'
                   : 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30'
@@ -231,7 +231,7 @@ export default function NotificationsPage() {
               <span>Violations</span>
               {violationCount > 0 && (
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
                     activeTab === 'VIOLATION'
                       ? 'bg-white/20 text-white'
                       : 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300'
@@ -244,7 +244,7 @@ export default function NotificationsPage() {
 
             <button
               onClick={() => setActiveTab('EXAM_SUBMISSION')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'EXAM_SUBMISSION'
                   ? 'bg-emerald-600 text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
@@ -254,10 +254,10 @@ export default function NotificationsPage() {
               <span>Submissions</span>
               {submissionCount > 0 && (
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
                     activeTab === 'EXAM_SUBMISSION'
                       ? 'bg-white/20 text-white'
-                      : 'bg-slate-100 dark:bg-slate-700/60 text-slate-500 dark:text-slate-400'
+                      : 'bg-slate-200/70 dark:bg-[#334155] text-slate-600 dark:text-slate-300'
                   }`}
                 >
                   {submissionCount}
@@ -267,15 +267,15 @@ export default function NotificationsPage() {
 
             <button
               onClick={() => setActiveTab('UNREAD')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'UNREAD'
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs'
+                  ? 'bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <span>Unread</span>
               {unreadCount > 0 && (
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 font-semibold">
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 font-mono font-bold">
                   {unreadCount}
                 </span>
               )}
@@ -290,14 +290,14 @@ export default function NotificationsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search notifications..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl text-xs bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors shadow-xs"
+              className="input-base text-xs pl-8 pr-7 py-2"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white cursor-pointer"
               >
-                <X className="w-3 h-3" />
+                <X className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -312,7 +312,7 @@ export default function NotificationsPage() {
             </p>
           </div>
         ) : filteredNotifications.length === 0 ? (
-          <div className="py-16 px-4 text-center rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-[#1e293b] shadow-xs space-y-3">
+          <div className="py-16 px-4 text-center rounded-2xl bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-[#334155] shadow-xs space-y-3">
             <div className="w-12 h-12 mx-auto rounded-2xl bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center text-slate-400">
               <Inbox className="w-6 h-6 opacity-60" />
             </div>
@@ -361,7 +361,7 @@ export default function NotificationsPage() {
                   className={`group relative rounded-2xl border transition-all duration-200 overflow-hidden shadow-xs hover:shadow-md cursor-pointer ${
                     !notification.read
                       ? 'bg-blue-50/30 dark:bg-blue-950/15 border-blue-200/80 dark:border-blue-900/50'
-                      : 'bg-white dark:bg-[#0f172a] border-slate-200/80 dark:border-[#1e293b]'
+                      : 'bg-white dark:bg-[#1e293b] border-slate-200/80 dark:border-[#334155]'
                   }`}
                 >
                   <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start gap-4">
@@ -556,7 +556,7 @@ export default function NotificationsPage() {
           onClick={() => setSnapshotPreview(null)}
         >
           <div
-            className="max-w-xl w-full bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1f293d] rounded-2xl overflow-hidden shadow-2xl p-6 text-slate-900 dark:text-slate-100 space-y-4 animate-in zoom-in-95 duration-200"
+            className="max-w-xl w-full bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-[#334155] rounded-2xl overflow-hidden shadow-2xl p-6 text-slate-900 dark:text-slate-100 space-y-4 animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">

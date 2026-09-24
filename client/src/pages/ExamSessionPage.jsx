@@ -750,8 +750,8 @@ export default function ExamSessionPage() {
   // Show a click-to-enter-fullscreen screen so the user initiates it themselves.
   if (needsFullscreenGate && !isSubmitted) {
     return (
-      <div className="h-screen w-screen bg-slate-50 dark:bg-[#090d16] flex flex-col items-center justify-center p-6 text-center transition-colors duration-200">
-        <div className="max-w-md w-full bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl p-7 sm:p-8 shadow-xl space-y-4">
+      <div className="h-screen w-screen bg-[#edf2f9] dark:bg-[#0f172a] flex flex-col items-center justify-center p-6 text-center transition-colors duration-200">
+        <div className="max-w-md w-full bg-white dark:bg-[#1e293b] border border-slate-200/90 dark:border-[#334155] rounded-2xl p-7 sm:p-8 shadow-xl space-y-4">
           <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900/60 flex items-center justify-center mx-auto">
             <Maximize className="w-7 h-7 text-blue-600 dark:text-blue-400" />
           </div>
@@ -779,7 +779,7 @@ export default function ExamSessionPage() {
 
   // ── Main Exam UI ──────────────────────────────────────────────────────────────
   return (
-    <div className="h-screen w-screen bg-slate-50 dark:bg-[#090d16] flex flex-col overflow-hidden select-none transition-colors duration-200">
+    <div className="h-screen w-screen bg-[#edf2f9] dark:bg-[#0f172a] flex flex-col overflow-hidden select-none transition-colors duration-200">
       {/* 1. Header */}
       <ExamHeader
         onSubmitClick={() => setIsSubmitModalOpen(true)}
@@ -823,7 +823,7 @@ export default function ExamSessionPage() {
       {/* 3a. Fullscreen Blocked Overlay */}
       {isFullscreenBlocked && (
         <div className="fixed inset-0 z-[9999] bg-slate-950/75 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
-          <div className="max-w-md w-full bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl p-6 sm:p-8 shadow-2xl text-slate-900 dark:text-slate-100 space-y-4">
+          <div className="max-w-md w-full bg-white dark:bg-[#1e293b] border border-slate-200/90 dark:border-[#334155] rounded-2xl p-6 sm:p-8 shadow-2xl text-slate-900 dark:text-slate-100 space-y-4">
             <div className="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 flex items-center justify-center mx-auto">
               <ShieldAlert className="w-8 h-8 text-rose-600 dark:text-rose-400" />
             </div>
@@ -851,7 +851,7 @@ export default function ExamSessionPage() {
       {/* 3b. Alt+Tab / Window Blur Overlay — blurs screen when user switches apps */}
       {isWindowBlurred && !isFullscreenBlocked && (
         <div className="fixed inset-0 z-[9997] bg-slate-950/75 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
-          <div className="max-w-md w-full bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl p-6 sm:p-8 shadow-2xl text-slate-900 dark:text-slate-100 space-y-4">
+          <div className="max-w-md w-full bg-white dark:bg-[#1e293b] border border-slate-200/90 dark:border-[#334155] rounded-2xl p-6 sm:p-8 shadow-2xl text-slate-900 dark:text-slate-100 space-y-4">
             <div className="w-16 h-16 rounded-full bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-900/60 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
             </div>
@@ -874,7 +874,7 @@ export default function ExamSessionPage() {
       {/* 4a. Per-violation warning popup */}
       {violationWarning.open && (
         <div className="fixed inset-0 z-[9998] bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-6">
-          <div className="bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+          <div className="bg-white dark:bg-[#1e293b] border border-slate-200/90 dark:border-[#334155] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="h-1.5 bg-rose-500" />
             <div className="p-6">
               {/* Icon + title */}
@@ -935,7 +935,7 @@ export default function ExamSessionPage() {
       {/* 4b. S4: Final warning modal — shown once when trust score ≤ 30 */}
       {finalWarningModal && (
         <div className="fixed inset-0 z-[9998] bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-6">
-          <div className="bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+          <div className="bg-white dark:bg-[#1e293b] border border-slate-200/90 dark:border-[#334155] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="h-1.5 bg-amber-500" />
             <div className="p-6 text-center space-y-4">
               <div className="w-14 h-14 rounded-full bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 flex items-center justify-center mx-auto">
@@ -963,7 +963,7 @@ export default function ExamSessionPage() {
       {/* 4c. Trust-score-zero termination modal */}
       {trustZeroModal && (
         <div className="fixed inset-0 z-[10000] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-6">
-          <div className="bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+          <div className="bg-white dark:bg-[#1e293b] border border-slate-200/90 dark:border-[#334155] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="h-1.5 bg-rose-600" />
             <div className="p-6 text-center space-y-4">
               <div className="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 flex items-center justify-center mx-auto">

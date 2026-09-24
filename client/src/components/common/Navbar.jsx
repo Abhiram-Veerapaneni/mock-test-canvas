@@ -16,15 +16,15 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-[#1f293d] bg-white/85 dark:bg-[#090d16]/85 backdrop-blur-md transition-colors duration-200">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-[#334155] glass-panel transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
         {/* Brand */}
         <Link to="/dashboard" className="flex items-center gap-2.5 shrink-0 group">
-          <div className="w-8 h-8 rounded-lg bg-blue-600 dark:bg-blue-600 flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform">
             <ShieldCheck className="w-4 h-4" />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white">
+            <span className="font-display text-sm font-bold tracking-tight text-slate-900 dark:text-white">
               Mock Test Canvas
             </span>
           </div>
@@ -34,10 +34,10 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-1.5">
           <Link
             to="/dashboard"
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               location.pathname === '/dashboard' || location.pathname === '/'
-                ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200/80 dark:border-slate-700/80 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                ? 'bg-blue-50/80 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/60 shadow-2xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-[#1e293b]'
             }`}
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
@@ -45,10 +45,10 @@ export default function Navbar() {
           </Link>
           <Link
             to="/create-test"
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               location.pathname === '/create-test'
-                ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200/80 dark:border-slate-700/80 shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                ? 'bg-blue-50/80 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200/70 dark:border-blue-800/60 shadow-2xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-[#1e293b]'
             }`}
           >
             <PlusCircle className="w-3.5 h-3.5" />
@@ -57,14 +57,14 @@ export default function Navbar() {
         </nav>
 
         {/* Right Actions: Bell + Theme Toggle + User Info & Logout / Sign In */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-2.5">
           {isAuthenticated && <NotificationBell />}
           <ThemeToggle />
 
           {isAuthenticated && user ? (
-            <div className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2 border-l border-slate-200 dark:border-[#1f293d]">
+            <div className="flex items-center gap-2 sm:gap-2.5 pl-1.5 sm:pl-2 border-l border-slate-200/80 dark:border-[#334155]">
               <div className="hidden sm:flex flex-col text-right">
-                <span className="text-xs font-semibold text-slate-900 dark:text-slate-100 leading-none truncate max-w-[140px]">
+                <span className="text-xs font-semibold text-slate-900 dark:text-white leading-none truncate max-w-[140px]">
                   {user.name}
                 </span>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 truncate max-w-[140px]">
@@ -72,7 +72,7 @@ export default function Navbar() {
                 </span>
               </div>
               <div
-                className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 shadow-xs"
+                className="w-8 h-8 rounded-lg bg-slate-100/80 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] flex items-center justify-center text-slate-600 dark:text-slate-300 shadow-2xs"
                 title={user.name || user.email}
               >
                 <UserIcon className="w-3.5 h-3.5" />
@@ -80,18 +80,18 @@ export default function Navbar() {
               <button
                 onClick={handleLogout}
                 title="Log out"
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-200/80 dark:border-slate-800 hover:border-rose-200 dark:hover:border-rose-900/50 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-200/80 dark:border-[#334155] hover:border-rose-200 dark:hover:border-rose-900/50 transition-colors cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2 pl-1 sm:pl-2 border-l border-slate-200 dark:border-[#1f293d]">
+            <div className="flex items-center gap-2 pl-1.5 sm:pl-2 border-l border-slate-200/80 dark:border-[#334155]">
               <button
                 type="button"
                 onClick={() => openAuthModal()}
-                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all cursor-pointer"
+                className="btn-primary"
               >
                 Sign In / Register
               </button>

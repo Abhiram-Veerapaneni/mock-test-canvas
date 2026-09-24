@@ -249,11 +249,11 @@ export default function QuestionEditModal({
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
       <div
-        className="max-w-4xl w-full bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200"
+        className="max-w-4xl w-full bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-[#334155] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-[#1e293b] flex items-center justify-between bg-slate-50/80 dark:bg-[#0a0f1d]/80 shrink-0">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-[#334155] flex items-center justify-between bg-slate-50/80 dark:bg-[#151f32] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-blue-500/20">
               #{questionIndex + 1}
@@ -439,12 +439,12 @@ export default function QuestionEditModal({
                     value={questionText}
                     onChange={(e) => setQuestionText(e.target.value)}
                     placeholder="Enter question statement (e.g. Find $\int_0^1 x dx$). Can be blank if statement is an image."
-                    className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 leading-relaxed"
+                    className="w-full p-3 bg-white dark:bg-[#151f32] border border-slate-200 dark:border-[#334155] rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 leading-relaxed"
                   />
                 )}
 
                 {(previewMode === 'preview' || previewMode === 'split') && (
-                  <div className="p-3 bg-slate-50 dark:bg-[#090d16] border border-slate-200 dark:border-slate-800 rounded-xl overflow-y-auto max-h-48 space-y-2">
+                  <div className="p-3 bg-slate-50 dark:bg-[#151f32] border border-slate-200 dark:border-[#334155] rounded-xl overflow-y-auto max-h-48 space-y-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                       Formula Rendered Preview
                     </span>
@@ -459,7 +459,7 @@ export default function QuestionEditModal({
 
               {/* Attached Question Picture Display */}
               {imageAttachment && (
-                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200 dark:border-[#334155] flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-14 h-14 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0 flex items-center justify-center">
                       <img
@@ -629,7 +629,7 @@ export default function QuestionEditModal({
 
             {/* NAT Range */}
             {questionType === 'NAT' && (
-              <div className="bg-slate-50 dark:bg-[#090d16] p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2.5">
+              <div className="bg-slate-50 dark:bg-[#151f32] p-4 rounded-xl border border-slate-200 dark:border-[#334155] space-y-2.5">
                 <label className="block text-xs font-semibold text-slate-800 dark:text-slate-200">
                   Accepted Numeric Answer Range [Min, Max]
                 </label>
@@ -642,7 +642,7 @@ export default function QuestionEditModal({
                       value={natMin}
                       onChange={(e) => setNatMin(e.target.value)}
                       placeholder="e.g. 10.0"
-                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-white font-mono"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-[#334155] rounded-lg text-xs text-slate-900 dark:text-white font-mono"
                     />
                   </div>
                   <div>
@@ -653,7 +653,7 @@ export default function QuestionEditModal({
                       value={natMax}
                       onChange={(e) => setNatMax(e.target.value)}
                       placeholder="e.g. 10.5"
-                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-white font-mono"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-[#334155] rounded-lg text-xs text-slate-900 dark:text-white font-mono"
                     />
                   </div>
                 </div>
@@ -670,14 +670,14 @@ export default function QuestionEditModal({
                 value={explanation}
                 onChange={(e) => setExplanation(e.target.value)}
                 placeholder="Step-by-step solution shown after candidate completes assessment..."
-                className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 leading-relaxed"
+                className="w-full p-3 bg-white dark:bg-[#151f32] border border-slate-200 dark:border-[#334155] rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 leading-relaxed"
               />
             </div>
           </form>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3.5 border-t border-slate-200 dark:border-[#1e293b] flex items-center justify-between bg-slate-50/80 dark:bg-[#0a0f1d]/80 shrink-0">
+        <div className="px-6 py-3.5 border-t border-slate-200 dark:border-[#334155] flex items-center justify-between bg-slate-50/80 dark:bg-[#151f32] shrink-0">
           <button
             type="button"
             onClick={onClose}

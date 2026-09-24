@@ -8,6 +8,7 @@ import TestCreationPage from './pages/TestCreationPage';
 import ExamDetailPage from './pages/ExamDetailPage';
 import ExamSessionPage from './pages/ExamSessionPage';
 import ExamAuditReportPage from './pages/ExamAuditReportPage';
+import ExamLiveMonitorPage from './pages/ExamLiveMonitorPage';
 import NotificationsPage from './pages/NotificationsPage';
 import LiveViolationToast from './components/proctoring/LiveViolationToast';
 import AuthModal from './components/common/AuthModal';
@@ -91,6 +92,24 @@ export default function App() {
           }
         />
 
+        {/* Dedicated Pop-up Live Proctoring Workstation */}
+        <Route
+          path="/test/:testId/live"
+          element={
+            <ProtectedRoute>
+              <ExamLiveMonitorPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/exam/:examId/live"
+          element={
+            <ProtectedRoute>
+              <ExamLiveMonitorPage />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Test Detail Page — Publicly accessible (Guest Mode supported) */}
         <Route path="/test/:testId" element={<ExamDetailPage />} />
         {/* Backwards compatibility for /exam/:examId */}
@@ -134,7 +153,7 @@ export default function App() {
           onClick={() => setPreviewImage(null)}
         >
           <div
-            className="max-w-2xl w-full bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] rounded-2xl overflow-hidden shadow-2xl p-6 text-slate-900 dark:text-slate-100 space-y-4"
+            className="max-w-2xl w-full bg-white dark:bg-[#1e293b] border border-slate-200/90 dark:border-[#334155] rounded-2xl overflow-hidden shadow-2xl p-6 text-slate-900 dark:text-slate-100 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -147,13 +166,13 @@ export default function App() {
               </div>
               <button
                 onClick={() => setPreviewImage(null)}
-                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors border border-slate-200/80 dark:border-slate-700"
+                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#151f32] dark:hover:bg-[#243147] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors border border-slate-200/80 dark:border-[#334155]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="rounded-xl overflow-hidden bg-slate-100 dark:bg-[#090d16] border border-slate-200/80 dark:border-[#1f293d] max-h-[60vh] flex items-center justify-center">
+            <div className="rounded-xl overflow-hidden bg-slate-100 dark:bg-[#0f172a] border border-slate-200/80 dark:border-[#334155] max-h-[60vh] flex items-center justify-center">
               <img
                 src={previewImage.imageUrl}
                 alt="Captured proctoring violation"

@@ -143,7 +143,7 @@ export default function ExamDetailPage() {
 
   if (isLoadingExam) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] flex items-center justify-center">
+      <div className="min-h-screen bg-[#edf2f9] dark:bg-[#0f172a] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
@@ -151,13 +151,13 @@ export default function ExamDetailPage() {
 
   if (error || !exam) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] flex items-center justify-center p-4">
-        <div className="max-w-sm w-full bg-white dark:bg-[#111827] border border-slate-200 dark:border-[#1f293d] rounded-2xl p-6 text-center shadow-lg">
+      <div className="min-h-screen bg-[#edf2f9] dark:bg-[#0f172a] flex items-center justify-center p-4">
+        <div className="max-w-sm w-full card-base p-6 text-center elevation-card">
           <AlertCircle className="w-8 h-8 text-rose-500 mx-auto mb-3" />
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-5">{error || 'Exam not found.'}</p>
+          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-5">{error || 'Exam not found.'}</p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold cursor-pointer transition-colors"
+            className="w-full btn-primary"
           >
             Return to Dashboard
           </button>
@@ -173,7 +173,7 @@ export default function ExamDetailPage() {
   const questions = exam.questions || [];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-[#edf2f9] dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
       <Navbar />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-7">
@@ -189,25 +189,25 @@ export default function ExamDetailPage() {
         </div>
 
         {/* ── Main Hero Card ────────────────────────────────────────────────── */}
-        <section className="rounded-3xl bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] p-6 sm:p-8 shadow-xs space-y-6">
+        <section className="card-base p-6 sm:p-8 elevation-card space-y-6">
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
             <div className="space-y-3.5 flex-1">
               {/* Badges strip */}
               <div className="flex items-center gap-2 flex-wrap">
                 {isCreator ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 shadow-xs">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 shadow-2xs">
                     <Sliders className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                     <span>Examiner Studio</span>
                   </span>
                 ) : (
-                  <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-900/60">
+                  <span className="badge-blue">
                     {exam.category || 'General'}
                   </span>
                 )}
 
                 {/* Draft / Published status */}
                 <span
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border shadow-xs ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border shadow-2xs ${
                     exam.status === 'draft'
                       ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border-amber-200 dark:border-amber-800'
                       : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
@@ -222,14 +222,14 @@ export default function ExamDetailPage() {
                 </span>
 
                 {exam.proctorSettings?.faceCheck !== false && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/60">
+                  <span className="badge-blue">
                     <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                     <span>AI Proctored</span>
                   </span>
                 )}
 
                 {hasAttempted && !isCreator && (
-                  <span className="px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-900/60">
+                  <span className="badge-emerald">
                     Attempted
                   </span>
                 )}
@@ -237,7 +237,7 @@ export default function ExamDetailPage() {
 
               {/* Title & Description */}
               <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                <h1 className="font-display text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
                   {exam.title}
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-3xl mt-2">
@@ -252,7 +252,7 @@ export default function ExamDetailPage() {
                   {subjects.map((s) => (
                     <span
                       key={s}
-                      className="px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[11px] text-slate-700 dark:text-slate-300 font-medium border border-slate-200/60 dark:border-slate-700/60"
+                      className="px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-[#151f32] text-[11px] text-slate-700 dark:text-slate-300 font-medium border border-slate-200/60 dark:border-[#334155]"
                     >
                       {s}
                     </span>
@@ -268,25 +268,48 @@ export default function ExamDetailPage() {
                   {/* Primary Creator Action: Edit Exam */}
                   <button
                     onClick={() => navigate(`/create-test?examId=${examId}`)}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs shadow-md shadow-blue-500/20 hover:shadow-lg transition-all cursor-pointer"
+                    className="btn-primary"
                   >
                     <Edit3 className="w-4 h-4" />
                     <span>Edit in Studio</span>
                   </button>
 
-                  {/* Creator Action: Live Proctoring Console */}
-                  <button
-                    onClick={() => setIsLiveMonitorOpen(true)}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
-                  >
-                    <Radio className="w-4 h-4 text-emerald-500 animate-pulse" />
-                    <span>Live Console</span>
-                  </button>
+                  {/* Creator Action: Live Proctoring Console (Combined Modal + Pop-out) */}
+                  <div className="w-full flex items-stretch rounded-xl border border-slate-200/90 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-2xs overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-600">
+                    <button
+                      type="button"
+                      onClick={() => setIsLiveMonitorOpen(true)}
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#243147] transition-colors cursor-pointer"
+                      title="Open Live Proctoring Console"
+                    >
+                      <Radio className="w-4 h-4 text-emerald-500 animate-pulse shrink-0" />
+                      <span>Live Console</span>
+                    </button>
+                    <div className="w-[1px] bg-slate-200/90 dark:border-r dark:border-[#334155] self-stretch" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const width = Math.min(1400, window.screen.availWidth - 80);
+                        const height = Math.min(900, window.screen.availHeight - 80);
+                        const left = Math.max(0, (window.screen.availWidth - width) / 2);
+                        const top = Math.max(0, (window.screen.availHeight - height) / 2);
+                        window.open(
+                          `/test/${examId}/live`,
+                          `proctor_live_${examId}`,
+                          `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,status=no,toolbar=no,menubar=no,location=no`
+                        );
+                      }}
+                      className="px-3 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-[#243147] transition-colors cursor-pointer"
+                      title="Open Live Console in separate window"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
 
                   {/* Creator Action: Violation Logs */}
                   <button
                     onClick={() => navigate(`/test/${examId}/audit`)}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition-all cursor-pointer"
+                    className="btn-secondary"
                   >
                     <FileText className="w-4 h-4 text-blue-500" />
                     <span>Violation Logs & Reports</span>
@@ -295,7 +318,7 @@ export default function ExamDetailPage() {
                   {/* Candidate Test Run for Creator */}
                   <button
                     onClick={handleStartExam}
-                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/60 dark:hover:bg-slate-800/80 text-slate-600 dark:text-slate-400 font-medium text-xs border border-dashed border-slate-300 dark:border-slate-700 transition-all cursor-pointer"
+                    className="btn-secondary border-dashed"
                     title="Simulate candidate experience"
                   >
                     <Play className="w-3.5 h-3.5" />
@@ -307,14 +330,14 @@ export default function ExamDetailPage() {
                 isExhausted ? (
                   <button
                     disabled
-                    className="px-6 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 font-semibold text-xs cursor-not-allowed"
+                    className="px-6 py-2.5 rounded-xl bg-slate-100 dark:bg-[#151f32] text-slate-400 font-semibold text-xs cursor-not-allowed"
                   >
                     Attempts Exhausted
                   </button>
                 ) : hasAttempted ? (
                   <button
                     onClick={handleStartExam}
-                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all cursor-pointer"
+                    className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer"
                   >
                     <RotateCcw className="w-4 h-4" />
                     <span>Retake Exam</span>
@@ -322,7 +345,7 @@ export default function ExamDetailPage() {
                 ) : (
                   <button
                     onClick={handleStartExam}
-                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md hover:shadow-lg transition-all cursor-pointer"
+                    className="btn-primary text-xs py-2.5 px-6"
                   >
                     <Play className="w-4 h-4 fill-current" />
                     <span>Start Proctored Exam</span>
@@ -333,8 +356,8 @@ export default function ExamDetailPage() {
           </div>
 
           {/* ── Stats Metric Strip ─────────────────────────────────────── */}
-          <div className="pt-6 border-t border-slate-100 dark:border-[#1f293d] grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-slate-50/70 dark:bg-[#090d16]/70 border border-slate-200/70 dark:border-[#1f293d]">
+          <div className="pt-6 border-t border-slate-100 dark:border-[#334155] grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="flex items-center gap-3.5 p-4 rounded-xl bg-white/80 dark:bg-[#151f32] border border-slate-200/70 dark:border-[#334155]">
               <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 flex items-center justify-center shrink-0 border border-blue-200/50 dark:border-blue-900/40">
                 <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
@@ -344,7 +367,7 @@ export default function ExamDetailPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-slate-50/70 dark:bg-[#090d16]/70 border border-slate-200/70 dark:border-[#1f293d]">
+            <div className="flex items-center gap-3.5 p-4 rounded-xl bg-white/80 dark:bg-[#151f32] border border-slate-200/70 dark:border-[#334155]">
               <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center shrink-0 border border-indigo-200/50 dark:border-indigo-900/40">
                 <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               </div>
@@ -354,7 +377,7 @@ export default function ExamDetailPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-slate-50/70 dark:bg-[#090d16]/70 border border-slate-200/70 dark:border-[#1f293d]">
+            <div className="flex items-center gap-3.5 p-4 rounded-xl bg-white/80 dark:bg-[#151f32] border border-slate-200/70 dark:border-[#334155]">
               <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center shrink-0 border border-emerald-200/50 dark:border-emerald-900/40">
                 <Award className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               </div>
@@ -368,7 +391,7 @@ export default function ExamDetailPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-slate-50/70 dark:bg-[#090d16]/70 border border-slate-200/70 dark:border-[#1f293d]">
+            <div className="flex items-center gap-3.5 p-4 rounded-xl bg-white/80 dark:bg-[#151f32] border border-slate-200/70 dark:border-[#334155]">
               <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-900/40">
                 <Target className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
@@ -386,15 +409,15 @@ export default function ExamDetailPage() {
         {isCreator ? (
           <section className="space-y-5">
             {/* Tabs Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#1f293d] pb-1 gap-4 overflow-x-auto">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#334155] pb-1 gap-4 overflow-x-auto">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setActiveTab('questions')}
                   className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                     activeTab === 'questions'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                      ? 'bg-blue-600 text-white shadow-2xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#243147]'
                   }`}
                 >
                   <BookOpen className="w-4 h-4" />
@@ -406,8 +429,8 @@ export default function ExamDetailPage() {
                   onClick={() => setActiveTab('proctoring')}
                   className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                     activeTab === 'proctoring'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                      ? 'bg-blue-600 text-white shadow-2xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#243147]'
                   }`}
                 >
                   <ShieldCheck className="w-4 h-4" />
@@ -419,8 +442,8 @@ export default function ExamDetailPage() {
                   onClick={() => setActiveTab('attempts')}
                   className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                     activeTab === 'attempts'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                      ? 'bg-blue-600 text-white shadow-2xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#243147]'
                   }`}
                 >
                   <CalendarDays className="w-4 h-4" />
@@ -442,7 +465,7 @@ export default function ExamDetailPage() {
             {activeTab === 'questions' && (
               <div className="space-y-4">
                 {questions.length === 0 ? (
-                  <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-[#1f293d]">
+                  <div className="p-12 text-center card-base">
                     <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No questions added yet</p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                       Click below to author or import questions for this examination.
@@ -450,7 +473,7 @@ export default function ExamDetailPage() {
                     <button
                       type="button"
                       onClick={() => navigate(`/create-test?examId=${examId}`)}
-                      className="mt-4 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs"
+                      className="mt-4 btn-primary"
                     >
                       Add Questions Now
                     </button>
@@ -463,10 +486,10 @@ export default function ExamDetailPage() {
                     return (
                       <div
                         key={q._id || idx}
-                        className="rounded-2xl bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] p-5 shadow-xs space-y-4"
+                        className="card-base p-5 elevation-card space-y-4"
                       >
                         {/* Question Card Header */}
-                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#1f293d] pb-3">
+                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#334155] pb-3">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-900/60 text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center justify-center">
                               {idx + 1}
@@ -474,14 +497,14 @@ export default function ExamDetailPage() {
                             <span className="text-xs font-bold text-slate-900 dark:text-white">
                               Question {idx + 1}
                             </span>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-[#151f32] text-slate-600 dark:text-slate-300">
                               {q.type || 'MCQ'}
                             </span>
                             <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                               +{q.marks || exam.markingScheme?.correct || 4} / {-(q.negativeMarks || Math.abs(exam.markingScheme?.incorrect || 1))} pts
                             </span>
                             {q.isEdited && (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+                              <span className="badge-amber">
                                 [Edited]
                               </span>
                             )}
@@ -502,7 +525,7 @@ export default function ExamDetailPage() {
 
                         {/* Question Diagram / Image Attachment */}
                         {q.imageAttachment && (
-                          <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 inline-block">
+                          <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] inline-block">
                             <img
                               src={q.imageAttachment}
                               alt={`Question ${idx + 1} diagram`}
@@ -533,14 +556,14 @@ export default function ExamDetailPage() {
                                   className={`p-3 rounded-xl border flex items-start gap-2.5 transition-colors ${
                                     isCorrect
                                       ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/80'
-                                      : 'bg-slate-50/50 dark:bg-slate-900/60 border-slate-200/80 dark:border-slate-800'
+                                      : 'bg-white/70 dark:bg-[#151f32] border-slate-200/80 dark:border-[#334155]'
                                   }`}
                                 >
                                   <span
                                     className={`w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 ${
                                       isCorrect
                                         ? 'bg-emerald-600 text-white shadow-xs'
-                                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+                                        : 'bg-white dark:bg-[#243147] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#334155]'
                                     }`}
                                   >
                                     {String.fromCharCode(65 + optIdx)}
@@ -607,7 +630,7 @@ export default function ExamDetailPage() {
             {/* TAB 2: Proctoring Security Rules */}
             {activeTab === 'proctoring' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-5 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] space-y-3">
+                <div className="p-5 card-base space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/60 dark:border-blue-900/60">
@@ -618,7 +641,7 @@ export default function ExamDetailPage() {
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">MediaPipe Vision Face Mesh</p>
                       </div>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                    <span className="badge-emerald">
                       {exam.proctorSettings?.faceCheck !== false ? 'Active' : 'Disabled'}
                     </span>
                   </div>
@@ -627,7 +650,7 @@ export default function ExamDetailPage() {
                   </p>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] space-y-3">
+                <div className="p-5 card-base space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-900/60">
@@ -638,7 +661,7 @@ export default function ExamDetailPage() {
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">Web Audio API Spectrum</p>
                       </div>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                    <span className="badge-emerald">
                       {exam.proctorSettings?.audioCheck !== false ? 'Active' : 'Disabled'}
                     </span>
                   </div>
@@ -647,7 +670,7 @@ export default function ExamDetailPage() {
                   </p>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] space-y-3">
+                <div className="p-5 card-base space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-200/60 dark:border-purple-900/60">
@@ -658,7 +681,7 @@ export default function ExamDetailPage() {
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">Fullscreen API & Window Blur</p>
                       </div>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                    <span className="badge-emerald">
                       {exam.proctorSettings?.fullScreenLock !== false ? 'Active' : 'Disabled'}
                     </span>
                   </div>
@@ -667,7 +690,7 @@ export default function ExamDetailPage() {
                   </p>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] space-y-3">
+                <div className="p-5 card-base space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-200/60 dark:border-amber-900/60">
@@ -678,7 +701,7 @@ export default function ExamDetailPage() {
                         <p className="text-[11px] text-slate-500 dark:text-slate-400">COCO-SSD Object Classifier</p>
                       </div>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                    <span className="badge-emerald">
                       {exam.proctorSettings?.objectCheck !== false ? 'Active' : 'Disabled'}
                     </span>
                   </div>
@@ -730,8 +753,8 @@ export default function ExamDetailPage() {
                 )}
 
                 {/* Submissions Table */}
-                <div className="rounded-2xl bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] overflow-hidden shadow-xs">
-                  <div className="px-6 py-4 border-b border-slate-100 dark:border-[#1f293d] flex items-center justify-between">
+                <div className="card-base overflow-hidden elevation-card">
+                  <div className="px-6 py-4 border-b border-slate-100 dark:border-[#334155] flex items-center justify-between">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
                       Attempt History ({attempts.length})
                     </h3>
@@ -745,7 +768,7 @@ export default function ExamDetailPage() {
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="border-b border-slate-100 dark:border-[#1f293d] bg-slate-50/75 dark:bg-[#090d16]/70 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          <tr className="border-b border-slate-200 dark:border-[#334155] bg-slate-100/75 dark:bg-[#151f32] text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                             <th className="py-3 px-5">Attempt</th>
                             <th className="py-3 px-5">Date</th>
                             <th className="py-3 px-5 text-center">Answered</th>
@@ -753,9 +776,9 @@ export default function ExamDetailPage() {
                             <th className="py-3 px-5 text-right">Accuracy</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-[#1f293d] text-xs">
+                        <tbody className="divide-y divide-slate-100 dark:divide-[#334155] text-xs">
                           {attempts.map((attempt, idx) => (
-                            <tr key={attempt._id || idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                            <tr key={attempt._id || idx} className="hover:bg-slate-50/80 dark:hover:bg-[#151f32]/60 transition-colors">
                               <td className="py-3 px-5 font-bold tabular-nums text-slate-900 dark:text-white">#{attempts.length - idx}</td>
                               <td className="py-3 px-5 text-slate-600 dark:text-slate-400">{formatDate(attempt.submittedAt || attempt.createdAt)}</td>
                               <td className="py-3 px-5 text-center tabular-nums font-semibold text-emerald-600 dark:text-emerald-400">
@@ -821,8 +844,8 @@ export default function ExamDetailPage() {
             )}
 
             {/* Candidate Submissions Table */}
-            <div className="rounded-2xl bg-white dark:bg-[#111827] border border-slate-200/90 dark:border-[#1f293d] overflow-hidden shadow-xs">
-              <div className="px-6 py-4 border-b border-slate-100 dark:border-[#1f293d]">
+            <div className="card-base overflow-hidden elevation-card">
+              <div className="px-6 py-4 border-b border-slate-100 dark:border-[#334155]">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
                   Attempt History
                 </h3>
@@ -830,7 +853,7 @@ export default function ExamDetailPage() {
 
               {attempts.length === 0 ? (
                 <div className="p-12 text-center">
-                  <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mx-auto mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#151f32] flex items-center justify-center text-slate-400 mx-auto mb-3">
                     <BookOpen className="w-6 h-6" />
                   </div>
                   <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No attempts logged yet</p>
@@ -842,7 +865,7 @@ export default function ExamDetailPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-100 dark:border-[#1f293d] bg-slate-50/75 dark:bg-[#090d16]/70 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      <tr className="border-b border-slate-200 dark:border-[#334155] bg-slate-100/75 dark:bg-[#151f32] text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                         <th className="py-3 px-5">Attempt</th>
                         <th className="py-3 px-5">Submission Date</th>
                         <th className="py-3 px-5 text-center">Answered</th>
@@ -850,13 +873,13 @@ export default function ExamDetailPage() {
                         <th className="py-3 px-5 text-right">Accuracy</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-[#1f293d] text-xs">
+                    <tbody className="divide-y divide-slate-100 dark:divide-[#334155] text-xs">
                       {attempts.map((attempt, idx) => (
-                        <tr key={attempt._id || idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                        <tr key={attempt._id || idx} className="hover:bg-slate-50/80 dark:hover:bg-[#243147]/50 transition-colors">
                           <td className="py-3.5 px-5 font-bold text-slate-900 dark:text-white tabular-nums">#{attempts.length - idx}</td>
                           <td className="py-3.5 px-5 text-slate-600 dark:text-slate-300">{formatDate(attempt.submittedAt || attempt.createdAt)}</td>
                           <td className="py-3.5 px-5 text-center tabular-nums">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/50">
+                            <span className="badge-emerald">
                               {(attempt.correct || 0) + (attempt.incorrect || 0)}
                             </span>
                           </td>
@@ -883,7 +906,7 @@ export default function ExamDetailPage() {
             onClick={() => setLightboxImage(null)}
           >
             <div
-              className="max-w-3xl w-full bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xl p-5 space-y-3"
+              className="max-w-3xl w-full bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-[#334155] rounded-2xl overflow-hidden shadow-2xl p-5 space-y-3"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between">
@@ -896,7 +919,7 @@ export default function ExamDetailPage() {
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <div className="max-h-[70vh] flex items-center justify-center bg-slate-50 dark:bg-slate-950 rounded-xl overflow-hidden p-2">
+              <div className="max-h-[70vh] flex items-center justify-center bg-slate-100 dark:bg-[#0f172a] rounded-xl overflow-hidden p-2">
                 <img src={lightboxImage} alt="Diagram preview" className="max-h-[65vh] w-auto object-contain" />
               </div>
               <div className="flex justify-end">
