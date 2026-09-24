@@ -10,6 +10,7 @@ import ExamSessionPage from './pages/ExamSessionPage';
 import ExamAuditReportPage from './pages/ExamAuditReportPage';
 import NotificationsPage from './pages/NotificationsPage';
 import LiveViolationToast from './components/proctoring/LiveViolationToast';
+import AuthModal from './components/common/AuthModal';
 import { getSocket, joinCreatorRoom, joinUserRoom } from './services/socket';
 import useNotificationStore from './store/useNotificationStore';
 import { X, ExternalLink } from 'lucide-react';
@@ -56,15 +57,8 @@ export default function App() {
         {/* Public Auth Page */}
         <Route path="/login" element={<AuthPage />} />
 
-        {/* Protected Dashboard */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
+        {/* Dashboard — Publicly accessible (Guest Mode supported) */}
+        <Route path="/dashboard" element={<DashboardPage />} />
 
         {/* Protected Notifications Center */}
         <Route
@@ -76,15 +70,8 @@ export default function App() {
           }
         />
 
-        {/* Protected Exam Authoring Studio */}
-        <Route
-          path="/create-test"
-          element={
-            <ProtectedRoute>
-              <TestCreationPage />
-            </ProtectedRoute>
-          }
-        />
+        {/* Exam Authoring Studio — Publicly accessible for building/previewing */}
+        <Route path="/create-test" element={<TestCreationPage />} />
 
         {/* Dedicated Creator Audit Report & Completion Page */}
         <Route
@@ -104,24 +91,10 @@ export default function App() {
           }
         />
 
-        {/* Test Detail Page — shows metadata + attempt history */}
-        <Route
-          path="/test/:testId"
-          element={
-            <ProtectedRoute>
-              <ExamDetailPage />
-            </ProtectedRoute>
-          }
-        />
+        {/* Test Detail Page — Publicly accessible (Guest Mode supported) */}
+        <Route path="/test/:testId" element={<ExamDetailPage />} />
         {/* Backwards compatibility for /exam/:examId */}
-        <Route
-          path="/exam/:examId"
-          element={
-            <ProtectedRoute>
-              <ExamDetailPage />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/exam/:examId" element={<ExamDetailPage />} />
 
         {/* Interactive Exam Session Player — generic SPA route during active test */}
         <Route
@@ -137,6 +110,9 @@ export default function App() {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+
+      {/* Global Auth Modal Pop-up */}
+      <AuthModal />
 
       {/* Floating Live Proctor Alert Toast for Creator */}
       {activeAlert && (

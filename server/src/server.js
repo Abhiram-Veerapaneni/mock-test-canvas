@@ -109,8 +109,8 @@ if (process.env.NODE_ENV === 'production') {
   app.use('/api', apiLimiter);
 }
 
-// Health Check Endpoint
-app.get('/api/health', (req, res) => {
+// Health Check Endpoint (supports both /api/health and /health)
+app.get(['/api/health', '/health'], (req, res) => {
   res.status(200).json({
     status: 'ok',
     timestamp: new Date().toISOString(),

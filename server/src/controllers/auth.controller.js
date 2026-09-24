@@ -1,6 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import { User } from '../models/User.model.js';
+import { Otp } from '../models/Otp.model.js';
+import { sendOtpEmail } from '../utils/sendEmail.js';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -14,13 +16,99 @@ const generateToken = (id) => {
 };
 
 /**
+ * @desc    Send 6-digit OTP verification code to user email
+ * @route   POST /api/auth/send-otp
+ * @access  Public
+ */
+export const sendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email address is required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a valid email address (e.g. name@domain.com).'
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'An account with this email already exists' });
+    }
+
+    // Generate random 6-digit OTP
+    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Delete any existing OTP for this email
+    await Otp.deleteMany({ email: normalizedEmail });
+
+    // Save new OTP
+    await Otp.create({ email: normalizedEmail, otp: generatedOtp });
+
+    // Send real verification email via Nodemailer
+    try {
+      await sendOtpEmail({ to: normalizedEmail, otp: generatedOtp });
+    } catch (emailErr) {
+      console.error('[EMAIL OTP FAIL] Could not dispatch email to:', normalizedEmail, emailErr.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Failed to deliver verification code. Please check that your email address is valid.'
+      });
+    }
+
+    console.log(`[EMAIL OTP VERIFICATION] Verification email dispatched to: ${normalizedEmail}`);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Verification code sent to your email inbox'
+    });
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to process verification code request' });
+  }
+};
+
+/**
+ * @desc    Verify 6-digit OTP code
+ * @route   POST /api/auth/verify-otp
+ * @access  Public
+ */
+export const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: 'Email and OTP code are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const otpRecord = await Otp.findOne({ email: normalizedEmail, otp: otp.trim() });
+
+    if (!otpRecord) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired verification code' });
+    }
+
+    return res.status(200).json({ success: true, message: 'Email verified successfully' });
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    return res.status(500).json({ success: false, message: 'Failed to verify code' });
+  }
+};
+
+/**
  * @desc    Register a new user
  * @route   POST /api/auth/register
  * @access  Public
  */
 export const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, otp } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -38,6 +126,19 @@ export const register = async (req, res) => {
         success: false,
         message: 'An account with this email already exists'
       });
+    }
+
+    // Verify OTP if provided
+    if (otp) {
+      const otpRecord = await Otp.findOne({ email: normalizedEmail, otp: otp.trim() });
+      if (!otpRecord) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid or expired verification code'
+        });
+      }
+      // Delete used OTP
+      await Otp.deleteMany({ email: normalizedEmail });
     }
 
     // Create user (password is hashed by pre-save hook)

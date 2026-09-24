@@ -6,7 +6,7 @@ import NotificationBell from './NotificationBell';
 import { LayoutDashboard, PlusCircle, LogOut, User as UserIcon, ShieldCheck } from 'lucide-react';
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout, openAuthModal } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -31,36 +31,34 @@ export default function Navbar() {
         </Link>
 
         {/* Navigation Links */}
-        {isAuthenticated && (
-          <nav className="hidden md:flex items-center gap-1.5">
-            <Link
-              to="/dashboard"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                location.pathname === '/dashboard'
-                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200/80 dark:border-slate-700/80 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-              }`}
-            >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Dashboard</span>
-            </Link>
-            <Link
-              to="/create-test"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                location.pathname === '/create-test'
-                  ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200/80 dark:border-slate-700/80 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-              }`}
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>Authoring Studio</span>
-            </Link>
-          </nav>
-        )}
+        <nav className="hidden md:flex items-center gap-1.5">
+          <Link
+            to="/dashboard"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              location.pathname === '/dashboard' || location.pathname === '/'
+                ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200/80 dark:border-slate-700/80 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+            }`}
+          >
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            <span>Dashboard</span>
+          </Link>
+          <Link
+            to="/create-test"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              location.pathname === '/create-test'
+                ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200/80 dark:border-slate-700/80 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+            }`}
+          >
+            <PlusCircle className="w-3.5 h-3.5" />
+            <span>Authoring Studio</span>
+          </Link>
+        </nav>
 
-        {/* Right Actions: Bell + Theme Toggle + User Info & Logout */}
+        {/* Right Actions: Bell + Theme Toggle + User Info & Logout / Sign In */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <NotificationBell />
+          {isAuthenticated && <NotificationBell />}
           <ThemeToggle />
 
           {isAuthenticated && user ? (
@@ -89,12 +87,15 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <Link
-              to="/login"
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-colors"
-            >
-              Sign In
-            </Link>
+            <div className="flex items-center gap-2 pl-1 sm:pl-2 border-l border-slate-200 dark:border-[#1f293d]">
+              <button
+                type="button"
+                onClick={() => openAuthModal()}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 shadow-xs focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all cursor-pointer"
+              >
+                Sign In / Register
+              </button>
+            </div>
           )}
         </div>
       </div>

@@ -54,7 +54,7 @@ export default function ExamDetailPage() {
   const [activeTab, setActiveTab] = useState('questions'); // 'questions' | 'proctoring' | 'attempts'
   const [lightboxImage, setLightboxImage] = useState(null);
 
-  const { user } = useAuthStore();
+  const { user, isAuthenticated, openAuthModal } = useAuthStore();
 
   const fetchExam = useCallback(async () => {
     try {
@@ -69,6 +69,10 @@ export default function ExamDetailPage() {
   }, [examId]);
 
   const fetchAttempts = useCallback(async () => {
+    if (!isAuthenticated) {
+      setIsLoadingAttempts(false);
+      return;
+    }
     try {
       const res = await api.get(`/submissions/my/${examId}`);
       if (res.data?.success) setAttempts(res.data.attempts || []);
@@ -77,7 +81,7 @@ export default function ExamDetailPage() {
     } finally {
       setIsLoadingAttempts(false);
     }
-  }, [examId]);
+  }, [examId, isAuthenticated]);
 
   useEffect(() => {
     fetchExam();
@@ -86,6 +90,18 @@ export default function ExamDetailPage() {
 
   const handleStartExam = () => {
     if (!examId) return;
+    if (!isAuthenticated) {
+      openAuthModal({
+        title: 'Sign In to Start Assessment',
+        subtitle: 'Log in or create a candidate account to begin this proctored test.',
+        onSuccess: () => {
+          localStorage.setItem('active_exam_id', examId);
+          useExamStore.getState().setActiveExamId(examId);
+          navigate('/test', { state: { examId } });
+        }
+      });
+      return;
+    }
     localStorage.setItem('active_exam_id', examId);
     useExamStore.getState().setActiveExamId(examId);
     navigate('/test', { state: { examId } });
