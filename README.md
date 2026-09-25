@@ -15,6 +15,7 @@
 <p align="center">
   <a href="#-key-features">Key Features</a> •
   <a href="#-architecture--tech-stack">Tech Stack</a> •
+  <a href="#-complete-dependency-manifest--rationale">Dependencies</a> •
   <a href="#-security--proctoring-engine">Proctoring Engine</a> •
   <a href="#-project-directory-structure">Project Structure</a> •
   <a href="#-environment-configuration">Configuration</a> •
@@ -154,6 +155,54 @@ graph TD
 | **Security & Limits** | **Express Rate Limit + CORS** | In-memory API rate limiter and strict origin whitelist. |
 | **AI Integration** | **@google/genai (Gemini API)** | Diagnostic reporting and step-by-step STEM problem explanation pipeline. |
 | **Hosting & CI/CD** | **Vercel (Client) + Render (API)** | Production edge routing with HTTPS and CORS parity. |
+
+### 📦 Complete Dependency Manifest & Rationale
+
+#### Backend Dependencies (`server/package.json`)
+
+| Package | Version | Category | Purpose & Architectural Rationale |
+| :--- | :--- | :--- | :--- |
+| **`express`** | `^4.21.2` | Web Framework | Core backend HTTP framework handling routes, controllers, middleware execution, and REST API endpoints. |
+| **`mongoose`** | `^8.9.5` | Database ODM | Connects to MongoDB, manages schemas, validation, relationships, and queries for users, exams, questions, and attempts. |
+| **`@google/genai`** | `latest` | AI / LLM SDK | Official Google Gemini API SDK used for automated question ingestion, test diagnostics, and step-by-step explanations. |
+| **`jsonwebtoken`** | `^9.0.3` | Authentication | Issues, signs, and cryptographically verifies stateless JSON Web Tokens (JWT) for secure user sessions. |
+| **`bcryptjs`** | `^3.0.3` | Security | Hashes candidate passwords with cryptographic salts before storage and validates credentials upon sign-in. |
+| **`google-auth-library`** | `^11.0.2` | Authentication | Verifies Google OAuth 2.0 ID tokens sent from the frontend for seamless one-tap Google SSO sign-in. |
+| **`cookie-parser`** | `^1.4.7` | Middleware | Parses incoming HTTP request cookies (`req.cookies`), allowing secure `httpOnly` JWT tokens to be read by the server. |
+| **`cors`** | `^2.8.5` | Security / Networking | Cross-Origin Resource Sharing middleware enabling safe communication between the frontend origin and Express backend. |
+| **`express-rate-limit`** | `^7.5.0` | Security | Rate limiting middleware protecting sensitive endpoints (auth, OTP verification, and AI question extraction) against abuse. |
+| **`multer`** | `^2.3.0` | File Handling | Middleware for handling `multipart/form-data` uploads (question paper files, documents, and student profile images). |
+| **`cloudinary`** | `^2.11.0` | Cloud Storage | Cloud asset management SDK used to upload, host, and serve user profile pictures, question diagrams, and proctoring snapshots. |
+| **`mammoth`** | `^1.12.2` | Document Parsing | Extracts raw text from uploaded `.docx` Word documents so the AI engine can structure them into questions. |
+| **`pdf-parse`** | `^1.1.1` | Document Parsing | Extracts text content from uploaded `.pdf` documents to ingest question banks and past exam papers. |
+| **`nodemailer`** | `^10.0.10` | Email Service | Sends transactional emails over SMTP (email verification codes, OTPs, and password reset links). |
+| **`socket.io`** | `^4.8.3` | Real-time WebSockets | Manages bidirectional WebSocket connections for real-time proctoring monitoring, live test synchronization, and instant alerts. |
+| **`dotenv`** | `^16.4.7` | Configuration | Loads environment variables from `.env` into `process.env` (database URIs, secrets, API keys). |
+| **`nodemon`** *(dev)* | `^3.1.9` | Dev Tooling | Development utility that automatically restarts the Node.js server upon file modifications. |
+
+#### Frontend Dependencies (`client/package.json`)
+
+| Package | Version | Category | Purpose & Architectural Rationale |
+| :--- | :--- | :--- | :--- |
+| **`react`** | `^19.2.8` | Core UI Library | Foundational library for building interactive, component-based user interfaces. |
+| **`react-dom`** | `^19.2.8` | UI Renderer | Renders React component trees directly into the browser's Document Object Model (DOM). |
+| **`react-router-dom`** | `^7.18.2` | Routing | Handles client-side routing, navigation, and protected routes (Login, Dashboard, Exam Canvas, Admin, Results). |
+| **`zustand`** | `^5.0.15` | State Management | Lightweight, boilerplate-free state management for user auth, live exam progress, answer states, and proctoring infractions. |
+| **`axios`** | `^1.20.0` | HTTP Client | Promise-based HTTP client for making API requests with pre-configured base URLs, credentials, and interceptors. |
+| **`@mediapipe/tasks-vision`** | `^1.0.1` | AI / Computer Vision | Runs on-device vision models in the browser (face detection and head pose tracking) for low-latency automated webcam proctoring. |
+| **`socket.io-client`** | `^4.8.3` | Real-time WebSockets | Connects to the backend WebSocket server for receiving instant proctoring warnings and live session synchronization. |
+| **`recharts`** | `^3.10.1` | Data Visualization | Renders interactive charts (accuracy trends, subject-wise scores, and performance breakdowns) in the student analytics dashboard. |
+| **`katex`** | `^0.18.1` | Math Typesetting | High-performance LaTeX rendering engine for formatting mathematical formulas, equations, and Greek symbols in STEM questions. |
+| **`lucide-react`** | `^1.28.0` | UI Icons | Modern SVG icon library providing clean, consistent icons across buttons, inputs, alerts, and navigation. |
+| **`canvas-confetti`** | `^1.9.4` | UI Effects | Renders celebratory confetti particles on completion of an exam or achievement of a high score. |
+| **`tailwindcss`** | `^4.3.3` | Styling Engine | Utility-first CSS framework for creating modern, responsive styling and glassmorphism themes. |
+| **`@tailwindcss/vite`** | `^4.3.3` | Build Integration | Official Vite plugin for Tailwind CSS v4, enabling seamless JIT styling compilation. |
+| **`clsx`** | `^2.1.1` | Styling Utility | Utility for conditionally joining class names together. |
+| **`tailwind-merge`** | `^3.6.0` | Styling Utility | Safely merges conflicting Tailwind CSS utility classes without style override bugs (used with `clsx` as `cn(...)`). |
+| **`vite`** *(dev)* | `^8.2.0` | Build Tool / Bundler | Next-generation frontend tooling providing instant server start, fast HMR, and optimized production builds. |
+| **`@vitejs/plugin-react`** *(dev)* | `^6.0.4` | Vite Plugin | Enables Fast Refresh and JSX transformation support for React in Vite. |
+| **`oxlint`** *(dev)* | `^1.75.0` | Linter | High-speed Rust-based JavaScript/TypeScript linter for fast code analysis and error detection. |
+| **`@types/react`** & **`@types/react-dom`** *(dev)* | `^19.x` | Type Definitions | TypeScript typing definitions for React and the DOM to provide IDE intellisense and autocomplete. |
 
 ---
 
