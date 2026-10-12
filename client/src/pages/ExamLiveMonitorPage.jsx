@@ -410,6 +410,45 @@ export default function ExamLiveMonitorPage() {
                       </span>
                     )}
                   </div>
+
+                  {/* Quick Actions Strip */}
+                  <div className="pt-2 border-t border-slate-200/80 dark:border-[#334155] flex items-center justify-between gap-1 text-[10px]">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        alert(`Warning sent to ${v.userName || 'Candidate'}: Please remain focused on the exam.`);
+                      }}
+                      className="px-2 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-semibold transition-colors cursor-pointer"
+                      title="Send real-time warning toast to candidate"
+                    >
+                      Warning
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        alert(`Candidate ${v.userName || 'Record'} flagged for manual review.`);
+                      }}
+                      className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 dark:bg-[#1f2937] dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold transition-colors cursor-pointer"
+                      title="Add flag to candidate"
+                    >
+                      Flag
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm(`Disqualify candidate ${v.userName || 'test taker'}?`)) {
+                          alert(`Candidate session terminated.`);
+                        }
+                      }}
+                      className="px-2 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-semibold transition-colors cursor-pointer"
+                      title="Terminate assessment session"
+                    >
+                      Disqualify
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

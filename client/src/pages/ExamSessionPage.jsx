@@ -15,7 +15,7 @@ import useBrowserLockdown from '../hooks/useBrowserLockdown';
 import {
   Loader2, AlertCircle, CheckCircle2, ArrowRight,
   Maximize, ShieldAlert, Trophy, Target, XCircle, MinusCircle,
-  AlertTriangle, ShieldOff, Clock as ClockIcon,
+  AlertTriangle, ShieldOff, Clock as ClockIcon, FlaskConical, CheckCheck
 } from 'lucide-react';
 
 // Bug #3 fix: moved outside component so it's not re-created on every render
@@ -43,6 +43,11 @@ export default function ExamSessionPage() {
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(location.search) : null;
   const isJustSubmitted = searchParams?.get('submitted') === 'true';
   const urlExamId = searchParams?.get('examId');
+
+  // Check practice mode flag
+  const isPractice =
+    location.state?.isPractice ??
+    (typeof window !== 'undefined' ? sessionStorage.getItem('active_exam_mode') === 'PRACTICE' : false);
 
   // Resolve examId from URL query, location state, localStorage, or Zustand store
   const examId =
@@ -135,10 +140,11 @@ export default function ExamSessionPage() {
     setProctorStream(null);
   }, []);
 
-  // Check if proctoring is required for this exam
+  // Check if proctoring is required for this exam (practice mode strictly bypasses all proctoring)
   const requiresProctoring =
-    exam?.proctorSettings?.faceCheck !== false ||
-    exam?.proctorSettings?.audioCheck !== false;
+    !isPractice &&
+    (exam?.proctorSettings?.faceCheck !== false ||
+     exam?.proctorSettings?.audioCheck !== false);
 
   const handleHardwareVerified = useCallback((stream) => {
     proctorStreamRef.current = stream;
@@ -171,6 +177,7 @@ export default function ExamSessionPage() {
   const [strikeModalState, setStrikeModalState] = useState({ open: false, type: null });
 
   const handleViolation = useCallback((type) => {
+    if (isPractice) return; // Practice mode: no infractions or strikes recorded
     const recorded = addViolation(type);
     if (recorded) {
       console.warn(`[Lockdown] Violation: ${type}`);
@@ -179,7 +186,7 @@ export default function ExamSessionPage() {
         setStrikeModalState({ open: true, type });
       }
     }
-  }, [addViolation]);
+  }, [addViolation, isPractice]);
 
   // ── Show violation warning popup after each new violation ────────────────────
   // Skip when the fullscreen blocker is already covering the screen.
@@ -300,13 +307,19 @@ export default function ExamSessionPage() {
       });
     }
 
+    const totalDurationSeconds = (currentExam?.durationMinutes || 180) * 60;
+    const remainingSeconds = useExamStore.getState().timeRemainingSeconds;
+    const timeSpentSeconds = Math.max(0, totalDurationSeconds - remainingSeconds);
+
     let resultDataPayload = null;
     try {
-      // S5: Include violations in submission payload so the server can persist them
+      // S5: Include violations and practice/timing in submission payload
       const res = await api.post('/submissions/submit', {
         examId: currentExam?._id || examId,
         answers: answersByQuestionId,
-        violations: currentViolations,
+        violations: isPractice ? [] : currentViolations,
+        isPractice: Boolean(isPractice),
+        timeSpentSeconds,
       });
       if (res.data?.success) {
         resultDataPayload = res.data.result;
@@ -341,8 +354,9 @@ export default function ExamSessionPage() {
             JSON.stringify({
               snap: snapshotObj,
               result: resultDataPayload,
-              violations: currentViolations,
+              violations: isPractice ? [] : currentViolations,
               examId: finalExamId,
+              isPractice: Boolean(isPractice),
             })
           );
           window.location.replace(`/test?submitted=true&examId=${finalExamId}`);
@@ -401,9 +415,9 @@ export default function ExamSessionPage() {
     doSubmit();
   }, [stopTimer, doSubmit, stopProctoringMedia]);
 
-  // ── 3.2 Browser lockdown ──────────────────────────────────────────────────────
+  // ── 3.2 Browser lockdown (disabled in practice mode) ───────────────────────
   const { dismissBlocker } = useBrowserLockdown({
-    active: isSessionActive,
+    active: isSessionActive && !isPractice,
     onViolation: handleViolation,
   });
 
@@ -508,7 +522,7 @@ export default function ExamSessionPage() {
         const [examRes, attemptsRes, startRes] = await Promise.all([
           api.get(`/exams/${examId}`),
           api.get(`/submissions/my/${examId}`).catch(() => ({ data: { success: true, attempts: [] } })),
-          api.post('/submissions/start', { examId }).catch((err) => {
+          api.post('/submissions/start', { examId, isPractice: Boolean(isPractice) }).catch((err) => {
             console.warn('[ExamSession] Start attempt error:', err?.response?.data || err?.message);
             return { data: { success: false } };
           }),
@@ -521,19 +535,20 @@ export default function ExamSessionPage() {
         if (examRes.data?.success && examRes.data.exam) {
           const examData = examRes.data.exam;
           
-          // Prevent manual navigation bypass for exhausted attempts
-          if (examData.maxAttempts !== null && isFreshAttempt) {
-            const attemptsUsed = attemptsRes.data?.attempts?.length || 0;
-            if (attemptsUsed >= examData.maxAttempts) {
-              throw new Error('You have exhausted all attempts for this examination.');
+          // Prevent manual navigation bypass for exhausted official attempts (practice attempts don't count)
+          if (examData.maxAttempts !== null && isFreshAttempt && !isPractice) {
+            const officialAttemptsUsed = (attemptsRes.data?.attempts || []).filter((a) => !a.isPractice).length;
+            if (officialAttemptsUsed >= examData.maxAttempts) {
+              throw new Error('You have exhausted all official attempts for this examination.');
             }
           }
 
           if (isMounted) {
             initExam(examData);
             const needsProctor =
-              examData.proctorSettings?.faceCheck !== false ||
-              examData.proctorSettings?.audioCheck !== false;
+              !isPractice &&
+              (examData.proctorSettings?.faceCheck !== false ||
+               examData.proctorSettings?.audioCheck !== false);
             if (!needsProctor) {
               setIsHardwareVerified(true);
             }
@@ -581,6 +596,12 @@ export default function ExamSessionPage() {
             <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-900 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3">
               <CheckCircle2 className="w-6 h-6" />
             </div>
+            {isPractice && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 mb-2">
+                <FlaskConical className="w-3.5 h-3.5" />
+                <span>Practice Session</span>
+              </div>
+            )}
             <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-1">Examination Submitted</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               {snap?.title || 'Your answers have been recorded.'}
@@ -685,20 +706,31 @@ export default function ExamSessionPage() {
           )}
 
           {/* Actions */}
-          <div className="flex gap-3">
-            <button
-              onClick={() => navigate(`/test/${submittedExamId || examId}`)}
-              className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-            >
-              View Attempts
-            </button>
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors"
-            >
-              <span>Dashboard</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+          <div className="space-y-2.5">
+            {(result?.attemptId || savedResultData?.result?.attemptId || attemptId) && (
+              <button
+                onClick={() => navigate(`/test/${submittedExamId || examId}/review/${result?.attemptId || savedResultData?.result?.attemptId || attemptId}`)}
+                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors shadow-xs"
+              >
+                <CheckCheck className="w-3.5 h-3.5" />
+                <span>Review Responses & Solutions</span>
+              </button>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => navigate(`/test/${submittedExamId || examId}`)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-medium text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                View Attempts
+              </button>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <span>Dashboard</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -780,6 +812,19 @@ export default function ExamSessionPage() {
   // ── Main Exam UI ──────────────────────────────────────────────────────────────
   return (
     <div className="h-screen w-screen bg-[#edf2f9] dark:bg-[#0f172a] flex flex-col overflow-hidden select-none transition-colors duration-200">
+      {/* Practice Mode Strip */}
+      {isPractice && (
+        <div className="bg-indigo-600 dark:bg-indigo-700 text-white text-[11px] font-semibold py-1 px-4 flex items-center justify-between shadow-2xs z-30 shrink-0">
+          <div className="flex items-center gap-2">
+            <FlaskConical className="w-3.5 h-3.5 text-indigo-200" />
+            <span>Practice Assessment — Proctoring is disabled. Examiner will not be notified.</span>
+          </div>
+          <span className="text-[10px] bg-indigo-500/60 dark:bg-indigo-800/80 px-2 py-0.5 rounded-full font-mono">
+            Unproctored
+          </span>
+        </div>
+      )}
+
       {/* 1. Header */}
       <ExamHeader
         onSubmitClick={() => setIsSubmitModalOpen(true)}
@@ -792,10 +837,10 @@ export default function ExamSessionPage() {
         <QuestionPalette />
       </div>
 
-      {/* Phase 4: Camera & Audio Monitor */}
-      {isSessionActive && (
+      {/* Phase 4: Camera & Audio Monitor (strictly disabled in practice mode) */}
+      {isSessionActive && !isPractice && (
         <CameraMonitor
-          active={isSessionActive}
+          active={isSessionActive && !isPractice}
           proctorSettings={exam?.proctorSettings}
           onViolation={handleViolation}
           attemptId={attemptId}

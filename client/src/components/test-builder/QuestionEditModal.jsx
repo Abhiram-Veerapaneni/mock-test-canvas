@@ -527,7 +527,7 @@ export default function QuestionEditModal({
                         key={optIdx}
                         className={`p-3 rounded-xl border transition-all ${
                           isSelected
-                            ? 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-300 dark:border-blue-800/80'
+                            ? 'bg-emerald-500/10 border-emerald-500/30 dark:bg-emerald-950/20 dark:border-emerald-500/30'
                             : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
                         }`}
                       >

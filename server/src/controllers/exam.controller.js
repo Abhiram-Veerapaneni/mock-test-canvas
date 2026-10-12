@@ -88,6 +88,9 @@ export const createExam = async (req, res) => {
       maxAttempts,
       markingScheme,
       proctorSettings,
+      allowPracticeMode = true,
+      allowReviewResponses = true,
+      schedule,
       questions
     } = req.body;
 
@@ -155,6 +158,13 @@ export const createExam = async (req, res) => {
       markingScheme: {
         correct: correctMark,
         incorrect: incorrectMark
+      },
+      allowPracticeMode: allowPracticeMode !== undefined ? Boolean(allowPracticeMode) : true,
+      allowReviewResponses: allowReviewResponses !== undefined ? Boolean(allowReviewResponses) : true,
+      schedule: {
+        isScheduled: Boolean(schedule?.isScheduled),
+        startTime: schedule?.startTime ? new Date(schedule.startTime) : null,
+        endTime: schedule?.endTime ? new Date(schedule.endTime) : null
       },
       questions: questionIds,
       proctorSettings: {
@@ -240,7 +250,7 @@ export const getAllExams = async (req, res) => {
 
     const total = await Exam.countDocuments(query);
     const exams = await Exam.find(query)
-      .select('title description category status durationMinutes totalMarks maxAttempts markingScheme proctorSettings questions createdAt creatorId')
+      .select('title description category status durationMinutes totalMarks maxAttempts markingScheme proctorSettings allowPracticeMode allowReviewResponses schedule questions createdAt creatorId')
       .populate('creatorId', 'name')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -272,6 +282,9 @@ export const getAllExams = async (req, res) => {
       maxAttempts: exam.maxAttempts ?? null, // null = unlimited
       markingScheme: exam.markingScheme,
       proctorSettings: exam.proctorSettings,
+      allowPracticeMode: exam.allowPracticeMode ?? true,
+      allowReviewResponses: exam.allowReviewResponses ?? true,
+      schedule: exam.schedule || { isScheduled: false },
       questionCount: exam.questions?.length || 0,
       userAttemptCount: userAttemptMap[exam._id.toString()] || 0,
       createdAt: exam.createdAt
@@ -375,6 +388,9 @@ export const updateExam = async (req, res) => {
       maxAttempts,
       markingScheme,
       proctorSettings,
+      allowPracticeMode,
+      allowReviewResponses,
+      schedule,
       questions
     } = req.body;
 
@@ -400,6 +416,19 @@ export const updateExam = async (req, res) => {
       existingExam.proctorSettings = {
         ...existingExam.proctorSettings?.toObject?.(),
         ...proctorSettings
+      };
+    }
+    if (allowPracticeMode !== undefined) {
+      existingExam.allowPracticeMode = Boolean(allowPracticeMode);
+    }
+    if (allowReviewResponses !== undefined) {
+      existingExam.allowReviewResponses = Boolean(allowReviewResponses);
+    }
+    if (schedule !== undefined) {
+      existingExam.schedule = {
+        isScheduled: Boolean(schedule?.isScheduled),
+        startTime: schedule?.startTime ? new Date(schedule.startTime) : null,
+        endTime: schedule?.endTime ? new Date(schedule.endTime) : null
       };
     }
 
@@ -525,13 +554,14 @@ export const getExamViolations = async (req, res) => {
 
     // Find all attempts for this exam (for both violation logs and completion reports)
     const attempts = await Attempt.find({ examId: id })
-      .select('userId score accuracy correct incorrect unanswered responses violations trustScore status startedAt submittedAt')
+      .select('userId score accuracy correct incorrect unanswered responses violations trustScore status startedAt submittedAt timeTakenSeconds isPractice')
       .populate('userId', 'name email avatar')
       .sort({ createdAt: -1 });
 
-    // Flatten all violations for the violation logs table
+    // Flatten all violations for the violation logs table (filter out practice attempts)
     const allViolations = [];
     attempts.forEach((att) => {
+      if (att.isPractice) return; // Do not display practice violations in examiner audit
       const userTotalViolations = att.violations?.length || 0;
       att.violations.forEach((v) => {
         allViolations.push({
@@ -584,6 +614,8 @@ export const getExamViolations = async (req, res) => {
         violationsCount: att.violations?.length || 0,
         trustScore: att.trustScore ?? 100,
         status: att.status,
+        isPractice: Boolean(att.isPractice),
+        timeTakenSeconds: att.timeTakenSeconds || 0,
         startedAt: att.startedAt,
         submittedAt: att.submittedAt || att.updatedAt,
       };
@@ -598,6 +630,9 @@ export const getExamViolations = async (req, res) => {
         totalMarks: exam.totalMarks,
         questionCount: exam.questions?.length || 0,
         proctorSettings: exam.proctorSettings,
+        schedule: exam.schedule,
+        allowPracticeMode: exam.allowPracticeMode,
+        allowReviewResponses: exam.allowReviewResponses
       },
       totalViolations: allViolations.length,
       violations: allViolations,

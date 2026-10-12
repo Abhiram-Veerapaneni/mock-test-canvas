@@ -57,6 +57,28 @@ const examSchema = new mongoose.Schema(
         ref: 'Question'
       }
     ],
+    allowPracticeMode: {
+      type: Boolean,
+      default: true
+    },
+    allowReviewResponses: {
+      type: Boolean,
+      default: true
+    },
+    schedule: {
+      isScheduled: {
+        type: Boolean,
+        default: false
+      },
+      startTime: {
+        type: Date,
+        default: null
+      },
+      endTime: {
+        type: Date,
+        default: null
+      }
+    },
     proctorSettings: {
       faceCheck: {
         type: Boolean,

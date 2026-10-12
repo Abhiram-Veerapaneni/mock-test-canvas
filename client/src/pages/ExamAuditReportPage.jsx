@@ -9,7 +9,7 @@ import {
   ShieldAlert, Users, Award, Clock, ArrowLeft, Loader2,
   AlertTriangle, Eye, X, CheckCircle2, Search, Filter,
   ExternalLink, Calendar, RefreshCw, FileText, BarChart3,
-  Check, ChevronDown, Radio
+  Check, ChevronDown, Radio, FlaskConical, ShieldCheck, CheckCheck
 } from 'lucide-react';
 
 const VIOLATION_LABELS = {
@@ -47,7 +47,16 @@ export default function ExamAuditReportPage() {
   const [completionSearch, setCompletionSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [trustFilter, setTrustFilter] = useState('ALL');
+  const [modeFilter, setModeFilter] = useState('ALL'); // 'ALL' | 'OFFICIAL' | 'PRACTICE'
   const [sortBy, setSortBy] = useState('RECENT'); // 'RECENT' | 'SCORE_DESC' | 'TRUST_ASC' | 'VIOLATIONS_DESC'
+
+  const formatSeconds = (sec) => {
+    if (!sec || sec <= 0) return '—';
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    if (m === 0) return `${s}s`;
+    return `${m}m ${s}s`;
+  };
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -98,7 +107,12 @@ export default function ExamAuditReportPage() {
       if (trustFilter === 'LOW') matchesTrust = rep.trustScore < 70;
       if (trustFilter === 'HIGH') matchesTrust = rep.trustScore >= 80;
 
-      return matchesSearch && matchesStatus && matchesTrust;
+      const matchesMode =
+        modeFilter === 'ALL' ||
+        (modeFilter === 'OFFICIAL' && !rep.isPractice) ||
+        (modeFilter === 'PRACTICE' && rep.isPractice);
+
+      return matchesSearch && matchesStatus && matchesTrust && matchesMode;
     })
     .sort((a, b) => {
       if (sortBy === 'SCORE_DESC') return (b.score || 0) - (a.score || 0);
@@ -330,15 +344,15 @@ export default function ExamAuditReportPage() {
                         {filteredViolations.map((v, idx) => (
                           <tr
                             key={idx}
-                            className="hover:bg-slate-50/80 dark:hover:bg-[#243147]/50 transition-colors"
+                            className="even:bg-slate-50/60 dark:even:bg-[#151f32]/40 hover:bg-slate-100/60 dark:hover:bg-[#243147]/60 transition-colors"
                           >
                             {/* 1. Timestamp */}
-                            <td className="py-3 px-4 whitespace-nowrap font-mono tabular-nums text-slate-600 dark:text-slate-300">
+                            <td className="py-2.5 px-4 whitespace-nowrap font-mono tabular-nums text-slate-600 dark:text-slate-300">
                               {v.timestamp ? new Date(v.timestamp).toLocaleString() : '—'}
                             </td>
 
                             {/* 2. User */}
-                            <td className="py-3 px-4 whitespace-nowrap">
+                            <td className="py-2.5 px-4 whitespace-nowrap">
                               <div className="flex items-center gap-2">
                                 <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 font-bold flex items-center justify-center text-[10px]">
                                   {v.userName ? v.userName.charAt(0).toUpperCase() : 'U'}
@@ -353,27 +367,29 @@ export default function ExamAuditReportPage() {
                             </td>
 
                             {/* 3. Violation Type */}
-                            <td className="py-3 px-4 whitespace-nowrap">
+                            <td className="py-2.5 px-4 whitespace-nowrap">
                               <span className={`px-2 py-0.5 rounded-md text-[11px] font-semibold border ${getBadgeStyle(v.type)}`}>
                                 {VIOLATION_LABELS[v.type] || v.type}
                               </span>
                             </td>
 
                             {/* 4. Number of Violations */}
-                            <td className="py-3 px-4 whitespace-nowrap text-center">
-                              <span className="inline-block px-2.5 py-0.5 rounded-full font-bold tabular-nums text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20">
+                            <td className="py-2.5 px-4 whitespace-nowrap text-center">
+                              <span className="inline-block px-2 py-0.2 rounded-full text-xs font-bold tabular-nums text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20">
                                 {v.noOfViolations ?? 1}
                               </span>
                             </td>
 
                             {/* 5. Image (if applicable) */}
-                            <td className="py-3 px-4 whitespace-nowrap text-center">
+                            <td className="py-2.5 px-4 whitespace-nowrap text-center">
                               {v.imageUrl ? (
                                 <button
+                                  type="button"
                                   onClick={() => setSelectedSnapshot(v)}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-semibold transition-all shadow-xs cursor-pointer hover:shadow-md"
+                                  title="Inspect Snapshot"
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#151f32] dark:hover:bg-[#243147] text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200/80 dark:border-[#334155] text-[11px] font-semibold transition-all cursor-pointer"
                                 >
-                                  <Eye className="w-3.5 h-3.5" />
+                                  <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                                   <span>View Snapshot</span>
                                 </button>
                               ) : (
@@ -407,6 +423,17 @@ export default function ExamAuditReportPage() {
                       <option value="SUBMITTED">Submitted</option>
                       <option value="IN_PROGRESS">In Progress</option>
                       <option value="DISQUALIFIED">Disqualified</option>
+                    </select>
+
+                    {/* Mode filter */}
+                    <select
+                      value={modeFilter}
+                      onChange={(e) => setModeFilter(e.target.value)}
+                      className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#151f32] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-[#334155] focus:outline-none cursor-pointer"
+                    >
+                      <option value="ALL">All Modes</option>
+                      <option value="OFFICIAL">Official Exams</option>
+                      <option value="PRACTICE">Practice Sessions</option>
                     </select>
 
                     {/* Trust score filter */}
@@ -457,13 +484,16 @@ export default function ExamAuditReportPage() {
                       <thead>
                         <tr className="bg-slate-50/80 dark:bg-[#151f32] border-b border-slate-200/80 dark:border-[#334155] text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                           <th className="py-3 px-4">User</th>
+                          <th className="py-3 px-4 text-center">Mode</th>
                           <th className="py-3 px-4 text-center">Status</th>
+                          <th className="py-3 px-4 text-center">Time Taken</th>
                           <th className="py-3 px-4 text-center">Score</th>
                           <th className="py-3 px-4 text-center">Accuracy</th>
                           <th className="py-3 px-4 text-center">Answered / Unanswered</th>
-                          <th className="py-3 px-4 text-center">No. of Violations</th>
-                          <th className="py-3 px-4 text-center">Trust Score at End</th>
+                          <th className="py-3 px-4 text-center">Violations</th>
+                          <th className="py-3 px-4 text-center">Trust Score</th>
                           <th className="py-3 px-4 text-right">Submitted At</th>
+                          <th className="py-3 px-4 text-right">Responses</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-[#334155]">
@@ -487,7 +517,22 @@ export default function ExamAuditReportPage() {
                               </div>
                             </td>
 
-                            {/* 2. Status */}
+                            {/* 2. Mode */}
+                            <td className="py-3 px-4 whitespace-nowrap text-center">
+                              {item.isPractice ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                                  <FlaskConical className="w-2.5 h-2.5" />
+                                  Practice
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                  <ShieldCheck className="w-2.5 h-2.5" />
+                                  Official
+                                </span>
+                              )}
+                            </td>
+
+                            {/* 3. Status */}
                             <td className="py-3 px-4 whitespace-nowrap text-center">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                                 item.status === 'SUBMITTED'
@@ -498,7 +543,12 @@ export default function ExamAuditReportPage() {
                               </span>
                             </td>
 
-                            {/* 3. Score */}
+                            {/* 4. Time Taken */}
+                            <td className="py-3 px-4 whitespace-nowrap text-center tabular-nums text-slate-600 dark:text-slate-300 font-mono">
+                              {formatSeconds(item.timeTakenSeconds)}
+                            </td>
+
+                            {/* 5. Score */}
                             <td className="py-3 px-4 whitespace-nowrap text-center">
                               <span className="font-bold text-slate-900 dark:text-white tabular-nums text-sm">
                                 {item.score}
@@ -506,21 +556,21 @@ export default function ExamAuditReportPage() {
                               <span className="text-[10px] text-slate-400 ml-1">pts</span>
                             </td>
 
-                            {/* 4. Accuracy */}
+                            {/* 6. Accuracy */}
                             <td className="py-3 px-4 whitespace-nowrap text-center font-semibold tabular-nums">
                               <span className={item.accuracy >= 70 ? 'text-emerald-500' : 'text-slate-600 dark:text-slate-400'}>
                                 {item.accuracy}%
                               </span>
                             </td>
 
-                            {/* 5. Answered / Unanswered */}
+                            {/* 7. Answered / Unanswered */}
                             <td className="py-3 px-4 whitespace-nowrap text-center font-mono">
                               <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{item.answeredCount}</span>
                               <span className="text-slate-400 mx-1">/</span>
                               <span className="text-slate-500">{item.unansweredCount}</span>
                             </td>
 
-                            {/* 6. Violations Count */}
+                            {/* 8. Violations Count */}
                             <td className="py-3 px-4 whitespace-nowrap text-center">
                               <span className={`px-2 py-0.5 rounded-full font-bold tabular-nums text-xs ${
                                 item.violationsCount > 0
@@ -531,18 +581,29 @@ export default function ExamAuditReportPage() {
                               </span>
                             </td>
 
-                            {/* 7. Trust Score at End */}
+                            {/* 9. Trust Score at End */}
                             <td className="py-3 px-4 whitespace-nowrap text-center">
                               <span className={`inline-block px-2.5 py-0.5 rounded-full font-bold tabular-nums text-xs border ${getTrustBadge(item.trustScore)}`}>
                                 {item.trustScore}%
                               </span>
                             </td>
 
-                            {/* 8. Submitted At */}
+                            {/* 10. Submitted At */}
                             <td className="py-3 px-4 whitespace-nowrap text-right font-mono text-slate-500 text-[11px]">
                               {item.submittedAt ? new Date(item.submittedAt).toLocaleDateString('en-IN', {
                                 day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
                               }) : '—'}
+                            </td>
+
+                            {/* 11. Actions */}
+                            <td className="py-3 px-4 whitespace-nowrap text-right">
+                              <button
+                                onClick={() => navigate(`/test/${examId}/review/${item.attemptId}`)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/40 transition-colors"
+                              >
+                                <CheckCheck className="w-3.5 h-3.5" />
+                                <span>Answers</span>
+                              </button>
                             </td>
                           </tr>
                         ))}

@@ -1,5 +1,5 @@
 import express from 'express';
-import { submitExam, getUserAttempts, logViolation, startAttempt } from '../controllers/submission.controller.js';
+import { submitExam, getUserAttempts, logViolation, startAttempt, getAttemptReview } from '../controllers/submission.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 import { uploadSnapshot } from '../middleware/upload.middleware.js';
 
@@ -13,6 +13,9 @@ router.post('/submit', protect, submitExam);
 
 // Get all attempts for the logged-in user for a specific exam
 router.get('/my/:examId', protect, getUserAttempts);
+
+// Get detailed responses and solutions review for a completed attempt
+router.get('/attempt/:attemptId/review', protect, getAttemptReview);
 
 // Log a proctoring violation with optional snapshot image
 router.post('/:id/violation', protect, uploadSnapshot, logViolation);

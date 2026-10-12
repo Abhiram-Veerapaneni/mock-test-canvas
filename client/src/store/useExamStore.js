@@ -61,6 +61,13 @@ export const useExamStore = create((set, get) => ({
       }
     }
 
+    // Dynamic timer cap: if exam is scheduled, time remaining cannot exceed the window's endTime
+    if (examData.schedule?.isScheduled && examData.schedule?.endTime) {
+      const scheduleEndMs = new Date(examData.schedule.endTime).getTime();
+      const secondsUntilEnd = Math.max(0, Math.floor((scheduleEndMs - Date.now()) / 1000));
+      initialTimeRemaining = Math.min(initialTimeRemaining, secondsUntilEnd);
+    }
+
     set({
       exam: examData,
       questions: examData.questions,

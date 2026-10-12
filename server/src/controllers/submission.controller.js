@@ -12,7 +12,7 @@ import cloudinary, { isCloudinaryConfigured } from '../config/cloudinary.js';
  */
 export const startAttempt = async (req, res) => {
   try {
-    const { examId } = req.body;
+    const { examId, isPractice = false } = req.body;
     const userId = req.user._id;
 
     if (!examId) {
@@ -24,26 +24,67 @@ export const startAttempt = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Exam not found' });
     }
 
-    // Check attempt limit (null = unlimited)
-    if (exam.maxAttempts !== null) {
-      const existingCount = await Attempt.countDocuments({
-        examId,
-        userId,
-        status: 'SUBMITTED',
-      });
-      if (existingCount >= exam.maxAttempts) {
+    const now = new Date();
+
+    // 1. PRACTICE MODE VALIDATIONS
+    if (isPractice) {
+      // Check if examiner allows practice mode
+      if (exam.allowPracticeMode === false) {
         return res.status(403).json({
           success: false,
-          message: `Maximum attempts (${exam.maxAttempts}) reached for this exam.`,
+          message: 'Practice mode is not allowed for this exam.'
         });
+      }
+
+      // If exam is scheduled, practice mode is only unlocked after the schedule ends
+      if (exam.schedule?.isScheduled && exam.schedule?.endTime && now < new Date(exam.schedule.endTime)) {
+        return res.status(403).json({
+          success: false,
+          message: `Practice mode for this scheduled exam will only be unlocked after the exam schedule concludes at ${new Date(exam.schedule.endTime).toLocaleString()}.`
+        });
+      }
+      // Practice mode does NOT consume or check official maxAttempts limit
+    } else {
+      // 2. OFFICIAL ATTEMPT VALIDATIONS
+      // Schedule Window enforcement
+      if (exam.schedule?.isScheduled) {
+        if (exam.schedule.startTime && now < new Date(exam.schedule.startTime)) {
+          return res.status(403).json({
+            success: false,
+            message: `This examination has not started yet. Testing window opens at ${new Date(exam.schedule.startTime).toLocaleString()}.`
+          });
+        }
+        if (exam.schedule.endTime && now > new Date(exam.schedule.endTime)) {
+          return res.status(403).json({
+            success: false,
+            message: `The scheduled testing window for this exam concluded at ${new Date(exam.schedule.endTime).toLocaleString()}.`
+          });
+        }
+      }
+
+      // Check official attempt limit (null = unlimited)
+      if (exam.maxAttempts !== null) {
+        const existingCount = await Attempt.countDocuments({
+          examId,
+          userId,
+          status: 'SUBMITTED',
+          isPractice: { $ne: true }
+        });
+        if (existingCount >= exam.maxAttempts) {
+          return res.status(403).json({
+            success: false,
+            message: `Maximum official attempts (${exam.maxAttempts}) reached for this exam.`
+          });
+        }
       }
     }
 
-    // Find existing IN_PROGRESS attempt or create a new one
+    // Find existing IN_PROGRESS attempt with matching mode or create a new one
     let attempt = await Attempt.findOne({
       examId,
       userId,
       status: 'IN_PROGRESS',
+      isPractice: Boolean(isPractice)
     }).sort({ createdAt: -1 });
 
     if (!attempt) {
@@ -52,16 +93,19 @@ export const startAttempt = async (req, res) => {
         userId,
         status: 'IN_PROGRESS',
         startedAt: new Date(),
+        isPractice: Boolean(isPractice),
         trustScore: 100,
-        violations: [],
+        violations: []
       });
     }
 
     return res.status(200).json({
       success: true,
       attemptId: attempt._id,
+      isPractice: attempt.isPractice,
       trustScore: attempt.trustScore,
       violations: attempt.violations,
+      startedAt: attempt.startedAt
     });
   } catch (error) {
     console.error('[startAttempt] Error:', error);
@@ -76,7 +120,7 @@ export const startAttempt = async (req, res) => {
  */
 export const submitExam = async (req, res) => {
   try {
-    const { examId, answers = {} } = req.body;
+    const { examId, answers = {}, isPractice = false, timeSpentSeconds } = req.body;
     const userId = req.user._id;
 
     if (!examId) {
@@ -89,12 +133,13 @@ export const submitExam = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Exam not found' });
     }
 
-    // Check attempt limit (null = unlimited)
-    if (exam.maxAttempts !== null) {
+    // Check official attempt limit (practice attempts do not count against maxAttempts)
+    if (!isPractice && exam.maxAttempts !== null) {
       const existingCount = await Attempt.countDocuments({
         examId,
         userId,
-        status: 'SUBMITTED'
+        status: 'SUBMITTED',
+        isPractice: { $ne: true }
       });
       if (existingCount >= exam.maxAttempts) {
         return res.status(403).json({
@@ -119,9 +164,21 @@ export const submitExam = async (req, res) => {
     });
 
     // Check if there is an existing IN_PROGRESS attempt to complete
-    let attempt = await Attempt.findOne({ examId, userId, status: 'IN_PROGRESS' }).sort({ createdAt: -1 });
+    let attempt = await Attempt.findOne({
+      examId,
+      userId,
+      status: 'IN_PROGRESS',
+      isPractice: Boolean(isPractice)
+    }).sort({ createdAt: -1 });
+
+    const submittedAt = new Date();
+    let timeTakenSeconds = 0;
 
     if (attempt) {
+      const startMs = attempt.startedAt ? new Date(attempt.startedAt).getTime() : Date.now();
+      const elapsedSec = Math.max(0, Math.round((submittedAt.getTime() - startMs) / 1000));
+      timeTakenSeconds = Number(timeSpentSeconds) > 0 ? Number(timeSpentSeconds) : elapsedSec;
+
       attempt.responses = responses;
       attempt.score = result.score;
       attempt.accuracy = result.accuracy;
@@ -129,7 +186,10 @@ export const submitExam = async (req, res) => {
       attempt.incorrect = result.incorrect;
       attempt.unanswered = result.unanswered;
       attempt.status = 'SUBMITTED';
-      attempt.submittedAt = new Date();
+      attempt.submittedAt = submittedAt;
+      attempt.isPractice = Boolean(isPractice);
+      attempt.timeTakenSeconds = timeTakenSeconds;
+
       if (Array.isArray(req.body.violations) && req.body.violations.length > 0) {
         const existingTimestamps = new Set(attempt.violations.map((v) => new Date(v.timestamp).getTime()));
         req.body.violations.forEach((v) => {
@@ -145,7 +205,8 @@ export const submitExam = async (req, res) => {
       }
       await attempt.save();
     } else {
-      // Create Attempt record
+      timeTakenSeconds = Number(timeSpentSeconds) || 0;
+      const startedAt = new Date(submittedAt.getTime() - timeTakenSeconds * 1000);
       attempt = await Attempt.create({
         examId,
         userId,
@@ -156,7 +217,10 @@ export const submitExam = async (req, res) => {
         incorrect: result.incorrect,
         unanswered: result.unanswered,
         status: 'SUBMITTED',
-        submittedAt: new Date(),
+        startedAt,
+        submittedAt,
+        isPractice: Boolean(isPractice),
+        timeTakenSeconds,
         violations: Array.isArray(req.body.violations) ? req.body.violations : []
       });
     }
@@ -167,17 +231,17 @@ export const submitExam = async (req, res) => {
         attemptedTests: {
           examId,
           attemptId: attempt._id,
-          completedAt: new Date()
+          completedAt: submittedAt
         }
       }
     });
 
-    // Create persistent notifications for examiner and candidate
+    // Create notifications
     try {
       const io = req.app.get('io');
 
-      // 1. Notify creator / examiner (if different from candidate)
-      if (exam.creatorId && String(exam.creatorId) !== String(userId)) {
+      // 1. Notify examiner ONLY for official attempts (DO NOT notify examiner for practice mode!)
+      if (!isPractice && exam.creatorId && String(exam.creatorId) !== String(userId)) {
         const examinerNotif = await Notification.create({
           recipient: exam.creatorId,
           sender: userId,
@@ -193,7 +257,8 @@ export const submitExam = async (req, res) => {
             score: result.score,
             totalMarks: exam.totalMarks,
             accuracy: Math.round(result.accuracy || 0),
-            timestamp: new Date(),
+            timestamp: submittedAt,
+            isPractice: false
           },
           link: `/test/${exam._id}/audit`,
         });
@@ -204,12 +269,14 @@ export const submitExam = async (req, res) => {
         }
       }
 
-      // 2. Notify candidate of completion
+      // 2. Notify candidate of their completion
       const candidateNotif = await Notification.create({
         recipient: userId,
         type: 'EXAM_SUBMISSION',
-        title: 'Exam Submitted Successfully',
-        message: `You completed "${exam.title}". Score: ${result.score}/${exam.totalMarks} (${Math.round(result.accuracy || 0)}% accuracy).`,
+        title: isPractice ? 'Practice Session Completed' : 'Exam Submitted Successfully',
+        message: isPractice
+          ? `You completed practice for "${exam.title}". Score: ${result.score}/${exam.totalMarks} (${Math.round(result.accuracy || 0)}% accuracy).`
+          : `You completed "${exam.title}". Score: ${result.score}/${exam.totalMarks} (${Math.round(result.accuracy || 0)}% accuracy).`,
         data: {
           examId: exam._id,
           examTitle: exam.title,
@@ -217,7 +284,8 @@ export const submitExam = async (req, res) => {
           score: result.score,
           totalMarks: exam.totalMarks,
           accuracy: Math.round(result.accuracy || 0),
-          timestamp: new Date(),
+          timestamp: submittedAt,
+          isPractice: Boolean(isPractice)
         },
         link: `/test/${exam._id}`,
       });
@@ -240,7 +308,11 @@ export const submitExam = async (req, res) => {
         unanswered: result.unanswered,
         totalQuestions: exam.questions.length,
         totalMarks: exam.totalMarks,
-        markingScheme: exam.markingScheme
+        markingScheme: exam.markingScheme,
+        isPractice: attempt.isPractice,
+        timeTakenSeconds: attempt.timeTakenSeconds,
+        startedAt: attempt.startedAt,
+        submittedAt: attempt.submittedAt
       }
     });
   } catch (error) {
@@ -260,7 +332,7 @@ export const getUserAttempts = async (req, res) => {
     const userId = req.user._id;
 
     const attempts = await Attempt.find({ examId, userId, status: 'SUBMITTED' })
-      .select('score accuracy correct incorrect unanswered responses submittedAt createdAt violations')
+      .select('score accuracy correct incorrect unanswered responses submittedAt startedAt timeTakenSeconds isPractice createdAt violations')
       .sort({ createdAt: -1 });
 
     return res.status(200).json({ success: true, attempts });
@@ -391,9 +463,9 @@ export const logViolation = async (req, res) => {
       { new: true, select: 'violations trustScore status' }
     );
 
-    // Create persistent Notification for examiner (creator)
+    // Create persistent Notification for examiner (creator) - ONLY FOR OFFICIAL ATTEMPTS
     let persistentNotification = null;
-    if (exam && exam.creatorId) {
+    if (!attempt.isPractice && exam && exam.creatorId) {
       try {
         const readableType = violation.type ? violation.type.replace(/_/g, ' ') : 'Proctoring Anomaly';
         persistentNotification = await Notification.create({
@@ -422,7 +494,7 @@ export const logViolation = async (req, res) => {
       }
     }
 
-    // Broadcast live violation to creator and exam rooms via Socket.IO
+    // Broadcast live violation to creator and exam rooms via Socket.IO - ONLY FOR OFFICIAL ATTEMPTS
     try {
       const io = req.app.get('io');
       if (io && exam) {
@@ -442,14 +514,13 @@ export const logViolation = async (req, res) => {
         };
 
         io.to(`exam_${exam._id}`).emit('violation:live', alertPayload);
-        if (exam.creatorId) {
+        if (!attempt.isPractice && exam.creatorId) {
           io.to(`creator_${exam.creatorId}`).emit('violation:live', alertPayload);
           if (persistentNotification) {
             io.to(`creator_${exam.creatorId}`).emit('notification:new', persistentNotification);
             io.to(`user_${exam.creatorId}`).emit('notification:new', persistentNotification);
           }
         }
-        console.log(`[Socket.IO] Broadcasted violation (${type}) to creator_${exam.creatorId} & exam_${exam._id}`);
       }
     } catch (socketErr) {
       console.warn('[logViolation] Socket broadcast warning:', socketErr?.message);
@@ -464,6 +535,147 @@ export const logViolation = async (req, res) => {
   } catch (error) {
     console.error('[logViolation] Error:', error);
     return res.status(500).json({ success: false, message: error.message || 'Server error' });
+  }
+};
+
+/**
+ * @desc   Get question responses and solutions review for a completed attempt
+ * @route  GET /api/submissions/attempt/:attemptId/review
+ * @access Private
+ */
+export const getAttemptReview = async (req, res) => {
+  try {
+    const { attemptId } = req.params;
+    const userId = req.user._id;
+
+    const attempt = await Attempt.findById(attemptId);
+    if (!attempt) {
+      return res.status(404).json({ success: false, message: 'Attempt not found' });
+    }
+
+    // Check authorization: must be attempt owner, creator of the exam, or admin
+    const isOwner = attempt.userId.toString() === userId.toString();
+    const exam = await Exam.findById(attempt.examId).populate('questions');
+    if (!exam) {
+      return res.status(404).json({ success: false, message: 'Exam not found' });
+    }
+
+    const isCreator = Boolean(
+      exam.creatorId && exam.creatorId.toString() === userId.toString()
+    );
+
+    if (!isOwner && !isCreator && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access restricted: You can only view your own attempt responses.'
+      });
+    }
+
+    // If candidate (not creator/admin), enforce response sheet security rules:
+    if (!isCreator && req.user.role !== 'admin') {
+      // 1. Examiner disabled viewing responses entirely
+      if (exam.allowReviewResponses === false) {
+        return res.status(403).json({
+          success: false,
+          message: 'The examiner has disabled response sheet and solution viewing for this assessment.'
+        });
+      }
+
+      // 2. Scheduled exam: only enable review after schedule concludes
+      if (exam.schedule?.isScheduled && exam.schedule?.endTime) {
+        const now = new Date();
+        const scheduledEnd = new Date(exam.schedule.endTime);
+        if (now < scheduledEnd) {
+          return res.status(403).json({
+            success: false,
+            message: `Solutions and response sheet will be released after the scheduled exam concludes at ${scheduledEnd.toLocaleString()}.`,
+            scheduledEndTime: exam.schedule.endTime
+          });
+        }
+      }
+    }
+
+    // Map responses by questionId
+    const responseMap = new Map();
+    (attempt.responses || []).forEach((r) => {
+      responseMap.set(r.questionId?.toString(), r);
+    });
+
+    const correctMark = exam.markingScheme?.correct ?? 4;
+    const incorrectMark = exam.markingScheme?.incorrect ?? -1;
+
+    // Build question reviews with candidate selection and verified solutions
+    const reviewedQuestions = (exam.questions || []).map((q, idx) => {
+      const qId = q._id.toString();
+      const resp = responseMap.get(qId);
+      const selectedAnswers = resp?.selectedAnswers || [];
+      const correctAnswers = q.correctAnswers || [];
+
+      let isCorrect = false;
+      let isAnswered = selectedAnswers.length > 0;
+      let marksAwarded = 0;
+
+      if (isAnswered) {
+        const sortedSelected = [...selectedAnswers].sort();
+        const sortedCorrect = [...correctAnswers].sort();
+        isCorrect =
+          sortedSelected.length === sortedCorrect.length &&
+          sortedSelected.every((val, i) => val === sortedCorrect[i]);
+
+        marksAwarded = isCorrect ? correctMark : incorrectMark;
+      }
+
+      return {
+        questionIndex: idx + 1,
+        questionId: q._id,
+        questionText: q.questionText,
+        questionType: q.questionType,
+        imageAttachment: q.imageAttachment || '',
+        options: q.options || [],
+        subject: q.subject || 'General',
+        topic: q.topic || 'General',
+        explanation: q.explanation || '',
+        correctAnswers,
+        selectedAnswers,
+        status: resp?.status || (isAnswered ? 'ANSWERED' : 'NOT_ANSWERED'),
+        timeSpentSeconds: resp?.timeSpentSeconds || 0,
+        isCorrect,
+        isAnswered,
+        marksAwarded
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      exam: {
+        _id: exam._id,
+        title: exam.title,
+        category: exam.category,
+        totalMarks: exam.totalMarks,
+        durationMinutes: exam.durationMinutes,
+        markingScheme: exam.markingScheme,
+        schedule: exam.schedule,
+        allowReviewResponses: exam.allowReviewResponses
+      },
+      attempt: {
+        _id: attempt._id,
+        score: attempt.score,
+        accuracy: attempt.accuracy,
+        correct: attempt.correct,
+        incorrect: attempt.incorrect,
+        unanswered: attempt.unanswered,
+        trustScore: attempt.trustScore,
+        violations: attempt.violations || [],
+        isPractice: Boolean(attempt.isPractice),
+        timeTakenSeconds: attempt.timeTakenSeconds || 0,
+        startedAt: attempt.startedAt,
+        submittedAt: attempt.submittedAt || attempt.updatedAt,
+        questions: reviewedQuestions
+      }
+    });
+  } catch (error) {
+    console.error('[getAttemptReview] Error:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Server error fetching attempt review' });
   }
 };
 

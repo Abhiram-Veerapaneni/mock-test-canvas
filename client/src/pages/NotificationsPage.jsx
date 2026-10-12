@@ -141,7 +141,7 @@ export default function NotificationsPage() {
     <div className="min-h-screen bg-[#edf2f9] dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       <Navbar />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Breadcrumb Navigation */}
         <Breadcrumbs
           items={[
@@ -246,7 +246,7 @@ export default function NotificationsPage() {
               onClick={() => setActiveTab('EXAM_SUBMISSION')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'EXAM_SUBMISSION'
-                  ? 'bg-emerald-600 text-white shadow-xs'
+                  ? 'bg-blue-600 text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
@@ -269,13 +269,15 @@ export default function NotificationsPage() {
               onClick={() => setActiveTab('UNREAD')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
                 activeTab === 'UNREAD'
-                  ? 'bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white shadow-xs'
+                  ? 'bg-blue-600 text-white shadow-xs'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <span>Unread</span>
               {unreadCount > 0 && (
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 font-mono font-bold">
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                  activeTab === 'UNREAD' ? 'bg-white/20 text-white' : 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                }`}>
                   {unreadCount}
                 </span>
               )}
@@ -358,10 +360,16 @@ export default function NotificationsPage() {
                       markAsRead(notification._id);
                     }
                   }}
-                  className={`group relative rounded-2xl border transition-all duration-200 overflow-hidden shadow-xs hover:shadow-md cursor-pointer ${
+                  className={`group relative rounded-2xl border transition-all duration-200 overflow-hidden shadow-xs hover:shadow-md cursor-pointer border-l-4 ${
+                    isViolation
+                      ? 'border-l-amber-500 dark:border-l-amber-500'
+                      : isSubmission
+                      ? 'border-l-blue-600 dark:border-l-blue-500'
+                      : 'border-l-slate-300 dark:border-l-slate-700'
+                  } ${
                     !notification.read
                       ? 'bg-blue-50/30 dark:bg-blue-950/15 border-blue-200/80 dark:border-blue-900/50'
-                      : 'bg-white dark:bg-[#1e293b] border-slate-200/80 dark:border-[#334155]'
+                      : 'bg-white dark:bg-[#111827] border-slate-200/80 dark:border-slate-800'
                   }`}
                 >
                   <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start gap-4">
@@ -482,10 +490,10 @@ export default function NotificationsPage() {
                                 e.stopPropagation();
                                 if (!notification.read) markAsRead(notification._id);
                               }}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+                              className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline transition-all cursor-pointer"
                             >
                               <span>Inspect in Audit Report</span>
-                              <ExternalLink className="w-3 h-3" />
+                              <ExternalLink className="w-3.5 h-3.5" />
                             </Link>
                           )}
                         </div>

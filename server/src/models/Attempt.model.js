@@ -100,6 +100,14 @@ const attemptSchema = new mongoose.Schema(
     },
     submittedAt: {
       type: Date
+    },
+    isPractice: {
+      type: Boolean,
+      default: false
+    },
+    timeTakenSeconds: {
+      type: Number,
+      default: 0
     }
   },
   {

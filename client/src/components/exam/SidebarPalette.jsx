@@ -12,28 +12,33 @@ export default function SidebarPalette({
   const getQuestionStatus = (question, index) => {
     const qId = question._id || index;
     const response = userResponses[qId];
+    const isCurrent = index === activeQuestionIndex;
 
-    if (!response) {
-      return index === activeQuestionIndex ? 'NOT_ANSWERED' : 'NOT_VISITED';
-    }
+    const hasValue = response && (Array.isArray(response.value) ? response.value.length > 0 : !!response.value);
 
-    const hasValue = Array.isArray(response.value) ? response.value.length > 0 : !!response.value;
-
-    if (response.isMarkedForReview && hasValue) {
+    // Rule 4: Answered & Review -> Purple with green tick
+    if (response?.isMarkedForReview && hasValue) {
       return 'ANSWERED_AND_MARKED';
-    } else if (response.isMarkedForReview) {
+    } else if (response?.isMarkedForReview) {
+      // Rule 3: Review -> Purple
       return 'MARKED_FOR_REVIEW';
     } else if (hasValue) {
+      // Rule 5: Answered -> Green
       return 'ANSWERED';
-    } else if (response.visited) {
+    } else if (isCurrent && !hasValue) {
+      // Rule 1: Selected question not yet answered -> Blue
+      return 'CURRENT_UNANSWERED';
+    } else if (response?.visited) {
+      // Rule 2: Left without answering -> Red
       return 'NOT_ANSWERED';
     }
 
-    return 'NOT_VISITED';
+    return isCurrent ? 'CURRENT_UNANSWERED' : 'NOT_VISITED';
   };
 
   const getStatusClass = (status) => {
     switch (status) {
+      case 'CURRENT_UNANSWERED': return 'jee-badge-current-unanswered';
       case 'ANSWERED': return 'jee-badge-answered';
       case 'NOT_ANSWERED': return 'jee-badge-not-answered';
       case 'MARKED_FOR_REVIEW': return 'jee-badge-review';
@@ -49,7 +54,7 @@ export default function SidebarPalette({
       acc[status] = (acc[status] || 0) + 1;
       return acc;
     },
-    { ANSWERED: 0, NOT_ANSWERED: 0, MARKED_FOR_REVIEW: 0, ANSWERED_AND_MARKED: 0, NOT_VISITED: 0 }
+    { CURRENT_UNANSWERED: 0, ANSWERED: 0, NOT_ANSWERED: 0, MARKED_FOR_REVIEW: 0, ANSWERED_AND_MARKED: 0, NOT_VISITED: 0 }
   );
 
   return (
@@ -65,18 +70,23 @@ export default function SidebarPalette({
         </div>
       </div>
 
-      {/* Official 5-State Legend Box */}
+      {/* Palette Legend Box */}
       <div className="jee-legend-box">
         <div className="jee-legend-title">Question Palette Legend</div>
         <div className="jee-legend-grid">
           <div className="jee-legend-item">
-            <div className="jee-legend-badge jee-badge-answered">{counts.ANSWERED}</div>
-            <span>Answered</span>
+            <div className="jee-legend-badge jee-badge-current-unanswered">{counts.CURRENT_UNANSWERED}</div>
+            <span>Selected (Unans)</span>
           </div>
 
           <div className="jee-legend-item">
             <div className="jee-legend-badge jee-badge-not-answered">{counts.NOT_ANSWERED}</div>
             <span>Not Answered</span>
+          </div>
+
+          <div className="jee-legend-item">
+            <div className="jee-legend-badge jee-badge-answered">{counts.ANSWERED}</div>
+            <span>Answered</span>
           </div>
 
           <div className="jee-legend-item">
@@ -86,10 +96,10 @@ export default function SidebarPalette({
 
           <div className="jee-legend-item">
             <div className="jee-legend-badge jee-badge-ans-review">{counts.ANSWERED_AND_MARKED}</div>
-            <span>Ans & Marked</span>
+            <span>Ans & Review</span>
           </div>
 
-          <div className="jee-legend-item" style={{ gridColumn: 'span 2' }}>
+          <div className="jee-legend-item">
             <div className="jee-legend-badge jee-badge-not-visited">{counts.NOT_VISITED}</div>
             <span>Not Visited</span>
           </div>

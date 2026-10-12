@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Camera, CameraOff, Mic, MicOff, CheckCircle2,
   AlertTriangle, ShieldCheck, Maximize, Loader2,
-  RefreshCw, Lock
+  RefreshCw, Lock, ChevronDown, ChevronUp
 } from 'lucide-react';
 
 /**
@@ -30,6 +30,7 @@ export default function ProctoringCheckGate({ exam, onVerified, onCancel }) {
   const [permissionState, setPermissionState] = useState('prompt'); // 'prompt' | 'requesting' | 'granted' | 'denied' | 'error'
   const [errorMessage, setErrorMessage] = useState('');
   const [activeStream, setActiveStream] = useState(null);
+  const [isProtocolExpanded, setIsProtocolExpanded] = useState(false);
 
   const videoPreviewRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -300,6 +301,22 @@ export default function ProctoringCheckGate({ exam, onVerified, onCancel }) {
                 }}
               />
 
+              {/* Facial Framing Guide (Oval Reticle) & Resolution Indicator */}
+              {permissionState === 'granted' && faceCheckEnabled && (
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                  <svg className="w-28 h-36 text-blue-500/60 drop-shadow-sm" viewBox="0 0 100 130" fill="none" stroke="currentColor">
+                    <ellipse cx="50" cy="65" rx="36" ry="48" strokeWidth="2" strokeDasharray="5 3" />
+                    <line x1="50" y1="10" x2="50" y2="18" strokeWidth="2" />
+                    <line x1="50" y1="112" x2="50" y2="120" strokeWidth="2" />
+                    <line x1="8" y1="65" x2="16" y2="65" strokeWidth="2" />
+                    <line x1="84" y1="65" x2="92" y2="65" strokeWidth="2" />
+                  </svg>
+                  <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-slate-900/80 text-[10px] font-mono text-white/90">
+                    720p HD
+                  </span>
+                </div>
+              )}
+
               {!(permissionState === 'granted' && faceCheckEnabled) && (
                 <>
                   {permissionState === 'requesting' ? (
@@ -432,23 +449,38 @@ export default function ProctoringCheckGate({ exam, onVerified, onCancel }) {
           </div>
         )}
 
-        {/* ── Candidate Proctoring Disclosure & Notice ── */}
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#090d16]/80 border border-slate-200/90 dark:border-[#1f293d] text-xs space-y-2">
-          <div className="flex items-center justify-between gap-2">
+        {/* ── Candidate Proctoring Disclosure & Protocol Accordion ── */}
+        <div className="rounded-2xl bg-slate-50 dark:bg-[#1f2937]/40 border border-slate-200/90 dark:border-slate-800 text-xs overflow-hidden transition-all">
+          <button
+            type="button"
+            onClick={() => setIsProtocolExpanded(!isProtocolExpanded)}
+            className="w-full p-4 flex items-center justify-between gap-2 text-left cursor-pointer hover:bg-slate-100/60 dark:hover:bg-slate-800/50 transition-colors"
+          >
             <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100">
               <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
               <span>Candidate Privacy & Proctoring Protocol</span>
             </div>
-            {proctorSettings?.liveNotifications && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900/60 text-blue-700 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 animate-pulse" />
-                Live Alerts
-              </span>
-            )}
-          </div>
-          <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[11px]">
-            Your testing environment is evaluated in real-time. Unauthorized actions (looking away, secondary people, mobile phones, or tab switches) capture timestamped snapshots that are transmitted to the <strong>exam creator</strong>.
-          </p>
+            <div className="flex items-center gap-2">
+              {proctorSettings?.liveNotifications && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-900/60 text-blue-700 dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 animate-pulse" />
+                  Live Alerts
+                </span>
+              )}
+              {isProtocolExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            </div>
+          </button>
+
+          {isProtocolExpanded && (
+            <div className="px-4 pb-4 pt-1 space-y-2 border-t border-slate-200/60 dark:border-slate-800 text-slate-600 dark:text-slate-400 leading-relaxed text-[11px] animate-in fade-in duration-150">
+              <p>
+                Your testing environment is evaluated in real-time. Unauthorized actions (looking away from display, secondary faces, mobile phones, or tab switches) log timestamped event flags for audit.
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-500">
+                🔒 Privacy Guarantee: Video frames are processed strictly in-memory using WebAssembly/WebGL models. Continuous video recording is never stored or broadcast.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* ── Action Buttons ─────────────────────────────────────────────── */}

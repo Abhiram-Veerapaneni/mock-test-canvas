@@ -6,6 +6,7 @@ import Breadcrumbs from '../components/common/Breadcrumbs';
 import ManualQuestionForm from '../components/test-builder/ManualQuestionForm';
 import IngestionReviewModal from '../components/test-builder/IngestionReviewModal';
 import QuestionEditModal from '../components/test-builder/QuestionEditModal';
+import QuestionPaperPDFModal from '../components/test-builder/QuestionPaperPDFModal';
 import MathRenderer from '../components/common/MathRenderer';
 import api from '../services/api';
 import useAuthStore from '../store/useAuthStore';
@@ -31,7 +32,17 @@ import {
   Image as ImageIcon,
   Check,
   X,
-  ExternalLink
+  ExternalLink,
+  Calendar,
+  Clock,
+  Eye,
+  BookOpen,
+  Lock,
+  CheckCheck,
+  GripVertical,
+  Settings,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 export default function TestCreationPage() {
@@ -55,6 +66,14 @@ export default function TestCreationPage() {
   const [isUnlimitedAttempts, setIsUnlimitedAttempts] = useState(true);
   const [maxAttemptsValue, setMaxAttemptsValue] = useState(3);
 
+  // Scheduling & Practice / Review preferences
+  const [allowPracticeMode, setAllowPracticeMode] = useState(true);
+  const [allowReviewResponses, setAllowReviewResponses] = useState(true);
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
   // Proctor settings
   const [faceCheck, setFaceCheck] = useState(true);
   const [audioCheck, setAudioCheck] = useState(true);
@@ -74,6 +93,11 @@ export default function TestCreationPage() {
 
   // Image Lightbox preview
   const [lightboxImage, setLightboxImage] = useState(null);
+
+  // Intentional Tab Layout & PDF Preview modal state
+  const [activeStudioTab, setActiveStudioTab] = useState('questions'); // 'questions' | 'settings'
+  const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
+  const [isDropzoneExpanded, setIsDropzoneExpanded] = useState(false);
 
   // AI Ingestion pipeline state
   const [isIngesting, setIsIngesting] = useState(false);
@@ -115,6 +139,24 @@ export default function TestCreationPage() {
             setFullScreenLock(ex.proctorSettings.fullScreenLock ?? true);
             setObjectCheck(ex.proctorSettings.objectCheck ?? true);
             setLiveNotifications(ex.proctorSettings.liveNotifications ?? false);
+          }
+          if (ex.allowPracticeMode !== undefined) {
+            setAllowPracticeMode(Boolean(ex.allowPracticeMode));
+          }
+          if (ex.allowReviewResponses !== undefined) {
+            setAllowReviewResponses(Boolean(ex.allowReviewResponses));
+          }
+          if (ex.schedule) {
+            setIsScheduled(Boolean(ex.schedule.isScheduled));
+            const pad = (n) => String(n).padStart(2, '0');
+            if (ex.schedule.startTime) {
+              const st = new Date(ex.schedule.startTime);
+              setStartTime(`${st.getFullYear()}-${pad(st.getMonth() + 1)}-${pad(st.getDate())}T${pad(st.getHours())}:${pad(st.getMinutes())}`);
+            }
+            if (ex.schedule.endTime) {
+              const et = new Date(ex.schedule.endTime);
+              setEndTime(`${et.getFullYear()}-${pad(et.getMonth() + 1)}-${pad(et.getDate())}T${pad(et.getHours())}:${pad(et.getMinutes())}`);
+            }
           }
           if (Array.isArray(ex.questions)) {
             setQuestions(ex.questions);
@@ -229,9 +271,171 @@ export default function TestCreationPage() {
     setSuccessMsg(`Question #${index + 1} updated successfully.`);
   };
 
-  // Save / Publish
-  const handleSaveExam = async (e, targetStatus = 'published') => {
+  // Pop out clean printable preview of question paper in new window
+  // Pop out clean printable preview of question paper in new window with Dark Mode support
+  const handlePopoutPreview = () => {
+    if (questions.length === 0) {
+      setError('Please add at least one question to preview the question paper.');
+      return;
+    }
+
+    const previewWin = window.open('', '_blank', 'width=1000,height=850,scrollbars=yes,resizable=yes');
+    if (!previewWin) {
+      alert('Pop-up window blocked! Please allow popups for this site to view the printable question paper.');
+      return;
+    }
+
+    const cleanTitle = title || 'Question Paper Preview';
+    const cleanCategory = category || 'Exam';
+
+    let questionsHtml = '';
+    questions.forEach((q, idx) => {
+      let optionsHtml = '';
+      if (Array.isArray(q.options)) {
+        q.options.forEach((opt, oIdx) => {
+          const letter = String.fromCharCode(65 + oIdx);
+          const optText = typeof opt === 'object' ? (opt.text || '') : opt;
+          const optImg = typeof opt === 'object' ? (opt.image || '') : '';
+          optionsHtml += `
+            <div class="option-row" style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;padding:8px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;">
+              <strong style="min-width:24px;color:#2563eb;">(${letter})</strong>
+              <div>
+                <span>${optText}</span>
+                ${optImg ? `<br/><img src="${optImg}" style="max-height:120px;margin-top:6px;border-radius:4px;"/>` : ''}
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      questionsHtml += `
+        <div class="question-card" style="margin-bottom:24px;padding:18px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;page-break-inside:avoid;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px;color:#64748b;">
+            <strong style="font-size:13px;color:#0f172a;" class="q-title">Question ${idx + 1} (${q.questionType || 'MCQ'})</strong>
+            <span style="font-family:monospace;font-weight:600;">+${correctMark} / ${incorrectMark} Marks</span>
+          </div>
+          <div class="q-text" style="font-size:14px;color:#0f172a;line-height:1.6;margin-bottom:12px;font-weight:500;">
+            ${q.questionText}
+          </div>
+          ${q.imageAttachment ? `<div style="margin-bottom:12px;"><img src="${q.imageAttachment}" style="max-height:220px;border-radius:8px;border:1px solid #e2e8f0;"/></div>` : ''}
+          <div style="margin-top:10px;">${optionsHtml}</div>
+        </div>
+      `;
+    });
+
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <title>${cleanTitle} - Question Paper Preview</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" />
+        <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 24px; transition: background 0.2s, color 0.2s; }
+          .paper-container { max-width: 860px; margin: 0 auto; background: #fff; padding: 32px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+          .header { border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; }
+          .toolbar { display: flex; gap: 8px; align-items: center; }
+          .print-btn { background: #2563eb; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; }
+          .print-btn:hover { background: #1d4ed8; }
+          .theme-btn { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px; }
+          .theme-btn:hover { background: #e2e8f0; }
+          
+          /* Dark mode support */
+          body.dark-mode { background: #0b0f17; color: #f8fafc; }
+          body.dark-mode .paper-container { background: #111827; border-color: #1e293b; box-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+          body.dark-mode .header { border-bottom-color: #1e293b; }
+          body.dark-mode .header h1 { color: #f8fafc !important; }
+          body.dark-mode .header p { color: #94a3b8 !important; }
+          body.dark-mode .theme-btn { background: #1f2937; color: #f8fafc; border-color: #374151; }
+          body.dark-mode .theme-btn:hover { background: #374151; }
+          body.dark-mode .question-card { background: #141d2e !important; border-color: #1e293b !important; }
+          body.dark-mode .q-title, body.dark-mode .q-text { color: #f8fafc !important; }
+          body.dark-mode .option-row { background: #111827 !important; border-color: #1e293b !important; color: #f8fafc !important; }
+          body.dark-mode .guidelines { background: #141d2e !important; border-color: #2563eb !important; color: #cbd5e1 !important; }
+
+          @media print { 
+            body, body.dark-mode { background: #fff !important; color: #000 !important; padding: 0; } 
+            .paper-container { box-shadow: none !important; padding: 0 !important; max-width: 100% !important; border: none !important; background: #fff !important; } 
+            .toolbar { display: none !important; } 
+            .question-card { background: #fff !important; border-color: #e2e8f0 !important; }
+            .option-row { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #000 !important; }
+            .q-title, .q-text { color: #000 !important; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="paper-container">
+          <div class="header">
+            <div>
+              <h1 style="margin:0 0 6px 0;font-size:22px;color:#0f172a;">${cleanTitle}</h1>
+              <p style="margin:0;font-size:13px;color:#64748b;">${cleanCategory} • ${durationMinutes} Minutes • Total Marks: ${questions.length * correctMark} • ${questions.length} Questions</p>
+            </div>
+            <div class="toolbar">
+              <button class="theme-btn" id="themeBtn" onclick="togglePaperTheme()">🌓 Dark Mode</button>
+              <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+            </div>
+          </div>
+          ${description ? `<div class="guidelines" style="background:#f8fafc;padding:12px 16px;border-radius:8px;border-left:4px solid #2563eb;font-size:13px;color:#475569;margin-bottom:24px;">${description}</div>` : ''}
+          <div>${questionsHtml}</div>
+        </div>
+        <script>
+          function togglePaperTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            document.getElementById('themeBtn').innerText = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+          }
+
+          document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body, {
+              delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false}
+              ],
+              throwOnError: false
+            });
+          });
+        </script>
+      </body>
+      </html>
+    `;
+
+    previewWin.document.open();
+    previewWin.document.write(fullHtml);
+    previewWin.document.close();
+  };
+
+  // Pre-publish validation & modal trigger
+  const handleInitiatePublish = (e) => {
     if (e) e.preventDefault();
+    setError('');
+    setSuccessMsg('');
+
+    if (!title.trim()) {
+      setError('Please provide an assessment title before publishing.');
+      return;
+    }
+    if (questions.length === 0) {
+      setError('Please add at least one question before publishing.');
+      return;
+    }
+    if (isScheduled) {
+      if (!startTime || !endTime) {
+        setError('Please set both Start Time and End Time for scheduled assessment.');
+        return;
+      }
+      if (new Date(endTime) <= new Date(startTime)) {
+        setError('Schedule End Time must be later than Start Time.');
+        return;
+      }
+    }
+
+    setShowConfirmModal(true);
+  };
+
+  // Save / Publish execution
+  const executeSaveExam = async (targetStatus = 'published') => {
     setError('');
     setSuccessMsg('');
 
@@ -239,7 +443,7 @@ export default function TestCreationPage() {
       openAuthModal({
         title: targetStatus === 'draft' ? 'Sign In to Save Draft' : 'Sign In to Publish Exam',
         subtitle: 'Log in or create a candidate account to save and publish your assessments.',
-        onSuccess: () => handleSaveExam(null, targetStatus)
+        onSuccess: () => executeSaveExam(targetStatus)
       });
       return;
     }
@@ -273,6 +477,13 @@ export default function TestCreationPage() {
           incorrect: Number(incorrectMark)
         },
         maxAttempts: isUnlimitedAttempts ? null : Math.max(1, Number(maxAttemptsValue)),
+        allowPracticeMode: Boolean(allowPracticeMode),
+        allowReviewResponses: Boolean(allowReviewResponses),
+        schedule: {
+          isScheduled: Boolean(isScheduled),
+          startTime: isScheduled && startTime ? new Date(startTime).toISOString() : null,
+          endTime: isScheduled && endTime ? new Date(endTime).toISOString() : null
+        },
         proctorSettings: {
           faceCheck,
           audioCheck,
@@ -314,6 +525,14 @@ export default function TestCreationPage() {
     }
   };
 
+  const handleSaveExam = (e, targetStatus = 'published') => {
+    if (targetStatus === 'published') {
+      handleInitiatePublish(e);
+    } else {
+      executeSaveExam('draft');
+    }
+  };
+
   const getOptionLabel = (idx) => String.fromCharCode(65 + idx);
 
   const formatOption = (opt) => {
@@ -341,15 +560,16 @@ export default function TestCreationPage() {
         </div>
 
         {/* Top Header Action Bar */}
-        <div className="card-base p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-xl sm:text-2xl font-bold font-display text-slate-900 dark:text-white tracking-tight">
-                {existingExamId ? 'Edit Examination' : 'Exam Authoring Studio'}
-              </h1>
+        {/* Top Header Action Bar with Inline Title Edit */}
+        <div className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+          <div className="flex-1 min-w-0 space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Examination Title
+              </span>
               {existingExamId && (
                 <span
-                  className={`px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide border ${
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide border ${
                     examStatus === 'draft'
                       ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
                       : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
@@ -359,15 +579,37 @@ export default function TestCreationPage() {
                 </span>
               )}
             </div>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              Configure parameters, proctoring security rules, and compose or re-order questions.
-            </p>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. JEE Advanced Full Mock 01 (Click to edit title)"
+              className="w-full text-base sm:text-xl font-bold font-display text-slate-900 dark:text-white bg-transparent border border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-blue-500 focus:bg-slate-50 dark:focus:bg-slate-900 rounded-xl px-2.5 py-1 -ml-2.5 transition-all outline-none"
+            />
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap shrink-0">
-            <div className="text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-[#151f32] px-3 py-2 rounded-xl border border-slate-200/80 dark:border-[#334155]">
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap shrink-0">
+            <div className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800">
               Questions: <strong className="text-slate-900 dark:text-white tabular-nums font-semibold">{questions.length}</strong>
             </div>
+
+            {/* Preview Question Paper Modal Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (questions.length === 0) {
+                  setError('Please add at least one question to preview the question paper.');
+                  return;
+                }
+                setIsPDFModalOpen(true);
+              }}
+              disabled={questions.length === 0}
+              title={questions.length === 0 ? "Add questions to preview paper" : "Preview question paper in dark/light mode and PDF export"}
+              className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5"
+            >
+              <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span>Preview Paper</span>
+            </button>
 
             {/* Save as Draft Button */}
             <button
@@ -383,8 +625,8 @@ export default function TestCreationPage() {
                 </>
               ) : (
                 <>
-                  <Bookmark className="w-3.5 h-3.5" />
-                  <span>Save as Draft</span>
+                  <Bookmark className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Save Draft</span>
                 </>
               )}
             </button>
@@ -411,93 +653,153 @@ export default function TestCreationPage() {
           </div>
         </div>
 
-        {error && (
-          <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2.5 shadow-xs">
-            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
-            <span className="font-medium">{error}</span>
-          </div>
-        )}
+        {/* Intentional Segmented Tab Switcher */}
+        <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+          <button
+            type="button"
+            onClick={() => setActiveStudioTab('questions')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              activeStudioTab === 'questions'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'bg-white dark:bg-[#111827] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
+            }`}
+          >
+            <BookOpen className="w-4 h-4" />
+            <span>Questions & Content</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+              activeStudioTab === 'questions' ? 'bg-blue-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+            }`}>
+              {questions.length}
+            </span>
+          </button>
 
-        {successMsg && (
-          <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2.5 shadow-xs">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-            <span className="font-medium">{successMsg}</span>
-          </div>
-        )}
+          <button
+            type="button"
+            onClick={() => setActiveStudioTab('settings')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              activeStudioTab === 'settings'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'bg-white dark:bg-[#111827] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
+            }`}
+          >
+            <Sliders className="w-4 h-4" />
+            <span>Exam & Proctoring Settings</span>
+          </button>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: Exam Configuration */}
-          <div className="lg:col-span-1 space-y-5">
-            <div className="card-base p-5 sm:p-6 space-y-5">
-              <div className="border-b border-slate-100 dark:border-[#334155] pb-3">
-                <h2 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  <span>Assessment Settings</span>
-                </h2>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Examination Title
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. JEE Advanced Full Mock 01"
-                  className="input-base text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Description & Guidelines
-                </label>
-                <textarea
-                  rows={3}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Exam instructions or syllabus summary..."
-                  className="input-base text-xs"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Curriculum Category
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="input-base text-xs cursor-pointer"
-                  >
-                    <option value="JEE">JEE</option>
-                    <option value="NEET">NEET</option>
-                    <option value="GATE">GATE</option>
-                    <option value="APTITUDE">APTITUDE</option>
-                    <option value="CUSTOM">CUSTOM</option>
-                  </select>
+        {/* TAB 2: Exam & Proctoring Settings */}
+        {activeStudioTab === 'settings' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            {/* COLUMN 1: Assessment Details, Marking & Scheduling */}
+            <div className="space-y-6">
+              {/* Card 1: Core Parameters */}
+              <div className="card-base p-5 sm:p-6 space-y-4">
+                <div className="border-b border-slate-100 dark:border-[#334155] pb-3">
+                  <h2 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span>Assessment Core Details</span>
+                  </h2>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Duration (Minutes)
+                    Examination Title
                   </label>
                   <input
-                    type="number"
-                    min={5}
-                    max={360}
-                    value={durationMinutes}
-                    onChange={(e) => setDurationMinutes(e.target.value)}
-                    className="input-base text-xs font-mono"
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. JEE Advanced Full Mock 01"
+                    className="input-base text-xs"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Description & Guidelines
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Exam instructions or syllabus summary..."
+                    className="input-base text-xs"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Curriculum Category
+                    </label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="input-base text-xs cursor-pointer"
+                    >
+                      <option value="JEE">JEE</option>
+                      <option value="NEET">NEET</option>
+                      <option value="GATE">GATE</option>
+                      <option value="APTITUDE">APTITUDE</option>
+                      <option value="CUSTOM">CUSTOM</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Duration (Minutes)
+                    </label>
+                    <input
+                      type="number"
+                      min={5}
+                      max={360}
+                      value={durationMinutes}
+                      onChange={(e) => setDurationMinutes(e.target.value)}
+                      className="input-base text-xs font-mono"
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Attempt Limit Card */}
-              <div className="bg-slate-50/80 dark:bg-[#151f32] p-4 rounded-xl border border-slate-200/80 dark:border-[#334155] space-y-3">
-                <div className="flex items-center justify-between">
+              {/* Card 2: Scoring & Marking Scheme */}
+              <div className="card-base p-5 sm:p-6 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#334155] pb-3">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span>Scoring & Negative Marking</span>
+                  </span>
+                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                    +{correctMark} / {incorrectMark} pts
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1 font-medium">Correct Mark (+)</span>
+                    <input
+                      type="number"
+                      value={correctMark}
+                      onChange={(e) => setCorrectMark(e.target.value)}
+                      className="input-base text-xs font-mono py-1.5"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1 font-medium">Negative Mark (-)</span>
+                    <input
+                      type="number"
+                      value={incorrectMark}
+                      onChange={(e) => setIncorrectMark(e.target.value)}
+                      className="input-base text-xs font-mono py-1.5"
+                    />
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-normal">
+                  Applied by default to newly added questions. Individual questions can override custom marks.
+                </p>
+              </div>
+
+              {/* Card 3: Candidate Attempt Limits */}
+              <div className="card-base p-5 sm:p-6 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#334155] pb-3">
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                     <RotateCcw className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     <span>Candidate Attempt Limits</span>
@@ -508,7 +810,7 @@ export default function TestCreationPage() {
                 </div>
 
                 {/* 3 Preset Mode Buttons */}
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2 pt-1">
                   <button
                     type="button"
                     onClick={() => {
@@ -608,180 +910,457 @@ export default function TestCreationPage() {
                 )}
               </div>
 
-              {/* Marking Scheme */}
-              <div className="bg-slate-50/80 dark:bg-[#151f32] p-4 rounded-xl border border-slate-200/80 dark:border-[#334155] space-y-2.5">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
-                  Scoring & Negative Marking
-                </span>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1 font-medium">Correct Mark (+)</span>
+              {/* Card 4: Assessment Scheduling Window */}
+              <div className="card-base p-5 sm:p-6 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#334155] pb-3">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span>Scheduled Test Window</span>
+                  </span>
+                  <label className="relative inline-flex items-center cursor-pointer">
                     <input
-                      type="number"
-                      value={correctMark}
-                      onChange={(e) => setCorrectMark(e.target.value)}
-                      className="input-base text-xs font-mono py-1.5"
+                      type="checkbox"
+                      checked={isScheduled}
+                      onChange={(e) => setIsScheduled(e.target.checked)}
+                      className="sr-only peer"
                     />
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1 font-medium">Negative Mark (-)</span>
-                    <input
-                      type="number"
-                      value={incorrectMark}
-                      onChange={(e) => setIncorrectMark(e.target.value)}
-                      className="input-base text-xs font-mono py-1.5"
-                    />
-                  </div>
+                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-hidden rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-blue-600"></div>
+                  </label>
                 </div>
-              </div>
 
-              {/* Proctoring Settings */}
-              <div className="bg-slate-50/80 dark:bg-[#151f32] p-4 rounded-xl border border-slate-200/80 dark:border-[#334155] space-y-3">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  <span>Proctoring Security Rules</span>
-                </span>
-                <div className="space-y-2.5 text-xs text-slate-600 dark:text-slate-400">
-                  <label className="flex items-center gap-2.5 cursor-pointer">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
+                  {isScheduled
+                    ? 'Restricts candidate access strictly between opening and closing timestamp.'
+                    : 'Unscheduled — candidates can begin this evaluation at any convenient time.'}
+                </p>
+
+                {isScheduled && (
+                  <div className="pt-2 border-t border-slate-200/80 dark:border-[#334155] space-y-3">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-blue-500" />
+                        <span>Window Start Date & Time</span>
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={startTime}
+                        onChange={(e) => setStartTime(e.target.value)}
+                        className="input-base text-xs font-mono py-1.5"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-rose-500" />
+                        <span>Window End Date & Time</span>
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={endTime}
+                        onChange={(e) => setEndTime(e.target.value)}
+                        className="input-base text-xs font-mono py-1.5"
+                      />
+                    </div>
+
+                    {startTime && endTime && new Date(endTime) <= new Date(startTime) && (
+                      <p className="text-[11px] font-medium text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 shrink-0" />
+                        <span>End time must be later than start time!</span>
+                      </p>
+                    )}
+
+                    {startTime && endTime && new Date(endTime) > new Date(startTime) && (
+                      <div className="p-2 rounded-lg bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 text-[10px] text-blue-700 dark:text-blue-300 flex items-center justify-between">
+                        <span>Window Span:</span>
+                        <strong>
+                          {Math.round((new Date(endTime) - new Date(startTime)) / (1000 * 60 * 60))} hours ({Math.round((new Date(endTime) - new Date(startTime)) / (1000 * 60))} mins)
+                        </strong>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* COLUMN 2: Proctoring Security, Access Rules & Overview */}
+            <div className="space-y-6">
+              {/* Card 1: Proctoring Security Rules */}
+              <div className="card-base p-5 sm:p-6 space-y-4">
+                <div className="border-b border-slate-100 dark:border-[#334155] pb-3 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <span>Proctoring Security Rules</span>
+                    </h2>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Configure automated browser lockdown and AI vision monitoring safeguards.
+                    </p>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
+                    AI Safeguards
+                  </span>
+                </div>
+
+                <div className="space-y-3 text-xs text-slate-600 dark:text-slate-400">
+                  {/* Facial Verification */}
+                  <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={faceCheck}
                       onChange={(e) => setFaceCheck(e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                      className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
                     />
-                    <span>Facial Presence Verification Hook</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-900 dark:text-white">Facial Presence Verification Hook</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${faceCheck ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-400'}`}>
+                          {faceCheck ? 'Active' : 'Off'}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal block mt-0.5">
+                        MediaPipe vision tracking for candidate absence, head turns, and multiple face intrusions.
+                      </span>
+                    </div>
                   </label>
-                  <label className="flex items-center gap-2.5 cursor-pointer">
+
+                  {/* Acoustic Audio */}
+                  <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={audioCheck}
                       onChange={(e) => setAudioCheck(e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                      className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
                     />
-                    <span>Acoustic & Noise Level Detection</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-900 dark:text-white">Acoustic & Noise Level Detection</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${audioCheck ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-400'}`}>
+                          {audioCheck ? 'Active' : 'Off'}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal block mt-0.5">
+                        Detects vocal murmur, background discussions, and ambient audio spikes in decibels.
+                      </span>
+                    </div>
                   </label>
-                  <label className="flex items-center gap-2.5 cursor-pointer">
+
+                  {/* Fullscreen Lock */}
+                  <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={fullScreenLock}
                       onChange={(e) => setFullScreenLock(e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                      className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
                     />
-                    <span>Strict Fullscreen & Focus Lockdown</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-900 dark:text-white">Strict Fullscreen & Focus Lockdown</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${fullScreenLock ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-400'}`}>
+                          {fullScreenLock ? 'Enforced' : 'Off'}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal block mt-0.5">
+                        Immediately penalizes tab switching, window blurring, browser navigation, or devtool inspection.
+                      </span>
+                    </div>
                   </label>
-                  <label className="flex items-center gap-2.5 cursor-pointer">
+
+                  {/* Device / Object Check */}
+                  <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={objectCheck}
                       onChange={(e) => setObjectCheck(e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                      className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
                     />
-                    <span>Prohibited Device Detection (Mobile/Books)</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-900 dark:text-white">Prohibited Device Detection (Mobile/Books)</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${objectCheck ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-400'}`}>
+                          {objectCheck ? 'Active' : 'Off'}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal block mt-0.5">
+                        COCO-SSD model scans video feed for mobile smartphones, notes, books, and external hardware.
+                      </span>
+                    </div>
                   </label>
-                  <label className="flex items-start gap-2.5 cursor-pointer pt-2 border-t border-slate-200/80 dark:border-[#334155]">
+
+                  {/* WebSocket Live Alerts */}
+                  <label className="flex items-start gap-3 p-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/80 dark:border-blue-900/40 hover:border-blue-300 dark:hover:border-blue-800 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={liveNotifications}
                       onChange={(e) => setLiveNotifications(e.target.checked)}
                       className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
                     />
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-slate-900 dark:text-white">Live Creator WebSocket Alerts</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 leading-normal mt-0.5">
-                        Instantly triggers live toasts with snapshot evidence on your examiner screen.
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-blue-950 dark:text-blue-200">Live Creator WebSocket Alerts</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${liveNotifications ? 'text-blue-600 bg-blue-100 dark:bg-blue-900/60' : 'text-slate-400'}`}>
+                          {liveNotifications ? 'Push Active' : 'Off'}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-blue-800/80 dark:text-blue-300/80 leading-normal block mt-0.5">
+                        Instantly triggers live toasts with snapshot evidence directly on your examiner screen when candidates violate rules.
                       </span>
                     </div>
                   </label>
                 </div>
               </div>
+
+              {/* Card 2: Candidate Access & Review Rules */}
+              <div className="card-base p-5 sm:p-6 space-y-4">
+                <div className="border-b border-slate-100 dark:border-[#334155] pb-3">
+                  <h2 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span>Candidate Access & Solutions Policy</span>
+                  </h2>
+                </div>
+
+                <div className="space-y-3 text-xs text-slate-600 dark:text-slate-400">
+                  {/* Practice Mode Toggle */}
+                  <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={allowPracticeMode}
+                      onChange={(e) => setAllowPracticeMode(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <span className="font-semibold text-slate-900 dark:text-white block">Allow Practice Mode (Unproctored)</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal mt-0.5 block">
+                        Candidates can practice questions without webcam or audio lockdown. {isScheduled ? 'For scheduled exams, practice mode unlocks strictly after the scheduled window ends.' : 'Practice attempts remain private.'}
+                      </span>
+                    </div>
+                  </label>
+
+                  {/* View Responses / Answer Key Toggle */}
+                  <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={allowReviewResponses}
+                      onChange={(e) => setAllowReviewResponses(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <span className="font-semibold text-slate-900 dark:text-white block">Allow View Responses & Solutions</span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal mt-0.5 block">
+                        Candidates can view their submission responses and comprehensive solutions after completing their test. {isScheduled ? 'For scheduled exams, solutions are released strictly after the scheduled window closes to prevent leaks.' : ''}
+                      </span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Card 3: Security & Proctoring Status Overview */}
+              <div className="rounded-2xl p-5 border bg-linear-to-br from-blue-50/70 to-indigo-50/40 dark:from-[#111827] dark:to-blue-950/20 border-blue-200/70 dark:border-blue-900/50 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-900 dark:text-white">Security & Integrity Overview</h3>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">Real-time candidate monitoring profile</p>
+                    </div>
+                  </div>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    faceCheck && audioCheck && fullScreenLock && objectCheck
+                      ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                      : (faceCheck || audioCheck || fullScreenLock)
+                      ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20'
+                      : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20'
+                  }`}>
+                    {faceCheck && audioCheck && fullScreenLock && objectCheck
+                      ? 'Maximum Lockdown'
+                      : (faceCheck || audioCheck || fullScreenLock)
+                      ? 'Standard Monitoring'
+                      : 'Minimal Security'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#111827]/80 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">Facial Vision:</span>
+                    <span className={`font-bold ${faceCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                      {faceCheck ? 'Active' : 'Disabled'}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#111827]/80 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">Audio Proctor:</span>
+                    <span className={`font-bold ${audioCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                      {audioCheck ? 'Active' : 'Disabled'}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#111827]/80 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">Fullscreen Lock:</span>
+                    <span className={`font-bold ${fullScreenLock ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                      {fullScreenLock ? 'Enforced' : 'Optional'}
+                    </span>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#111827]/80 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
+                    <span className="text-slate-600 dark:text-slate-400">Device Scan:</span>
+                    <span className={`font-bold ${objectCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                      {objectCheck ? 'Active' : 'Disabled'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-white/70 dark:bg-[#151f32]/60 border border-slate-200/60 dark:border-slate-800 text-[11px] space-y-1.5 text-slate-600 dark:text-slate-300">
+                  <div className="flex items-center justify-between">
+                    <span>Schedule Window:</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">
+                      {isScheduled ? 'Restricted Date/Time' : 'Flexible (Anytime)'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Candidate Attempts:</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">
+                      {isUnlimitedAttempts ? 'Unlimited Retakes' : `${maxAttemptsValue} Attempts maximum`}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Live Examiner Alerts:</span>
+                    <span className={`font-semibold ${liveNotifications ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`}>
+                      {liveNotifications ? 'Real-Time Toasts On' : 'Silent Logging'}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Right Column: Authoring & Question Drafts */}
-          <div className="lg:col-span-2 space-y-5">
-            {/* AI Document & Scanned Paper Ingestion Card */}
-            <div className="card-base p-5 sm:p-6 space-y-4">
-              <div className="flex items-center justify-between">
+        {/* TAB 1: Questions & Content */}
+        {activeStudioTab === 'questions' && (
+          <div className="space-y-6">
+            {/* AI Document & Scanned Paper Ingestion Card - Compact & Expandable */}
+            <div className="card-base p-4 sm:p-5 space-y-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs">
+                  <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs shrink-0">
                     <Sparkles className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <span>Automated AI Question Paper Ingestion</span>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                         Gemini 2.5
                       </span>
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Upload PDF (.pdf), Word (.docx), or question paper image (.png, .jpg). Gemini extracts questions and LaTeX formulas automatically.
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Instantly parses questions, multi-line equations, and figures from PDF, Word (.docx), or photos.
                     </p>
                   </div>
                 </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleAddQuestion({
+                        questionText: "A particle moves along the x-axis such that its position is given by $$x(t) = 3t^2 - 12t + 9$$. At what time $t$ does the particle momentarily come to rest?",
+                        questionType: "MCQ",
+                        subject: "Physics",
+                        topic: "Kinematics",
+                        difficulty: "Medium",
+                        options: [
+                          { text: "$$t = 1\\text{ s}$$", image: "" },
+                          { text: "$$t = 2\\text{ s}$$", image: "" },
+                          { text: "$$t = 3\\text{ s}$$", image: "" },
+                          { text: "$$t = 4\\text{ s}$$", image: "" }
+                        ],
+                        correctAnswers: [1],
+                        marks: correctMark,
+                        negativeMarks: incorrectMark,
+                        explanation: "The velocity is the derivative of position: $$v(t) = \\frac{dx}{dt} = 6t - 12$$. Setting $$v(t) = 0 \\implies 6t = 12 \\implies t = 2\\text{ s}$$."
+                      });
+                      setSuccessMsg('Sample competitive exam question loaded into paper!');
+                      setTimeout(() => setSuccessMsg(''), 3000);
+                    }}
+                    className="btn-secondary text-[11px] py-1.5 px-3 flex items-center gap-1.5 cursor-pointer"
+                    title="Insert a sample JEE/NEET KaTeX question"
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Load Sample Question</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsDropzoneExpanded(!isDropzoneExpanded)}
+                    className="btn-secondary text-[11px] py-1.5 px-3 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>{isDropzoneExpanded ? 'Collapse' : 'Upload File'}</span>
+                    {isDropzoneExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               </div>
 
-              {/* Drag and Drop Zone */}
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setDragActive(true);
-                }}
-                onDragLeave={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setDragActive(false);
-                }}
-                onDrop={handleFileDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`relative border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer ${
-                  dragActive
-                    ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20 scale-[1.01]'
-                    : isIngesting
-                    ? 'border-indigo-300 dark:border-indigo-800 bg-indigo-50/20 dark:bg-indigo-950/10 cursor-wait'
-                    : 'border-slate-200/80 dark:border-[#334155] hover:border-blue-400 dark:hover:border-blue-500 bg-slate-50/50 dark:bg-[#151f32]/50'
-                }`}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.docx,.doc,image/png,image/jpeg,image/webp,image/jpg,application/pdf"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      handleFileUpload(e.target.files[0]);
-                    }
+              {/* Drag and Drop Zone (Expandable) */}
+              {(isDropzoneExpanded || isIngesting || dragActive) && (
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDragActive(true);
                   }}
-                  className="hidden"
-                />
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDragActive(false);
+                  }}
+                  onDrop={handleFileDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`relative border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer ${
+                    dragActive
+                      ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20 scale-[1.01]'
+                      : isIngesting
+                      ? 'border-indigo-300 dark:border-indigo-800 bg-indigo-50/20 dark:bg-indigo-950/10 cursor-wait'
+                      : 'border-slate-200/80 dark:border-[#334155] hover:border-blue-400 dark:hover:border-blue-500 bg-slate-50/50 dark:bg-[#151f32]/50'
+                  }`}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.docx,.doc,image/png,image/jpeg,image/webp,image/jpg,application/pdf"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        handleFileUpload(e.target.files[0]);
+                      }
+                    }}
+                    className="hidden"
+                  />
 
-                {isIngesting ? (
-                  <div className="py-3 space-y-3">
-                    <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin mx-auto" />
-                    <div className="space-y-1">
-                      <p className="text-xs font-semibold text-slate-900 dark:text-white">
-                        {ingestionStep || 'Processing document with Gemini AI...'}
-                      </p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        Extracting questions, options, and formatting LaTeX formulas...
-                      </p>
+                  {isIngesting ? (
+                    <div className="py-3 space-y-3">
+                      <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin mx-auto" />
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-slate-900 dark:text-white">
+                          {ingestionStep || 'Processing document with Gemini AI...'}
+                        </p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Extracting questions, options, and formatting LaTeX formulas...
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="py-2 space-y-2">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mx-auto">
-                      <UploadCloud className="w-5 h-5" />
+                  ) : (
+                    <div className="py-2 space-y-2">
+                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mx-auto">
+                        <UploadCloud className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                          <span className="text-blue-600 dark:text-blue-400 underline underline-offset-2">Click to browse</span> or drag and drop document here
+                        </p>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                          Supports PDF (.pdf), Word (.docx) & Images (.png, .jpg, .webp) up to 15 MB
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                        <span className="text-blue-600 dark:text-blue-400 underline underline-offset-2">Click to browse</span> or drag and drop document here
-                      </p>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
-                        Supports PDF (.pdf), Word (.docx) & Images (.png, .jpg, .webp) up to 15 MB
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
 
               {ingestionError && (
                 <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2">
@@ -1020,7 +1599,7 @@ export default function TestCreationPage() {
               )}
             </div>
           </div>
-        </div>
+        )}
       </main>
 
       {/* Edit Question Modal */}
@@ -1088,6 +1667,169 @@ export default function TestCreationPage() {
           }}
         />
       )}
+
+      {/* Confirm Examination Settings Before Publishing Modal */}
+      {showConfirmModal && (
+        <div
+          className="fixed inset-0 z-[10000] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setShowConfirmModal(false)}
+        >
+          <div
+            className="max-w-2xl w-full bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-[#334155] rounded-2xl p-6 space-y-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#334155] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <CheckCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Confirm Examination Parameters</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Review your test rules, scheduling window, and proctoring parameters before publishing.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#151f32]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              {/* Test Meta Card */}
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Assessment Details</span>
+                <div className="font-semibold text-slate-900 dark:text-white text-sm">{title}</div>
+                <div className="text-slate-500 dark:text-slate-400">
+                  {category} • {durationMinutes} mins • {questions.length} Questions
+                </div>
+                <div className="text-blue-600 dark:text-blue-400 font-medium">
+                  Total Marks: {questions.length * correctMark} (+{correctMark} / {incorrectMark})
+                </div>
+              </div>
+
+              {/* Schedule Card */}
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Schedule Window</span>
+                {isScheduled ? (
+                  <>
+                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                      Scheduled Window
+                    </span>
+                    <div className="text-[11px] text-slate-700 dark:text-slate-300 font-mono">
+                      <strong>Opens:</strong> {new Date(startTime).toLocaleString()}
+                    </div>
+                    <div className="text-[11px] text-slate-700 dark:text-slate-300 font-mono">
+                      <strong>Closes:</strong> {new Date(endTime).toLocaleString()}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      Open / Unscheduled
+                    </span>
+                    <p className="text-slate-500 dark:text-slate-400 text-[11px]">
+                      Candidates can start this assessment at any time.
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* Candidate Access & Solutions Card */}
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Candidate Access Rules</span>
+                <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
+                  <span>Attempt Limit:</span>
+                  <strong>{isUnlimitedAttempts ? 'Unlimited (∞)' : `${maxAttemptsValue} Attempts`}</strong>
+                </div>
+                <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
+                  <span>Practice Mode:</span>
+                  <strong className={allowPracticeMode ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}>
+                    {allowPracticeMode ? (isScheduled ? 'After schedule ends' : 'Allowed anytime') : 'Disabled'}
+                  </strong>
+                </div>
+                <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
+                  <span>View Responses:</span>
+                  <strong className={allowReviewResponses ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}>
+                    {allowReviewResponses ? (isScheduled ? 'Released after schedule' : 'Available immediately') : 'Hidden / Disabled'}
+                  </strong>
+                </div>
+              </div>
+
+              {/* Proctoring Rules Card */}
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Proctoring Enforcement</span>
+                <div className="grid grid-cols-2 gap-1 text-[11px] text-slate-600 dark:text-slate-400">
+                  <span className={faceCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}>
+                    {faceCheck ? '✓' : '✕'} Face Detection
+                  </span>
+                  <span className={audioCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}>
+                    {audioCheck ? '✓' : '✕'} Audio Monitor
+                  </span>
+                  <span className={fullScreenLock ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}>
+                    {fullScreenLock ? '✓' : '✕'} Fullscreen Lock
+                  </span>
+                  <span className={objectCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}>
+                    {objectCheck ? '✓' : '✕'} Device Detection
+                  </span>
+                </div>
+                <div className="text-[11px] pt-1 border-t border-slate-200 dark:border-[#334155] text-slate-500">
+                  Live alerts: <strong>{liveNotifications ? 'Enabled' : 'Disabled'}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100 dark:border-[#334155]">
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(false)}
+                className="btn-secondary text-xs py-2 px-4"
+              >
+                Back to Editing
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  executeSaveExam('published');
+                }}
+                disabled={isSaving}
+                className="btn-primary text-xs py-2 px-5 flex items-center gap-2"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Publishing...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Confirm & Publish Examination</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Question Paper Dark & Light Mode PDF Preview Modal */}
+      <QuestionPaperPDFModal
+        isOpen={isPDFModalOpen}
+        exam={{
+          title: title || 'Untitled Examination',
+          category,
+          durationMinutes: Number(durationMinutes) || 60,
+          markingScheme: { correct: Number(correctMark) || 4, incorrect: Number(incorrectMark) || -1 },
+          questions,
+          createdAt: new Date().toISOString()
+        }}
+        onClose={() => setIsPDFModalOpen(false)}
+      />
     </div>
   );
 }

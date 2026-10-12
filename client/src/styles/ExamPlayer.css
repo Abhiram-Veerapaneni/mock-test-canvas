@@ -496,20 +496,32 @@
   flex-shrink: 0;
 }
 
-.jee-badge-answered { background-color: #16a34a; }
-.jee-badge-not-answered { background-color: #dc2626; }
-.jee-badge-review { background-color: #9333ea; }
-.jee-badge-ans-review { background-color: #9333ea; position: relative; }
+.jee-badge-current-unanswered {
+  background-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 0 0 2px #60a5fa;
+}
+.jee-badge-answered { background-color: #16a34a; color: #ffffff; }
+.jee-badge-not-answered { background-color: #dc2626; color: #ffffff; }
+.jee-badge-review { background-color: #9333ea; color: #ffffff; }
+.jee-badge-ans-review { background-color: #9333ea; position: relative; color: #ffffff; }
 .jee-badge-ans-review::after {
-  content: '';
+  content: '✓';
   position: absolute;
-  top: -2px;
-  right: -2px;
-  width: 9px;
-  height: 9px;
-  background-color: #22c55e;
+  top: -4px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  background-color: #16a34a;
   border-radius: 50%;
-  border: 1px solid #ffffff;
+  border: 1.5px solid #ffffff;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 .jee-badge-not-visited {
   background-color: var(--jee-bg-section-inactive);

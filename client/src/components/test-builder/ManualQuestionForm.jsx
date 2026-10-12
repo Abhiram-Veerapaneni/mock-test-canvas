@@ -9,7 +9,12 @@ import {
   AlertCircle,
   Image as ImageIcon,
   Loader2,
-  X
+  X,
+  GripVertical,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  BookOpen
 } from 'lucide-react';
 
 export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', examTitle = 'exam' }) {
@@ -28,6 +33,7 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
   const [natMin, setNatMin] = useState('');
   const [natMax, setNatMax] = useState('');
   const [explanation, setExplanation] = useState('');
+  const [isExplanationOpen, setIsExplanationOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState('split');
   const [validationError, setValidationError] = useState('');
 
@@ -42,7 +48,7 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
   const handleQuestionImageUpload = async (file) => {
     if (!file) return;
     if (!examTitle || !examTitle.trim()) {
-      setValidationError('Please enter the Examination Title at the top before uploading images, so all pictures are organized in the same folder.');
+      setValidationError('Please enter the Examination Title at the top before uploading images.');
       if (questionFileRef.current) questionFileRef.current.value = '';
       return;
     }
@@ -77,7 +83,7 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
   const handleOptionImageUpload = async (file, optIdx) => {
     if (!file) return;
     if (!examTitle || !examTitle.trim()) {
-      setValidationError('Please enter the Examination Title at the top before uploading images, so all pictures are organized in the same folder.');
+      setValidationError('Please enter the Examination Title at the top before uploading images.');
       if (optionFileRefs.current[optIdx]) optionFileRefs.current[optIdx].value = '';
       return;
     }
@@ -242,25 +248,25 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
   };
 
   return (
-    <div className="card-base p-5 sm:p-6 text-slate-900 dark:text-slate-100 space-y-5">
-      <div className="flex items-center justify-between pb-3 border-b border-slate-200/80 dark:border-[#334155]">
+    <div className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 text-slate-900 dark:text-zinc-100 shadow-xs space-y-5">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
         <div>
           <h3 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-            Question Authoring Form
+            Question Authoring Panel
           </h3>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-            LaTeX equations parsed via KaTeX ($inline$ and $$block$$). Questions and options can be text or pictures.
+            LaTeX equations parsed via KaTeX ($inline$ and $$block$$). Questions and options support diagrams.
           </p>
         </div>
 
         {/* Segmented View Toggle */}
-        <div className="flex items-center bg-slate-100 dark:bg-[#151f32] p-0.5 rounded-lg border border-slate-200/80 dark:border-[#334155] text-xs">
+        <div className="flex items-center bg-slate-100 dark:bg-slate-900 p-0.5 rounded-xl border border-slate-200/80 dark:border-slate-800 text-xs">
           <button
             type="button"
             onClick={() => setPreviewMode('edit')}
-            className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
               previewMode === 'edit'
-                ? 'bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white shadow-xs font-semibold'
+                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs font-semibold'
                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
@@ -271,9 +277,9 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
           <button
             type="button"
             onClick={() => setPreviewMode('split')}
-            className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
               previewMode === 'split'
-                ? 'bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white shadow-xs font-semibold'
+                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs font-semibold'
                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
@@ -282,9 +288,9 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
           <button
             type="button"
             onClick={() => setPreviewMode('preview')}
-            className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
               previewMode === 'preview'
-                ? 'bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white shadow-xs font-semibold'
+                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs font-semibold'
                 : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
@@ -296,14 +302,14 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
       </div>
 
       {validationError && (
-        <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+        <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
           <span>{validationError}</span>
         </div>
       )}
 
       <form onSubmit={handleSubmitQuestion} className="space-y-4">
-        {/* Type, Subject, Topic */}
+        {/* Streamlined Question Type, Subject, and Topic Tags */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -312,7 +318,7 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
             <select
               value={questionType}
               onChange={(e) => handleQuestionTypeChange(e.target.value)}
-              className="input-base text-xs"
+              className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
             >
               <option value="MCQ">MCQ (Single Choice)</option>
               <option value="MSQ">MSQ (Multiple Choice)</option>
@@ -327,7 +333,7 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
             <select
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="input-base text-xs"
+              className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
             >
               <option value="Mathematics">Mathematics</option>
               <option value="Physics">Physics</option>
@@ -347,12 +353,12 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="e.g. Definite Integrals"
-              className="input-base text-xs"
+              className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
           </div>
         </div>
 
-        {/* Statement with Preview & Picture Attachment */}
+        {/* Statement with Split/Preview Tabs & Picture Attachment */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -404,14 +410,14 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
                 value={questionText}
                 onChange={(e) => setQuestionText(e.target.value)}
                 placeholder="Enter question statement (e.g. Find $\int_0^1 x dx$). Can be left blank if statement is an image."
-                className="input-base text-xs font-mono leading-relaxed"
+                className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono leading-relaxed text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
             )}
 
             {(previewMode === 'preview' || previewMode === 'split') && (
-              <div className="p-3 bg-slate-50 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] rounded-xl overflow-y-auto max-h-40 space-y-2">
+              <div className="p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-y-auto max-h-40 space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">
-                  Rendered Preview
+                  Real-Time LaTeX Preview
                 </span>
                 {questionText ? (
                   <MathRenderer text={questionText} className="text-xs text-slate-900 dark:text-slate-100" />
@@ -424,14 +430,14 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
 
           {/* Attached Question Picture Display */}
           {imageAttachment && (
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] flex items-center justify-between gap-3">
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-12 h-12 rounded-lg overflow-hidden bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-[#334155] shrink-0 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-lg overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0 flex items-center justify-center">
                   <img src={imageAttachment} alt="Question Diagram" className="w-full h-full object-contain" />
                 </div>
                 <div className="min-w-0">
                   <span className="text-xs font-semibold text-slate-900 dark:text-white block truncate">
-                    Question Picture Attached
+                    Question Diagram Attached
                   </span>
                   <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate block">
                     {imageAttachment}
@@ -450,16 +456,16 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
           )}
         </div>
 
-        {/* MCQ/MSQ Options */}
+        {/* Options Builder: Clean A, B, C, D input rows with drag handles, subtle green highlight */}
         {(questionType === 'MCQ' || questionType === 'MSQ') && (
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
               <div>
                 <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Options & Correct Answer ({questionType === 'MCQ' ? 'Single' : 'Multiple'})
+                  Options Builder & Correct Key ({questionType === 'MCQ' ? 'Single Choice' : 'Multiple Choice'})
                 </label>
                 <p className="text-[10px] text-slate-400">
-                  Options can be text, a picture, or both.
+                  Click the option badge (A, B, C, D) to mark the correct choice. Rows highlight with subtle emerald.
                 </p>
               </div>
               <button
@@ -478,8 +484,21 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
                 const isUploadingThis = uploadingOptIndex === optIdx;
 
                 return (
-                  <div key={optIdx} className="space-y-1.5 p-2 rounded-xl bg-slate-50/50 dark:bg-[#151f32]/40 border border-slate-200/80 dark:border-[#334155]">
+                  <div
+                    key={optIdx}
+                    className={`space-y-1.5 p-2 rounded-xl border transition-all duration-150 ${
+                      isSelected
+                        ? 'bg-emerald-500/10 border-emerald-500/40 dark:bg-emerald-950/25 dark:border-emerald-800/60 shadow-2xs'
+                        : 'bg-slate-50/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800'
+                    }`}
+                  >
                     <div className="flex items-center gap-2">
+                      {/* Drag Handle */}
+                      <div className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-grab px-0.5">
+                        <GripVertical className="w-4 h-4" />
+                      </div>
+
+                      {/* Correct Option Selector Badge */}
                       <button
                         type="button"
                         onClick={() =>
@@ -487,11 +506,11 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
                             ? handleCorrectMcqChange(optIdx)
                             : handleCorrectMsqToggle(optIdx)
                         }
-                        title={isSelected ? 'Marked correct' : 'Click to mark correct'}
+                        title={isSelected ? 'Correct option (Click to toggle)' : 'Click to mark as correct option'}
                         className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-colors cursor-pointer ${
                           isSelected
                             ? 'bg-emerald-600 text-white shadow-xs'
-                            : 'bg-white dark:bg-[#1e293b] text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-[#334155] hover:bg-slate-100 dark:hover:bg-[#243147]'
+                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                         }`}
                       >
                         {isSelected ? '✓' : String.fromCharCode(65 + optIdx)}
@@ -502,10 +521,10 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
                         value={opt.text}
                         onChange={(e) => handleOptionTextChange(optIdx, e.target.value)}
                         placeholder={`Option ${String.fromCharCode(65 + optIdx)} text/formula...`}
-                        className="flex-1 input-base text-xs py-1.5"
+                        className="flex-1 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                       />
 
-                      {/* Option Image Trigger */}
+                      {/* Option Image Upload Trigger */}
                       <input
                         ref={(el) => (optionFileRefs.current[optIdx] = el)}
                         type="file"
@@ -521,7 +540,7 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
                         type="button"
                         onClick={() => optionFileRefs.current[optIdx]?.click()}
                         disabled={isUploadingThis}
-                        className="p-1.5 rounded-lg bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-[#334155] text-slate-600 dark:text-slate-300 hover:text-blue-600 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-blue-600 transition-colors cursor-pointer"
                         title="Attach option picture"
                       >
                         {isUploadingThis ? (
@@ -536,6 +555,7 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
                           type="button"
                           onClick={() => handleRemoveOption(optIdx)}
                           className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer"
+                          title="Delete option"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -544,15 +564,15 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
 
                     {/* Option image preview if attached */}
                     {opt.image && (
-                      <div className="ml-9 flex items-center justify-between p-1.5 rounded-lg bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-[#334155]">
+                      <div className="ml-12 flex items-center justify-between p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                         <div className="flex items-center gap-2 min-w-0">
                           <img
                             src={opt.image}
                             alt="Option diagram"
-                            className="w-8 h-8 object-contain rounded border border-slate-200/80 dark:border-[#334155] bg-white"
+                            className="w-8 h-8 object-contain rounded border border-slate-200 dark:border-slate-700 bg-white"
                           />
                           <span className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
-                            Option Picture Uploaded
+                            Option Diagram Uploaded
                           </span>
                         </div>
                         <button
@@ -574,7 +594,7 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
 
         {/* NAT Range */}
         {questionType === 'NAT' && (
-          <div className="bg-slate-50/80 dark:bg-[#151f32] p-3.5 rounded-xl border border-slate-200/80 dark:border-[#334155] space-y-2">
+          <div className="bg-slate-50 dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
               Numeric Value Range [Min, Max]
             </label>
@@ -587,7 +607,7 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
                   value={natMin}
                   onChange={(e) => setNatMin(e.target.value)}
                   placeholder="e.g. 10.0"
-                  className="input-base text-xs font-mono py-1.5"
+                  className="w-full px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono text-slate-900 dark:text-white"
                 />
               </div>
               <div>
@@ -598,32 +618,65 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
                   value={natMax}
                   onChange={(e) => setNatMax(e.target.value)}
                   placeholder="e.g. 10.5"
-                  className="input-base text-xs font-mono py-1.5"
+                  className="w-full px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono text-slate-900 dark:text-white"
                 />
               </div>
             </div>
           </div>
         )}
 
-        {/* Explanation */}
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-            Explanation / Pedagogical Solution
-          </label>
-          <textarea
-            rows={2}
-            value={explanation}
-            onChange={(e) => setExplanation(e.target.value)}
-            placeholder="Solution details visible in post-exam analysis..."
-            className="input-base text-xs font-mono"
-          />
+        {/* Collapsible Accordion for Pedagogical Solution / Explanation */}
+        <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setIsExplanationOpen(!isExplanationOpen)}
+            className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/80 flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span>Pedagogical Solution / Explanation (Optional)</span>
+              {explanation.trim() && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                  Added
+                </span>
+              )}
+            </div>
+            {isExplanationOpen ? (
+              <ChevronUp className="w-4 h-4 text-slate-400" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-slate-400" />
+            )}
+          </button>
+
+          {isExplanationOpen && (
+            <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 space-y-2">
+              <textarea
+                rows={3}
+                value={explanation}
+                onChange={(e) => setExplanation(e.target.value)}
+                placeholder="Step-by-step solution shown after candidate completes assessment (LaTeX supported)..."
+                className="w-full p-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              />
+              {explanation.trim() && (
+                <div className="p-2.5 bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-200 dark:border-slate-800">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                    Explanation KaTeX Preview:
+                  </span>
+                  <MathRenderer text={explanation} className="text-xs text-slate-800 dark:text-slate-200" />
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Add Question Button */}
-        <div className="pt-2 flex justify-end">
+        {/* Sticky Action Bar for "Add to Question Paper" */}
+        <div className="sticky bottom-0 pt-3 pb-1 bg-white/95 dark:bg-[#111827]/95 backdrop-blur-xs border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+          <span className="text-[11px] text-slate-400">
+            {questionType} • {subject}
+          </span>
           <button
             type="submit"
-            className="btn-primary text-xs py-2.5 px-5 flex items-center gap-1.5"
+            className="btn-primary text-xs py-2 px-5 flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" />
             <span>Add to Question Paper</span>
