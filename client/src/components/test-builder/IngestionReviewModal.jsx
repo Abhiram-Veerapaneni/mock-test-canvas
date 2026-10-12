@@ -118,29 +118,29 @@ export default function IngestionReviewModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
       <div
-        className="max-w-4xl w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-sm overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200"
+        className="max-w-4xl w-full bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-sm overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-3.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950 shrink-0">
+        <div className="px-6 py-3.5 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between bg-[#F8FAFC] dark:bg-[#0C0F17] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-zinc-500" />
+            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-slate-500" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 tracking-tight">
                   AI Ingestion Review Studio
                 </h2>
-                <span className="text-xs text-zinc-400 tabular-nums">
+                <span className="text-xs text-slate-400 tabular-nums">
                   ({questions.length} Parsed)
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1.5">
-                <FileText className="w-3 h-3 text-zinc-400" />
-                <span className="truncate max-w-[280px] sm:max-w-md font-medium text-zinc-700 dark:text-zinc-300">
+              <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
+                <FileText className="w-3 h-3 text-slate-400" />
+                <span className="truncate max-w-[280px] sm:max-w-md font-medium text-slate-700 dark:text-slate-300">
                   {fileName || 'Uploaded Document'}
                 </span>
                 <span>· Review and refine LaTeX formulas before importing</span>
@@ -182,29 +182,29 @@ export default function IngestionReviewModal({
                   key={q.id || qIndex}
                   className={`rounded-lg border transition-colors overflow-hidden ${
                     isExpanded
-                      ? 'border-zinc-400 dark:border-zinc-600 bg-zinc-50/50 dark:bg-zinc-800/30'
-                      : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700'
+                      ? 'border-indigo-500/50 dark:border-indigo-400/50 bg-slate-50/50 dark:bg-[#162030]/50'
+                      : 'border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#131926] hover:border-slate-300 dark:hover:border-slate-700'
                   }`}
                 >
                   {/* Collapsed Bar / Summary Header */}
                   <div
                     onClick={() => setExpandedIndex(isExpanded ? -1 : qIndex)}
-                    className="p-3.5 flex items-center justify-between gap-3 cursor-pointer select-none bg-white dark:bg-zinc-900"
+                    className="p-3.5 flex items-center justify-between gap-3 cursor-pointer select-none bg-white dark:bg-[#131926]"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className="w-6 h-6 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-xs font-mono font-medium text-zinc-900 dark:text-zinc-100 shrink-0">
+                      <span className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-xs font-mono font-medium text-slate-900 dark:text-slate-100 shrink-0">
                         #{qIndex + 1}
                       </span>
 
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 shrink-0 border border-zinc-200 dark:border-zinc-700">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium uppercase tracking-wider bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 shrink-0 border border-slate-200 dark:border-slate-700">
                         {q.questionType}
                       </span>
 
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400 shrink-0 font-medium">
+                      <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0 font-medium">
                         {q.subject}
                       </span>
 
-                      <p className="text-xs text-zinc-800 dark:text-zinc-200 truncate">
+                      <p className="text-xs text-slate-800 dark:text-slate-200 truncate">
                         {q.questionText}
                       </p>
                     </div>
@@ -216,12 +216,12 @@ export default function IngestionReviewModal({
                           handleDeleteQuestion(qIndex);
                         }}
                         title="Delete question"
-                        className="p-1 rounded-md text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                        className="p-1 rounded-md text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
 
-                      <div className="text-zinc-400">
+                      <div className="text-slate-400">
                         {isExpanded ? (
                           <ChevronUp className="w-4 h-4" />
                         ) : (
@@ -233,17 +233,17 @@ export default function IngestionReviewModal({
 
                   {/* Expanded Form Body */}
                   {isExpanded && (
-                    <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 space-y-4 bg-zinc-50/50 dark:bg-zinc-950/40">
+                    <div className="p-4 border-t border-slate-200/80 dark:border-slate-800/80 space-y-4 bg-slate-50/50 dark:bg-[#0C0F17]/40">
                       {/* Meta Grid: Subject, Topic, Question Type */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
-                          <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-400 block mb-1">
+                          <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block mb-1">
                             Subject
                           </label>
                           <select
                             value={q.subject}
                             onChange={(e) => handleUpdateQuestion(qIndex, 'subject', e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-md text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100"
+                            className="w-full px-3 py-1.5 rounded-md text-xs bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-slate-900 dark:focus:border-slate-100"
                           >
                             {SUBJECT_OPTIONS.map((subj) => (
                               <option key={subj} value={subj}>
@@ -254,7 +254,7 @@ export default function IngestionReviewModal({
                         </div>
 
                         <div>
-                          <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-400 block mb-1">
+                          <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block mb-1">
                             Topic
                           </label>
                           <input
@@ -262,12 +262,12 @@ export default function IngestionReviewModal({
                             value={q.topic || ''}
                             onChange={(e) => handleUpdateQuestion(qIndex, 'topic', e.target.value)}
                             placeholder="e.g. Kinematics, Calculus"
-                            className="w-full px-3 py-1.5 rounded-md text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100"
+                            className="w-full px-3 py-1.5 rounded-md text-xs bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-slate-900 dark:focus:border-slate-100"
                           />
                         </div>
 
                         <div>
-                          <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-400 block mb-1">
+                          <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block mb-1">
                             Question Type
                           </label>
                           <select
@@ -275,7 +275,7 @@ export default function IngestionReviewModal({
                             onChange={(e) =>
                               handleUpdateQuestion(qIndex, 'questionType', e.target.value)
                             }
-                            className="w-full px-3 py-1.5 rounded-md text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100"
+                            className="w-full px-3 py-1.5 rounded-md text-xs bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-slate-900 dark:focus:border-slate-100"
                           >
                             <option value="MCQ">Single Choice (MCQ)</option>
                             <option value="MSQ">Multiple Select (MSQ)</option>
@@ -287,13 +287,13 @@ export default function IngestionReviewModal({
                       {/* Question Text with Live LaTeX Toggle */}
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                          <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                             <span>Question Text (LaTeX supported)</span>
                           </label>
                           <button
                             type="button"
                             onClick={() => togglePreview(qIndex)}
-                            className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
+                            className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer"
                           >
                             {isPreview ? <Edit3 className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                             <span>{isPreview ? 'Edit Source' : 'Preview Render'}</span>
@@ -301,7 +301,7 @@ export default function IngestionReviewModal({
                         </div>
 
                         {isPreview ? (
-                          <div className="p-3 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-zinc-900 dark:text-zinc-100 min-h-[72px]">
+                          <div className="p-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#131926] text-xs text-slate-900 dark:text-slate-100 min-h-[72px]">
                             <MathRenderer text={q.questionText} />
                           </div>
                         ) : (
@@ -311,7 +311,7 @@ export default function IngestionReviewModal({
                             onChange={(e) =>
                               handleUpdateQuestion(qIndex, 'questionText', e.target.value)
                             }
-                            className="w-full px-3 py-2 rounded-md text-xs font-mono bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 leading-relaxed"
+                            className="w-full px-3 py-2 rounded-md text-xs font-mono bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 leading-relaxed"
                             placeholder="Enter question text with LaTeX formulas like $\frac{a}{b}$ or $\sqrt{x}$..."
                           />
                         )}
@@ -321,14 +321,14 @@ export default function IngestionReviewModal({
                       {q.questionType !== 'NAT' ? (
                         <div className="space-y-2.5 pt-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">
+                            <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
                               Options & Correct Answer ({q.questionType === 'MCQ' ? 'Single Choice' : 'Multi-Select'})
                             </span>
                             {q.options.length < 6 && (
                               <button
                                 type="button"
                                 onClick={() => handleAddOption(qIndex)}
-                                className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
+                                className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer"
                               >
                                 <Plus className="w-3 h-3" />
                                 <span>Add Option</span>
@@ -347,7 +347,7 @@ export default function IngestionReviewModal({
                                   className={`flex items-center gap-2.5 p-2 rounded-md border transition-colors ${
                                     isCorrect
                                       ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30'
-                                      : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900'
+                                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-[#131926]'
                                   }`}
                                 >
                                   {/* Radio / Checkbox for Correct Answer */}
@@ -358,7 +358,7 @@ export default function IngestionReviewModal({
                                     className={`w-6 h-6 rounded-md flex items-center justify-center font-mono font-medium text-xs shrink-0 cursor-pointer transition-colors ${
                                       isCorrect
                                         ? 'bg-emerald-600 text-white'
-                                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
+                                        : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#162030]'
                                     }`}
                                   >
                                     {isCorrect ? <Check className="w-3.5 h-3.5" /> : optionLabel}
@@ -372,13 +372,13 @@ export default function IngestionReviewModal({
                                       onChange={(e) =>
                                         handleOptionChange(qIndex, optIndex, e.target.value)
                                       }
-                                      className="w-full px-2 py-0.5 rounded text-xs bg-transparent border-0 focus:outline-none text-zinc-900 dark:text-zinc-100 font-mono"
+                                      className="w-full px-2 py-0.5 rounded text-xs bg-transparent border-0 focus:outline-none text-slate-900 dark:text-slate-100 font-mono"
                                       placeholder={`Option ${optionLabel} text or formula...`}
                                     />
                                   </div>
 
                                   {/* Rendered Preview Snippet */}
-                                  <div className="hidden sm:block max-w-[200px] truncate text-xs text-zinc-500 dark:text-zinc-400 px-2 py-0.5 border-l border-zinc-200 dark:border-zinc-700">
+                                  <div className="hidden sm:block max-w-[200px] truncate text-xs text-slate-500 dark:text-slate-400 px-2 py-0.5 border-l border-slate-200 dark:border-slate-700">
                                     <MathRenderer text={opt} />
                                   </div>
 
@@ -387,7 +387,7 @@ export default function IngestionReviewModal({
                                     <button
                                       type="button"
                                       onClick={() => handleRemoveOption(qIndex, optIndex)}
-                                      className="p-1 rounded text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
+                                      className="p-1 rounded text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
                                     >
                                       <X className="w-3.5 h-3.5" />
                                     </button>
@@ -400,7 +400,7 @@ export default function IngestionReviewModal({
                       ) : (
                         /* NAT (Numerical) Input */
                         <div className="space-y-1.5 pt-1">
-                          <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-400 block">
+                          <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block">
                             Numerical Correct Answer
                           </label>
                           <input
@@ -413,14 +413,14 @@ export default function IngestionReviewModal({
                               ])
                             }
                             placeholder="e.g. 42 or 3.14"
-                            className="w-full sm:w-64 px-3 py-1.5 rounded-md text-xs font-mono bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100"
+                            className="w-full sm:w-64 px-3 py-1.5 rounded-md text-xs font-mono bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-slate-900 dark:focus:border-slate-100"
                           />
                         </div>
                       )}
 
                       {/* Explanation Field */}
                       <div className="space-y-1.5 pt-1">
-                        <label className="text-[11px] font-medium uppercase tracking-wider text-zinc-400 block">
+                        <label className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block">
                           Solution Explanation (Optional)
                         </label>
                         <textarea
@@ -430,7 +430,7 @@ export default function IngestionReviewModal({
                             handleUpdateQuestion(qIndex, 'explanation', e.target.value)
                           }
                           placeholder="Provide solution steps or reasoning (LaTeX formulas supported)..."
-                          className="w-full px-3 py-1.5 rounded-md text-xs font-mono bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 leading-relaxed"
+                          className="w-full px-3 py-1.5 rounded-md text-xs font-mono bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 leading-relaxed"
                         />
                       </div>
                     </div>
@@ -444,7 +444,7 @@ export default function IngestionReviewModal({
           <button
             type="button"
             onClick={handleAddNewQuestion}
-            className="w-full py-2.5 rounded-md border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center justify-center gap-2 text-xs font-medium transition-colors cursor-pointer"
+            className="w-full py-2.5 rounded-md border border-dashed border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 flex items-center justify-center gap-2 text-xs font-medium transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add Another Question Manually</span>
@@ -452,7 +452,7 @@ export default function IngestionReviewModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="px-6 py-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950 shrink-0">
+        <div className="px-6 py-3 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between bg-[#F8FAFC] dark:bg-[#0C0F17] shrink-0">
           <button
             type="button"
             onClick={onClose}
@@ -462,7 +462,7 @@ export default function IngestionReviewModal({
           </button>
 
           <div className="flex items-center gap-2.5">
-            <span className="text-xs text-zinc-500 hidden sm:inline">
+            <span className="text-xs text-slate-500 hidden sm:inline">
               Ready to import {questions.length} questions
             </span>
             <button

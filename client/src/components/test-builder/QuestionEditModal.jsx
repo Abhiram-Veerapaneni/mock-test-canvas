@@ -281,20 +281,20 @@ export default function QuestionEditModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
       <div
-        className="max-w-4xl w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-sm overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200"
+        className="max-w-4xl w-full bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-sm overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-3.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950 shrink-0">
+        <div className="px-6 py-3.5 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between bg-[#F8FAFC] dark:bg-[#0C0F17] shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center font-semibold text-xs tabular-nums">
+            <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-semibold text-xs tabular-nums">
               #{questionIndex + 1}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100 tracking-tight">
                   Edit Question Item
                 </h2>
                 {isPublishedExam && (
@@ -308,7 +308,7 @@ export default function QuestionEditModal({
                   </span>
                 )}
               </div>
-              <p className="text-xs text-zinc-500 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5">
                 Modify statement, replace KaTeX formulas, or update attached pictures & options.
               </p>
             </div>
@@ -526,19 +526,19 @@ export default function QuestionEditModal({
                     value={questionText}
                     onChange={(e) => setQuestionText(e.target.value)}
                     placeholder="Enter question statement (e.g. Find $\int_0^1 x dx$). Can be blank if statement is an image."
-                    className="w-full p-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-mono text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 leading-relaxed"
+                    className="w-full p-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-slate-900 dark:focus:border-slate-100 leading-relaxed"
                   />
                 )}
 
                 {(previewMode === 'preview' || previewMode === 'split') && (
-                  <div className="p-3 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg overflow-y-auto max-h-48 space-y-2">
-                    <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-400 block">
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg overflow-y-auto max-h-48 space-y-2">
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block">
                       Formula Rendered Preview
                     </span>
                     {questionText ? (
-                      <MathRenderer text={questionText} className="text-xs text-zinc-900 dark:text-zinc-100" />
+                      <MathRenderer text={questionText} className="text-xs text-slate-900 dark:text-slate-100" />
                     ) : (
-                      <span className="text-[11px] text-zinc-400 italic">No text provided.</span>
+                      <span className="text-[11px] text-slate-400 italic">No text provided.</span>
                     )}
                   </div>
                 )}
@@ -546,7 +546,7 @@ export default function QuestionEditModal({
 
               {/* Attached Question Picture Display */}
               {imageAttachment && (
-                <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-between gap-4">
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-14 h-14 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0 flex items-center justify-center">
                       <img
@@ -598,7 +598,7 @@ export default function QuestionEditModal({
                     type="button"
                     onClick={handleAddOption}
                     disabled={options.length >= 6}
-                    className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 disabled:opacity-40 cursor-pointer"
+                    className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 flex items-center gap-1 disabled:opacity-40 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add Option
                   </button>
@@ -716,31 +716,31 @@ export default function QuestionEditModal({
 
             {/* NAT Range */}
             {questionType === 'NAT' && (
-              <div className="bg-zinc-50 dark:bg-zinc-800/40 p-4 rounded-md border border-zinc-200 dark:border-zinc-700/60 space-y-2.5">
-                <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+              <div className="bg-slate-50 dark:bg-[#162030] p-4 rounded-md border border-slate-200 dark:border-slate-700/60 space-y-2.5">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
                   Accepted Numeric Answer Range [Min, Max]
                 </label>
                 <div className="grid grid-cols-2 gap-3 max-w-sm">
                   <div>
-                    <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block mb-1">Minimum Value</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">Minimum Value</span>
                     <input
                       type="number"
                       step="any"
                       value={natMin}
                       onChange={(e) => setNatMin(e.target.value)}
                       placeholder="e.g. 10.0"
-                      className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-xs text-zinc-900 dark:text-zinc-100 font-mono"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-md text-xs text-slate-900 dark:text-slate-100 font-mono"
                     />
                   </div>
                   <div>
-                    <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block mb-1">Maximum Value (Optional)</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">Maximum Value (Optional)</span>
                     <input
                       type="number"
                       step="any"
                       value={natMax}
                       onChange={(e) => setNatMax(e.target.value)}
                       placeholder="e.g. 10.5"
-                      className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-xs text-zinc-900 dark:text-zinc-100 font-mono"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-md text-xs text-slate-900 dark:text-slate-100 font-mono"
                     />
                   </div>
                 </div>
@@ -749,7 +749,7 @@ export default function QuestionEditModal({
 
             {/* Explanation */}
             <div>
-              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Pedagogical Solution / Explanation (LaTeX supported)
               </label>
               <textarea
@@ -757,14 +757,14 @@ export default function QuestionEditModal({
                 value={explanation}
                 onChange={(e) => setExplanation(e.target.value)}
                 placeholder="Step-by-step solution shown after candidate completes assessment..."
-                className="w-full p-2.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-xs font-mono text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500 leading-relaxed"
+                className="w-full p-2.5 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-md text-xs font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-slate-400 dark:focus:border-slate-500 leading-relaxed"
               />
             </div>
           </form>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950 shrink-0">
+        <div className="px-6 py-3 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between bg-[#F8FAFC] dark:bg-[#0C0F17] shrink-0">
           <button
             type="button"
             onClick={onClose}

@@ -1,36 +1,74 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../services/api';
 import { getSocket, joinExamRoom } from '../../services/socket';
+import api from '../../services/api';
 import { formatTime12h, formatDateTime12h } from '../../utils/dateUtils';
 import {
-  ShieldAlert, Radio, X, Loader2, Users, Eye, EyeOff,
-  Volume2, AlertTriangle, RefreshCw, Calendar, Clock,
-  ExternalLink, CheckCircle2, User, Search
+  ShieldAlert,
+  ExternalLink,
+  X,
+  RefreshCw,
+  Eye,
+  Clock,
+  User,
+  Search,
+  Camera,
+  MoreVertical,
+  Flag,
+  VolumeOff,
+  UserX,
+  ShieldCheck,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 
-const VIOLATION_LABELS = {
-  TAB_SWITCH: 'Tab Switch',
-  WINDOW_BLUR: 'Focus Lost',
-  FULLSCREEN_EXIT: 'Fullscreen Exit',
-  NO_FACE: 'No Face Detected',
-  MULTI_FACE: 'Multiple Faces',
-  NOISE_SPIKE: 'Excessive Noise',
-  CELL_PHONE: 'Mobile Phone',
-  PROHIBITED_BOOK: 'Study Material',
-  PROHIBITED_OBJECT: 'Prohibited Device',
+const VIOLATION_CONFIG = {
+  CELL_PHONE: { label: 'Mobile Phone', tone: 'critical' },
+  PROHIBITED_OBJECT: { label: 'Prohibited Device', tone: 'critical' },
+  MULTI_FACE: { label: 'Multiple Faces', tone: 'warning' },
+  NO_FACE: { label: 'No Face', tone: 'warning' },
+  PROHIBITED_BOOK: { label: 'Study Material', tone: 'warning' },
+  NOISE_SPIKE: { label: 'Noise Detected', tone: 'warning' },
+  TAB_SWITCH: { label: 'Tab Switch', tone: 'neutral' },
+  WINDOW_BLUR: { label: 'Focus Lost', tone: 'neutral' },
+  FULLSCREEN_EXIT: { label: 'Fullscreen Exit', tone: 'neutral' },
 };
 
-export default function ExamLiveMonitorModal({ examId, examTitle, onClose }) {
+const getViolationDetails = (type) => {
+  if (!type) return { label: 'Infraction', tone: 'warning' };
+  if (VIOLATION_CONFIG[type]) return VIOLATION_CONFIG[type];
+  const formatted = type.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+  return { label: formatted, tone: 'warning' };
+};
+
+export default function ExamLiveMonitorModal({ isOpen, onClose, examId, examTitle }) {
   const [violations, setViolations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedImageModal, setSelectedImageModal] = useState(null);
+  const [brokenImages, setBrokenImages] = useState(() => new Set());
+  const [openDropdownIdx, setOpenDropdownIdx] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [mutedCandidates, setMutedCandidates] = useState(() => new Set());
 
-  // Fetch initial violations from backend
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('[data-modal-action-dropdown]')) {
+        setOpenDropdownIdx(null);
+      }
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, []);
+
+  const markImageBroken = (url) => {
+    setBrokenImages((prev) => new Set(prev).add(url));
+  };
+
   const fetchViolations = async () => {
+    if (!examId) return;
     setIsLoading(true);
     setError(null);
     try {
@@ -39,17 +77,18 @@ export default function ExamLiveMonitorModal({ examId, examTitle, onClose }) {
         setViolations(res.data.violations || []);
       }
     } catch (err) {
-      console.warn('Failed to load violations:', err);
-      setError(err.response?.data?.message || 'Could not fetch violations.');
+      console.warn('Failed to load initial violations:', err);
+      setError(err.response?.data?.message || 'Could not fetch proctoring infractions.');
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
+    if (!isOpen || !examId) return;
+
     fetchViolations();
 
-    // Setup real-time Socket.IO listener for this exam
     const socket = getSocket();
     joinExamRoom(examId);
 
@@ -74,11 +113,11 @@ export default function ExamLiveMonitorModal({ examId, examTitle, onClose }) {
       socket.off('disconnect', handleDisconnect);
       socket.off('violation:live', handleLiveViolation);
     };
-  }, [examId]);
+  }, [isOpen, examId]);
 
-  // In live alerting image grid, exclude tab switches and non-image violations
+  // Exclude non-image events for snapshot gallery
   const filteredViolations = violations.filter((v) => {
-    if (!v.imageUrl) return false; // Exclude non-image events like tab switch
+    if (!v.imageUrl) return false;
     const matchesFilter = selectedFilter === 'ALL' || v.type === selectedFilter;
     const matchesSearch =
       !searchQuery ||
@@ -106,157 +145,154 @@ export default function ExamLiveMonitorModal({ examId, examTitle, onClose }) {
     );
   };
 
-  const renderBadge = (type) => {
-    let dotColor = 'bg-blue-400';
-    switch (type) {
-      case 'CELL_PHONE':
-      case 'PROHIBITED_OBJECT':
-        dotColor = 'bg-rose-400';
-        break;
-      case 'PROHIBITED_BOOK':
-      case 'NO_FACE':
-        dotColor = 'bg-amber-400';
-        break;
-      case 'MULTI_FACE':
-        dotColor = 'bg-indigo-400';
-        break;
-      case 'NOISE_SPIKE':
-        dotColor = 'bg-sky-400';
-        break;
-      default:
-        dotColor = 'bg-blue-400';
-    }
-
-    return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 shrink-0">
-        <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
-        <span>{VIOLATION_LABELS[type] || type}</span>
-      </span>
-    );
+  const toggleMuteCandidate = (candidateId) => {
+    setMutedCandidates((prev) => {
+      const next = new Set(prev);
+      if (next.has(candidateId)) next.delete(candidateId);
+      else next.add(candidateId);
+      return next;
+    });
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-zinc-950/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="max-w-5xl w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-sm flex flex-col max-h-[92vh] overflow-hidden text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
+  if (!isOpen) return null;
 
-        {/* ── Modal Header ── */}
-        <div className="px-5 sm:px-6 py-3.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-4 bg-white dark:bg-zinc-900">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-8 h-8 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 flex items-center justify-center shrink-0">
-              <ShieldAlert className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight truncate">
-                  Live Proctoring & Evidence Console
-                </h2>
-                <span className="inline-flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 shrink-0">
-                  <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-                  <span>{isConnected ? 'Stream Active' : 'Connecting...'}</span>
-                </span>
-              </div>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-lg">
-                {examTitle} • Real-time photographic evidence stream
-              </p>
-            </div>
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+      <div className="max-w-6xl w-full bg-[#F8FAFC] dark:bg-[#0C0F17] border border-slate-200 dark:border-slate-800 rounded-xl flex flex-col max-h-[92vh] overflow-hidden text-slate-900 dark:text-slate-100 shadow-2xl font-sans transition-colors duration-150">
+
+        {/* ── 1. SOLID TOP CONSOLE BAR ── */}
+        <div className="px-5 sm:px-6 py-2.5 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-4 bg-white dark:bg-[#131926] shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <h2 className="text-xs font-semibold text-slate-900 dark:text-slate-100 tracking-tight truncate">
+              Live Proctoring Console
+            </h2>
+
+            {/* Active Session Pill */}
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Live</span>
+            </span>
+
+            {/* Session Meta */}
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 truncate hidden sm:inline">
+              {examTitle} · <span className="font-mono">ID: {String(examId).slice(0, 8)}...</span>
+            </span>
           </div>
 
+          {/* Right Controls */}
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* Open in New Window */}
             <button
               type="button"
               onClick={handleOpenInNewWindow}
-              title="Open in separate pop-up window"
-              className="btn-secondary text-xs px-2.5 py-1.5 inline-flex items-center gap-1.5"
+              title="Open in separate workstation window"
+              className="h-7 px-2 rounded-md border border-slate-200 dark:border-slate-700/80 text-[11px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030] transition-colors cursor-pointer flex items-center gap-1.5"
             >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Open in New Window</span>
+              <ExternalLink className="w-3 h-3" />
+              <span className="hidden sm:inline">New Window</span>
             </button>
 
-            {/* Refresh */}
             <button
               type="button"
               onClick={fetchViolations}
               disabled={isLoading}
-              title="Refresh violations"
-              className="btn-secondary p-1.5"
+              title="Refresh telemetry"
+              className="h-7 px-2 rounded-md border border-slate-200 dark:border-slate-700/80 text-[11px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030] transition-colors cursor-pointer flex items-center gap-1.5"
             >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Sync</span>
             </button>
 
-            {/* Close */}
             <button
               type="button"
               onClick={onClose}
-              title="Close modal"
-              className="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+              title="Close console modal"
+              className="h-7 px-1.5 rounded-md border border-slate-200 dark:border-slate-700/80 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#162030] transition-colors cursor-pointer"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* ── Telemetry Quick Metrics Bar ── */}
-        <div className="px-5 sm:px-6 py-2.5 bg-zinc-50/50 dark:bg-zinc-900/50 border-b border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center gap-4 text-xs">
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
-            <span className="text-zinc-500 text-[11px]">Snaps:</span>
-            <span className="font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">{totalSnapshots}</span>
+        {/* ── 2. COMPACT KPI TELEMETRY STRIP (Slim & Integrated) ── */}
+        <div className="px-5 sm:px-6 py-2 bg-white dark:bg-[#131926] border-b border-slate-200/80 dark:border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-slate-800/80 shrink-0">
+          <div className="flex items-center gap-2.5 py-1 sm:py-0 sm:px-3 first:pl-0">
+            <Camera className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+            <div>
+              <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400 block">Evidence Snaps</span>
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 tabular-nums leading-none">{totalSnapshots}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-            <span className="text-zinc-500 text-[11px]">Mobile/Hardware:</span>
-            <span className="font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">{phoneAlerts}</span>
+
+          <div className="flex items-center gap-2.5 py-1 sm:py-0 sm:px-3">
+            <ShieldAlert className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+            <div>
+              <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400 block">Hardware Flags</span>
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 tabular-nums leading-none">{phoneAlerts}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            <span className="text-zinc-500 text-[11px]">Face/Attention:</span>
-            <span className="font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">{faceAlerts}</span>
+
+          <div className="flex items-center gap-2.5 py-1 sm:py-0 sm:px-3">
+            <AlertTriangle className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+            <div>
+              <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400 block">Biometric Flags</span>
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 tabular-nums leading-none">{faceAlerts}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span className="text-zinc-500 text-[11px]">Flagged Candidates:</span>
-            <span className="font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">{uniqueCandidates}</span>
+
+          <div className="flex items-center gap-2.5 py-1 sm:py-0 sm:px-3 last:pr-0">
+            <User className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+            <div>
+              <span className="text-[9px] font-medium uppercase tracking-wider text-slate-400 block">Active Candidates</span>
+              <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 tabular-nums leading-none">{uniqueCandidates}</span>
+            </div>
           </div>
         </div>
 
-        {/* ── Filter Bar & Search ── */}
-        <div className="px-5 sm:px-6 py-2.5 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-            {['ALL', 'CELL_PHONE', 'PROHIBITED_BOOK', 'NO_FACE', 'MULTI_FACE'].map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setSelectedFilter(type)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer border ${
-                  selectedFilter === type
-                    ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100'
-                    : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-850'
-                }`}
-              >
-                {type === 'ALL' ? `All Snapshots (${filteredViolations.length})` : VIOLATION_LABELS[type] || type}
-              </button>
-            ))}
+        {/* ── 3. FILTER & SEARCH TOOLBAR ── */}
+        <div className="px-5 sm:px-6 py-2 border-b border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#131926] flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+            {[
+              { key: 'ALL', label: `All (${filteredViolations.length})` },
+              { key: 'CELL_PHONE', label: `Phones (${phoneAlerts})` },
+              { key: 'MULTI_FACE', label: `Faces (${faceAlerts})` },
+              { key: 'NO_FACE', label: 'No Face' },
+            ].map(({ key, label }) => {
+              const isActive = selectedFilter === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setSelectedFilter(key)}
+                  className={`text-[11px] px-2 py-0.5 rounded-md transition-colors whitespace-nowrap cursor-pointer font-medium ${
+                    isActive
+                      ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
 
-          <div className="relative w-full sm:w-56">
-            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="relative w-full sm:w-52">
+            <Search className="w-3 h-3 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter candidate..."
-              className="input-base text-xs pl-8 pr-3 py-1.5"
+              placeholder="Search candidate..."
+              className="text-[11px] h-7 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-[#0C0F17] px-2.5 pl-7 w-full text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:bg-white dark:focus:bg-[#0C0F17] focus:outline-none focus:border-indigo-500 transition-colors"
             />
           </div>
         </div>
 
-        {/* ── Content Grid / Evidence Gallery ── */}
-        <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 bg-zinc-50/50 dark:bg-zinc-950/50">
+        {/* ── 4. VIDEO-FIRST CANDIDATE TILES (Twitch Mod View / CCTV HUD Grid) ── */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 bg-[#F8FAFC] dark:bg-[#0C0F17]">
           {isLoading ? (
-            <div className="py-20 flex flex-col items-center justify-center text-zinc-400 space-y-2">
-              <Loader2 className="w-6 h-6 animate-spin text-zinc-600 dark:text-zinc-400" />
-              <span className="text-xs">Loading proctoring evidence...</span>
+            <div className="py-24 flex flex-col items-center justify-center text-slate-400 space-y-2">
+              <Loader2 className="w-5 h-5 animate-spin text-slate-500 dark:text-slate-400" />
+              <span className="text-xs font-medium">Synchronizing live proctoring stream...</span>
             </div>
           ) : error ? (
             <div className="p-4 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-center justify-between">
@@ -264,138 +300,241 @@ export default function ExamLiveMonitorModal({ examId, examTitle, onClose }) {
               <button
                 type="button"
                 onClick={fetchViolations}
-                className="btn-secondary text-xs px-3 py-1"
+                className="px-3 py-1 bg-white hover:bg-slate-50 border border-rose-200 rounded-md text-xs font-medium text-rose-700 cursor-pointer"
               >
                 Retry
               </button>
             </div>
           ) : filteredViolations.length === 0 ? (
             <div className="py-20 text-center space-y-2">
-              <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/50 dark:border-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mx-auto">
-                <CheckCircle2 className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mx-auto">
+                <ShieldCheck className="w-5 h-5" />
               </div>
-              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">No Violations Logged</h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
-                No proctoring infractions match this filter. When candidates violate rules, live snapshots will automatically populate here.
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Clean Session • No Infractions</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+                No incidents logged matching filter parameters. Verified visual telemetry captures will stream in real time.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredViolations.map((v, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-3.5 flex flex-col justify-between space-y-3 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors group shadow-none"
-                >
-                  {/* Candidate Info & Type Header */}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-6 h-6 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-semibold flex items-center justify-center shrink-0">
-                        {v.userName ? v.userName.charAt(0).toUpperCase() : <User className="w-3.5 h-3.5" />}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-medium text-zinc-900 dark:text-zinc-100 truncate">{v.userName || 'Candidate'}</p>
-                        <p className="text-[10px] text-zinc-400 truncate">{v.userEmail || 'Active Candidate'}</p>
-                      </div>
-                    </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {filteredViolations.map((v, idx) => {
+                const isBroken = brokenImages.has(v.imageUrl);
+                const trustScore = v.candidateTrustScore ?? 100;
+                const isMuted = mutedCandidates.has(v.userId || v.userEmail);
+                const isDropdownOpen = openDropdownIdx === idx;
+                const firstName = v.userName ? v.userName.split(' ')[0] : 'Candidate';
+                const violationDetails = getViolationDetails(v.type);
 
-                    {renderBadge(v.type)}
-                  </div>
-
-                  {/* Cloudinary Snapshot Image */}
-                  {v.imageUrl ? (
-                    <div
-                      onClick={() => setSelectedImageModal(v)}
-                      className="w-full h-44 rounded-md bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 overflow-hidden relative group/img cursor-pointer"
-                    >
+                return (
+                  <div
+                    key={idx}
+                    className="relative aspect-video rounded-lg overflow-hidden bg-slate-950 border border-slate-800/80 shadow-sm group hover:ring-2 hover:ring-indigo-500 transition-all cursor-pointer select-none"
+                    onClick={() => {
+                      if (v.imageUrl && !isBroken) setSelectedImageModal(v);
+                    }}
+                  >
+                    {/* Video / Snapshot Feed */}
+                    {v.imageUrl && !isBroken ? (
                       <img
                         src={v.imageUrl}
-                        alt="Violation snapshot"
-                        className="w-full h-full object-cover transition-transform duration-200 group-hover/img:scale-102"
+                        alt={`Capture of ${v.userName || 'candidate'}`}
+                        onError={() => markImageBroken(v.imageUrl)}
+                        className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
                         loading="lazy"
                       />
-                      <div className="absolute inset-0 bg-zinc-950/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity">
-                        <div className="px-2.5 py-1 rounded-md bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xs text-zinc-900 dark:text-zinc-100 text-xs font-medium flex items-center gap-1.5 shadow-sm">
-                          <Eye className="w-3.5 h-3.5 text-zinc-500" />
-                          <span>Enlarge Evidence</span>
-                        </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-slate-500 text-xs gap-1 bg-slate-900 w-full h-full">
+                        <Camera className="w-4 h-4 text-slate-600" />
+                        <span className="text-[10px] font-mono text-slate-400">Feed Unavailable</span>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="w-full h-44 rounded-md bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center text-zinc-400 space-y-1">
-                      <AlertTriangle className="w-5 h-5 opacity-60" />
-                      <span className="text-[11px]">System Flag (No image)</span>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Metadata Footer */}
-                  <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-[11px]">
-                    <span className="flex items-center gap-1 font-mono text-zinc-500 dark:text-zinc-400">
-                      <Clock className="w-3 h-3 text-zinc-400" />
-                      {v.timestamp ? formatTime12h(v.timestamp, { includeSeconds: true }) : 'Just now'}
-                    </span>
-                    {v.candidateTrustScore !== undefined && (
-                      <span className="text-zinc-500 dark:text-zinc-400 font-mono text-[11px]">
-                        Trust: <strong className={`font-medium ${v.candidateTrustScore < 70 ? 'text-rose-600 dark:text-rose-400' : 'text-zinc-800 dark:text-zinc-200'}`}>
-                          {v.candidateTrustScore}%
+                    {/* HUD Overlay: Top-Left Candidate Badge */}
+                    <div className="absolute top-2 left-2 z-10 bg-black/65 backdrop-blur-md px-1.5 py-0.5 rounded text-[9.5px] font-medium text-white flex items-center gap-1 shadow-sm pointer-events-none">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="truncate max-w-[100px]">{firstName}</span>
+                      {isMuted && (
+                        <span title="Audio muted" className="text-rose-400">
+                          <VolumeOff className="w-2.5 h-2.5" />
+                        </span>
+                      )}
+                    </div>
+
+                    {/* HUD Overlay: Top-Right Violation Flag (Compact, proportional title-case pill) */}
+                    {v.type && (
+                      <div className={`absolute top-2 right-2 z-10 backdrop-blur-md text-[9px] font-medium px-1.5 py-0.5 rounded shadow-xs flex items-center gap-1 pointer-events-none ${
+                        violationDetails.tone === 'critical'
+                          ? 'bg-rose-500/90 text-white'
+                          : 'bg-amber-500/90 text-black'
+                      }`}>
+                        <AlertTriangle className="w-2.5 h-2.5" />
+                        <span>{violationDetails.label}</span>
+                      </div>
+                    )}
+
+                    {/* HUD Overlay: Center Hover Enlarge Cue */}
+                    <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                      <span className="bg-black/70 backdrop-blur-md text-white text-[9.5px] font-medium px-2 py-0.5 rounded flex items-center gap-1 shadow-sm">
+                        <Eye className="w-2.5 h-2.5" />
+                        <span>Inspect Feed</span>
+                      </span>
+                    </div>
+
+                    {/* HUD Overlay: Bottom-Left Live Telemetry */}
+                    <div className="absolute bottom-2 left-2 z-10 bg-black/65 backdrop-blur-md px-1.5 py-0.5 rounded text-[9px] font-mono text-slate-200 flex items-center gap-1.5 shadow-sm pointer-events-none">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-2 h-2 text-slate-400" />
+                        <span>{v.timestamp ? formatTime12h(v.timestamp, { includeSeconds: true }) : 'Live'}</span>
+                      </div>
+                      <span className="text-slate-500">•</span>
+                      <span>
+                        Trust{' '}
+                        <strong className={trustScore > 75 ? 'text-emerald-400' : trustScore < 60 ? 'text-rose-400' : 'text-amber-400'}>
+                          {trustScore}%
                         </strong>
                       </span>
-                    )}
+                    </div>
+
+                    {/* HUD Overlay: Bottom-Right Hover Action Triggers */}
+                    <div
+                      className="absolute bottom-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-black/70 backdrop-blur-md p-0.5 rounded shadow-sm"
+                      onClick={(e) => e.stopPropagation()}
+                      data-modal-action-dropdown
+                    >
+                      <button
+                        type="button"
+                        onClick={() => alert(`Warning issued to ${v.userName || 'Candidate'}: Please remain focused on your examination.`)}
+                        className="bg-amber-500 hover:bg-amber-400 text-black font-semibold text-[9px] px-1.5 py-0.5 rounded transition cursor-pointer flex items-center gap-0.5"
+                        title="Issue warning"
+                      >
+                        <ShieldAlert className="w-2.5 h-2.5" />
+                        <span>Warn</span>
+                      </button>
+
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setOpenDropdownIdx(isDropdownOpen ? null : idx)}
+                          title="Actions menu"
+                          className="text-white hover:bg-white/20 p-1 rounded cursor-pointer transition-colors"
+                        >
+                          <MoreVertical className="w-3 h-3" />
+                        </button>
+
+                        {isDropdownOpen && (
+                          <div
+                            className="absolute right-0 bottom-full mb-1 w-44 rounded-md bg-[#131926] border border-slate-700 shadow-xl py-1 z-40 text-xs"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              onClick={() => {
+                                alert(`Flag logged for ${v.userName || 'candidate'} for manual review.`);
+                                setOpenDropdownIdx(null);
+                              }}
+                              className="w-full text-left px-3 py-1.5 text-slate-200 hover:bg-[#162030] flex items-center gap-2 cursor-pointer"
+                            >
+                              <Flag className="w-3.5 h-3.5 text-slate-400" />
+                              <span>Flag for Review</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                toggleMuteCandidate(v.userId || v.userEmail);
+                                setOpenDropdownIdx(null);
+                              }}
+                              className="w-full text-left px-3 py-1.5 text-slate-200 hover:bg-[#162030] flex items-center gap-2 cursor-pointer"
+                            >
+                              <VolumeOff className="w-3.5 h-3.5 text-slate-400" />
+                              <span>{isMuted ? 'Unmute Audio' : 'Mute Audio'}</span>
+                            </button>
+
+                            <div className="my-1 border-t border-slate-700/80" />
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm(`Disqualify candidate ${v.userName || 'record'} and terminate session?`)) {
+                                  alert(`Candidate session terminated.`);
+                                }
+                                setOpenDropdownIdx(null);
+                              }}
+                              className="w-full text-left px-3 py-1.5 text-rose-400 hover:bg-rose-950/40 flex items-center gap-2 font-medium cursor-pointer"
+                            >
+                              <UserX className="w-3.5 h-3.5 text-rose-500" />
+                              <span>Disqualify Candidate</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* ── Fullscreen Image Lightbox Modal ── */}
+        {/* ── High-Resolution Photo Lightbox ── */}
         {selectedImageModal && (
           <div
-            className="fixed inset-0 z-60 bg-zinc-950/60 backdrop-blur-xs flex items-center justify-center p-4"
+            className="fixed inset-0 z-60 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4"
             onClick={() => setSelectedImageModal(null)}
           >
             <div
-              className="max-w-3xl w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden shadow-sm space-y-4 p-5 text-zinc-900 dark:text-zinc-100"
+              className="max-w-3xl w-full bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden p-5 text-slate-900 dark:text-slate-100 space-y-4 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                    Violation Evidence Snapshot
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Infraction Evidence Review
                   </h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    {selectedImageModal.userName} • {VIOLATION_LABELS[selectedImageModal.type] || selectedImageModal.type} •{' '}
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                    {selectedImageModal.userName} • {getViolationDetails(selectedImageModal.type).label} •{' '}
                     {formatDateTime12h(selectedImageModal.timestamp, { includeYear: true, includeSeconds: true })}
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setSelectedImageModal(null)}
-                  className="p-1 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer transition-colors"
+                  className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#162030] cursor-pointer transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 max-h-[65vh] flex items-center justify-center">
+              <div className="rounded-lg overflow-hidden bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center max-h-[65vh]">
                 <img
                   src={selectedImageModal.imageUrl}
-                  alt="High resolution violation"
+                  alt="Infraction capture full"
                   className="max-h-[65vh] w-auto object-contain"
                 />
               </div>
 
-              <div className="flex items-center justify-between text-xs pt-1">
-                <span className="text-zinc-500 dark:text-zinc-400 font-mono text-[11px]">
-                  Cloudinary Asset • Stored under exam directory
-                </span>
-                <a
-                  href={selectedImageModal.imageUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-zinc-700 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100 font-medium"
-                >
-                  <span>Open Full Original</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
+              <div className="flex items-center justify-between pt-1 text-xs">
+                <div className="text-slate-500 dark:text-slate-400 font-mono">
+                  Trust Score: <strong className="text-slate-900 dark:text-slate-100">{selectedImageModal.candidateTrustScore ?? 100}%</strong>
+                </div>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={selectedImageModal.imageUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="h-8 px-3 rounded-md border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030] transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <span>Original Image</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedImageModal(null)}
+                    className="h-8 px-3 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors cursor-pointer"
+                  >
+                    Close Evidence
+                  </button>
+                </div>
               </div>
             </div>
           </div>

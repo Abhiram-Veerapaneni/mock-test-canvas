@@ -226,34 +226,34 @@ export default function DashboardPage() {
   const totalQuestions = questionBankCount !== null ? questionBankCount : totalExamQuestions;
   const completedAttempts = user?.attemptedTests?.length || 0;
 
-  const getCategoryBadgeClass = (category) => {
+  const getCategoryEyebrowClass = (category) => {
     const cat = (category || '').toUpperCase();
     if (cat === 'JEE' || cat === 'NEET') {
-      return 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/60 dark:bg-indigo-950/40 border-indigo-100 dark:border-indigo-900/40';
+      return 'text-indigo-600 dark:text-indigo-400';
     }
     if (cat === 'GATE') {
-      return 'text-blue-600 dark:text-blue-400 bg-blue-50/60 dark:bg-blue-950/40 border-blue-100 dark:border-blue-900/40';
+      return 'text-blue-600 dark:text-sky-400';
     }
     if (cat === 'APTITUDE') {
-      return 'text-teal-700 dark:text-teal-400 bg-teal-50/60 dark:bg-teal-950/40 border-teal-100 dark:border-teal-900/40';
+      return 'text-amber-600 dark:text-amber-400';
     }
-    return 'text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700';
+    return 'text-slate-500 dark:text-slate-400';
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F9FB] dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0C0F17] text-slate-900 dark:text-slate-300 flex flex-col">
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Top Header */}
         <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
           <div>
-            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               Assessments
             </h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {isAuthenticated ? (
-                <>Logged in as <span className="font-medium text-zinc-800 dark:text-zinc-200">{user?.name || user?.email}</span>. Select an active test to begin.</>
+                <>Logged in as <span className="font-medium text-slate-800 dark:text-slate-200">{user?.name || user?.email}</span>. Select an active test to begin.</>
               ) : (
                 <>Browse verified competitive exam papers or author custom assessments.</>
               )}
@@ -263,7 +263,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleAuthorExamClick}
-              className="btn-primary"
+              className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-sm shadow-indigo-600/20 active:scale-[0.98] dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white dark:shadow-indigo-500/10 text-xs py-1.5 px-3 rounded-lg flex items-center gap-1.5 transition-all duration-150 cursor-pointer"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               <span>Author New Exam</span>
@@ -272,38 +272,38 @@ export default function DashboardPage() {
         </section>
 
         {/* KPI & Metric Blocks: 3-column border-separated grid rather than separate floating bubble cards */}
-        <section className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-zinc-200 dark:divide-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-zinc-900">
+        <section className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200/80 dark:divide-slate-800/80 border border-slate-200/80 rounded-lg bg-white shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none">
           <div className="p-4 sm:p-5">
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Active Tests</p>
-            <p className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 tabular-nums mt-1">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Active Tests</p>
+            <p className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 tabular-nums mt-1">
               {displayExams.length}
             </p>
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">Ready for testing</p>
+            <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">Ready for testing</p>
           </div>
 
           <div
             onClick={() => navigate('/question-bank')}
-            className="p-4 sm:p-5 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-850/50 transition-colors group"
+            className="p-4 sm:p-5 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#162030] transition-colors group"
             title="Browse Question Bank repository"
           >
             <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors">
                 Question Bank
               </p>
-              <Compass className="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
+              <Compass className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors" />
             </div>
-            <p className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 tabular-nums mt-1">
+            <p className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 tabular-nums mt-1">
               {totalQuestions}
             </p>
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">KaTeX math verified</p>
+            <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">KaTeX math verified</p>
           </div>
 
           <div className="p-4 sm:p-5">
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Completed Assessments</p>
-            <p className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 tabular-nums mt-1">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Completed Assessments</p>
+            <p className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 tabular-nums mt-1">
               {completedAttempts}
             </p>
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">
+            <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">
               {completedAttempts > 0 ? 'Full analysis available' : 'Start your first test'}
             </p>
           </div>
@@ -313,23 +313,23 @@ export default function DashboardPage() {
         <section className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
           {/* Search */}
           <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-80">
-            <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tests by title or topic..."
-              className="w-full pl-8 pr-16 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-colors"
+              className="w-full pl-8 pr-16 py-1.5 bg-white dark:bg-[#131926] border border-slate-200/80 dark:border-slate-800/80 rounded-md text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition-colors"
             />
             <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
               {isSearching && (
-                <Loader2 className="w-3 h-3 text-zinc-400 animate-spin" />
+                <Loader2 className="w-3 h-3 text-slate-400 animate-spin" />
               )}
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="p-0.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded transition-colors"
+                  className="p-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded transition-colors"
                   title="Clear search"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -347,8 +347,8 @@ export default function DashboardPage() {
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors cursor-pointer whitespace-nowrap ${isSelected
-                      ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-                      : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/60'
+                    ? 'bg-indigo-600 text-white dark:bg-indigo-500 dark:text-white shadow-sm shadow-indigo-600/20'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/60'
                     }`}
                 >
                   {cat === 'ALL' ? 'All' : cat}
@@ -361,8 +361,8 @@ export default function DashboardPage() {
         {/* Test Cards & List Grid */}
         <section>
           {isLoading ? (
-            <div className="py-20 flex flex-col items-center justify-center text-zinc-400">
-              <Loader2 className="w-5 h-5 animate-spin text-zinc-500 mb-2" />
+            <div className="py-20 flex flex-col items-center justify-center text-slate-400 dark:text-slate-400">
+              <Loader2 className="w-5 h-5 animate-spin text-indigo-600 dark:text-indigo-400 mb-2" />
               <p className="text-xs">Loading tests...</p>
             </div>
           ) : error ? (
@@ -373,41 +373,41 @@ export default function DashboardPage() {
               </div>
               <button
                 onClick={fetchExams}
-                className="btn-secondary py-1 px-2.5 text-xs"
+                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm active:scale-[0.98] dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700 py-1 px-2.5 text-xs rounded-lg font-medium transition cursor-pointer"
               >
                 Retry
               </button>
             </div>
           ) : displayExams.length === 0 ? (
-            <div className="text-center py-16 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-8">
+            <div className="text-center py-16 bg-white dark:bg-[#131926] border border-slate-200/80 dark:border-slate-800/80 rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:shadow-none p-8">
               {searchQuery.trim() ? (
                 <>
-                  <Search className="w-6 h-6 text-zinc-400 mx-auto mb-2" />
-                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
+                  <Search className="w-6 h-6 text-slate-400 dark:text-slate-400 mx-auto mb-2" />
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">
                     No matching examinations found
                   </h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto mb-4">
+                  <p className="text-xs text-slate-500 dark:text-slate-300 max-w-sm mx-auto mb-4">
                     No active tests match "{searchQuery}" in category ({selectedCategory}).
                   </p>
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="btn-secondary text-xs py-1.5 px-3"
+                    className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm active:scale-[0.98] dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-xs py-1.5 px-3 rounded-lg font-medium transition cursor-pointer"
                   >
                     Clear Search Query
                   </button>
                 </>
               ) : (
                 <>
-                  <BookOpen className="w-6 h-6 text-zinc-400 mx-auto mb-2" />
-                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
+                  <BookOpen className="w-6 h-6 text-slate-400 dark:text-slate-400 mx-auto mb-2" />
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">
                     No examinations found
                   </h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto mb-4">
+                  <p className="text-xs text-slate-500 dark:text-slate-300 max-w-sm mx-auto mb-4">
                     No active tests match your filter ({selectedCategory}). You can author a new examination paper in the studio.
                   </p>
                   <button
                     onClick={() => navigate('/create-test')}
-                    className="btn-primary"
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-sm shadow-indigo-600/20 active:scale-[0.98] dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white dark:shadow-indigo-500/10 text-xs py-1.5 px-3 rounded-lg transition cursor-pointer"
                   >
                     Create Exam
                   </button>
@@ -431,25 +431,27 @@ export default function DashboardPage() {
                   <div
                     key={exam._id}
                     onClick={() => navigate(`/test/${exam._id}`)}
-                    className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-200 hover:shadow-sm flex flex-col justify-between group cursor-pointer"
+                    className="rounded-xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:shadow-md transition-all duration-150 dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none dark:hover:border-slate-700 dark:hover:bg-[#162030] p-5 flex flex-col justify-between group cursor-pointer"
                   >
                     <div>
                       {/* Header: Upper-left subtle eyebrow + Conditional status indicator only */}
                       <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                        <span className={`text-[11px] font-semibold uppercase tracking-wider ${getCategoryEyebrowClass(exam.category)}`}>
                           {exam.category || 'Standard'}
                         </span>
                         <div className="flex items-center gap-1.5">
                           {exam.isGenerated && !exam.isPublic && (
-                            <span className="text-[11px] text-zinc-400 font-medium">Private</span>
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Private</span>
                           )}
                           {/* Status: ONLY show if draft or exhausted. Published/Live is default so do not label. */}
                           {isDraft ? (
-                            <span className="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40 text-[11px] px-2 py-0.5 rounded-md font-medium">
+                            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-slate-700/80">
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                               Draft
                             </span>
                           ) : isExhausted ? (
-                            <span className="bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40 text-[11px] px-2 py-0.5 rounded-md font-medium">
+                            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-slate-700/80">
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                               Exhausted
                             </span>
                           ) : null}
@@ -457,47 +459,47 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Body: Card title */}
-                      <h2 className="text-base font-semibold text-zinc-900 dark:text-white line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                         {exam.title}
                       </h2>
 
                       {exam.description && (
-                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-2">
+                        <p className="text-xs text-slate-500 dark:text-slate-300 mt-1 line-clamp-2">
                           {exam.description}
                         </p>
                       )}
 
                       {/* Clean Schema Data Grid: Duration, Questions, Marks with Ratio, Schedule */}
-                      <div className="border-y border-zinc-100 dark:border-zinc-800 py-3 my-3 grid grid-cols-2 gap-y-2.5 gap-x-3 text-xs text-zinc-600 dark:text-zinc-400">
+                      <div className="border-y border-slate-100 dark:border-slate-800/80 py-3 my-3 grid grid-cols-2 gap-y-2.5 gap-x-3 text-xs text-slate-600 dark:text-slate-400">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <Clock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400 shrink-0" />
                           <span className="truncate tabular-nums">{exam.durationMinutes} mins</span>
                         </div>
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <FileText className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <FileText className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400 shrink-0" />
                           <span className="truncate tabular-nums">{questionCount} Questions</span>
                         </div>
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <Award className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <Award className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400 shrink-0" />
                           <span className="truncate tabular-nums">
                             {exam.totalMarks || (questionCount * (exam.markingScheme?.correct || 4))} Marks
                             {exam.markingScheme?.correct !== undefined && (
-                              <span className="text-[10px] text-zinc-400 ml-1">
+                              <span className="text-[10px] text-slate-400 dark:text-slate-400 ml-1">
                                 (+{exam.markingScheme.correct}/{exam.markingScheme.incorrect ?? 0})
                               </span>
                             )}
                           </span>
                         </div>
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400 shrink-0" />
                           <span className="truncate text-[11px]">{scheduleMeta}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Footer: Dual-Action Hierarchy & Attempts counter */}
-                    <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-3 mt-1 flex items-center justify-between">
-                      <span className="text-xs text-zinc-400 tabular-nums">
+                    <div className="border-t border-slate-100 dark:border-slate-800/80 pt-3 mt-1 flex items-center justify-between">
+                      <span className="text-xs text-slate-400 dark:text-slate-400 tabular-nums">
                         {isUnlimited
                           ? `${attemptsUsed} attempts`
                           : `${attemptsUsed}/${maxAttempts} attempts`}
@@ -514,10 +516,10 @@ export default function DashboardPage() {
                               localStorage.setItem('active_exam_id', exam._id);
                               navigate('/test', { state: { examId: exam._id, isPractice: true } });
                             }}
-                            className="border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs py-1.5 px-2.5 rounded-lg shadow-sm font-medium transition cursor-pointer flex items-center gap-1.5"
+                            className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm active:scale-[0.98] dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-xs py-1.5 px-2.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5"
                             title="Start unproctored practice session"
                           >
-                            <Compass className="w-3.5 h-3.5 text-zinc-400" />
+                            <Compass className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400" />
                             <span>Practice</span>
                           </button>
                         )}
@@ -530,13 +532,13 @@ export default function DashboardPage() {
                               e.stopPropagation();
                               navigate(`/create-test?examId=${exam._id}`);
                             }}
-                            className="bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 text-xs py-1.5 px-3 rounded-lg shadow-sm font-medium transition cursor-pointer flex items-center gap-1.5"
+                            className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm active:scale-[0.98] dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-xs py-1.5 px-3 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5"
                           >
                             <Edit3 className="w-3 h-3" />
                             <span>Edit Draft</span>
                           </button>
                         ) : isExhausted ? (
-                          <span className="text-xs text-zinc-400 py-1.5 px-2 font-medium">Exhausted</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-400 py-1.5 px-2 font-medium">Exhausted</span>
                         ) : hasAttempted ? (
                           <button
                             type="button"
@@ -544,7 +546,7 @@ export default function DashboardPage() {
                               e.stopPropagation();
                               navigate(`/test/${exam._id}`);
                             }}
-                            className="bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 text-xs py-1.5 px-3 rounded-lg shadow-sm font-medium transition cursor-pointer flex items-center gap-1.5"
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-sm shadow-indigo-600/20 active:scale-[0.98] dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white dark:shadow-indigo-500/10 text-xs py-1.5 px-3 rounded-lg transition cursor-pointer flex items-center gap-1.5"
                           >
                             <RotateCcw className="w-3 h-3" />
                             <span>Retake</span>
@@ -556,7 +558,7 @@ export default function DashboardPage() {
                               e.stopPropagation();
                               navigate(`/test/${exam._id}`);
                             }}
-                            className="bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 text-xs py-1.5 px-3 rounded-lg shadow-sm font-medium transition cursor-pointer flex items-center gap-1.5"
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-sm shadow-indigo-600/20 active:scale-[0.98] dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white dark:shadow-indigo-500/10 text-xs py-1.5 px-3 rounded-lg transition cursor-pointer flex items-center gap-1.5"
                           >
                             <Play className="w-3 h-3 fill-current" />
                             <span>Start</span>

@@ -21,8 +21,8 @@ export default function ServerBootIndicator() {
       <div
         className={`relative overflow-hidden rounded-lg border p-4 shadow-sm transition-colors duration-200 ${
           justWokeUp
-            ? 'bg-zinc-900 border-emerald-500/30 text-zinc-100'
-            : 'bg-zinc-900 border-zinc-800 text-zinc-100'
+            ? 'bg-slate-900 border-emerald-500/30 text-slate-100'
+            : 'bg-slate-900 border-slate-800 text-slate-100'
         }`}
       >
         <div className="flex items-start gap-3 relative z-10">
@@ -33,7 +33,7 @@ export default function ServerBootIndicator() {
                 <CheckCircle2 className="w-4 h-4" />
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-md bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300">
+              <div className="w-8 h-8 rounded-md bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300">
                 <Server className="w-4 h-4 animate-pulse" />
               </div>
             )}
@@ -57,7 +57,7 @@ export default function ServerBootIndicator() {
               </h4>
             </div>
 
-            <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+            <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
               {justWokeUp
                 ? 'Backend container is alive! Your requests will now process instantly.'
                 : 'Server spins down after inactivity. Initializing container (~30–50s)...'}
@@ -65,19 +65,19 @@ export default function ServerBootIndicator() {
 
             {/* Progress Bar & Timer */}
             <div className="mt-3 space-y-1.5">
-              <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400">
+              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
                 <span className="flex items-center gap-1">
-                  <Cpu className="w-3 h-3 text-zinc-400" />
+                  <Cpu className="w-3 h-3 text-slate-400" />
                   {justWokeUp ? 'Operational' : `Initializing (${elapsedSeconds}s)`}
                 </span>
                 <span className="tabular-nums">{progressPercent}%</span>
               </div>
 
               {/* Progress bar line */}
-              <div className="w-full h-1 bg-zinc-800 rounded-sm overflow-hidden border border-zinc-800">
+              <div className="w-full h-1 bg-slate-800 rounded-sm overflow-hidden border border-slate-800">
                 <div
                   className={`h-full transition-all duration-300 rounded-sm ${
-                    justWokeUp ? 'bg-emerald-500' : 'bg-zinc-100'
+                    justWokeUp ? 'bg-emerald-500' : 'bg-slate-100'
                   }`}
                   style={{ width: `${progressPercent}%` }}
                 />
@@ -90,7 +90,7 @@ export default function ServerBootIndicator() {
                 <button
                   type="button"
                   onClick={() => checkHealth(false)}
-                  className="inline-flex items-center gap-1 text-[10px] font-medium text-zinc-300 hover:text-white underline cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-300 hover:text-white underline cursor-pointer"
                 >
                   <RefreshCw className="w-3 h-3 animate-spin" />
                   Check connection again
@@ -104,7 +104,7 @@ export default function ServerBootIndicator() {
             type="button"
             onClick={dismiss}
             aria-label="Dismiss notification"
-            className="shrink-0 p-1 text-zinc-400 hover:text-white rounded-md hover:bg-zinc-800 transition-colors cursor-pointer"
+            className="shrink-0 p-1 text-slate-400 hover:text-white rounded-md hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>

@@ -273,51 +273,48 @@ export default function AddQuestionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-4xl shadow-xl overflow-hidden my-auto max-h-[92vh] flex flex-col">
+      <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/90 dark:shadow-none rounded-2xl w-full max-w-4xl shadow-xl overflow-hidden my-auto max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-850/50">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#162030]/50">
           <div>
-            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+            <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
               {isEdit ? 'Edit Bank Question' : 'Add Question to Bank'}
             </h2>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs text-slate-500 mt-0.5">
               Contribute verified questions to the shared question repository.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             {/* View Mode Switcher */}
-            <div className="hidden sm:flex items-center bg-zinc-100 dark:bg-zinc-800 p-0.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs">
+            <div className="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
               <button
                 type="button"
                 onClick={() => setPreviewMode('edit')}
-                className={`px-2 py-1 rounded text-xs transition-colors cursor-pointer ${
-                  previewMode === 'edit'
-                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-medium'
-                    : 'text-zinc-500'
-                }`}
+                className={`px-2 py-1 rounded text-xs transition-colors cursor-pointer ${previewMode === 'edit'
+                    ? 'bg-white dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium'
+                    : 'text-slate-500'
+                  }`}
               >
                 Edit
               </button>
               <button
                 type="button"
                 onClick={() => setPreviewMode('split')}
-                className={`px-2 py-1 rounded text-xs transition-colors cursor-pointer ${
-                  previewMode === 'split'
-                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-medium'
-                    : 'text-zinc-500'
-                }`}
+                className={`px-2 py-1 rounded text-xs transition-colors cursor-pointer ${previewMode === 'split'
+                    ? 'bg-white dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium'
+                    : 'text-slate-500'
+                  }`}
               >
                 Split
               </button>
               <button
                 type="button"
                 onClick={() => setPreviewMode('preview')}
-                className={`px-2 py-1 rounded text-xs transition-colors cursor-pointer ${
-                  previewMode === 'preview'
-                    ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-medium'
-                    : 'text-zinc-500'
-                }`}
+                className={`px-2 py-1 rounded text-xs transition-colors cursor-pointer ${previewMode === 'preview'
+                    ? 'bg-white dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-medium'
+                    : 'text-slate-500'
+                  }`}
               >
                 Preview
               </button>
@@ -326,7 +323,7 @@ export default function AddQuestionModal({
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#162030] transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -346,7 +343,7 @@ export default function AddQuestionModal({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Stream */}
             <div>
-              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Subject Stream
               </label>
               <input
@@ -355,7 +352,7 @@ export default function AddQuestionModal({
                 value={stream}
                 onChange={(e) => setStream(e.target.value)}
                 placeholder="e.g. Physics, Mathematics"
-                className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400"
+                className="w-full px-3 py-1.5 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-slate-400"
               />
               <datalist id="stream-suggestions">
                 {streamSuggestions.map((st) => (
@@ -366,7 +363,7 @@ export default function AddQuestionModal({
 
             {/* Question Type */}
             <div>
-              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Question Type
               </label>
               <select
@@ -378,7 +375,7 @@ export default function AddQuestionModal({
                   else if (newType === 'MSQ') setCorrectAnswers([0]);
                   else if (newType === 'NAT') setCorrectAnswers([]);
                 }}
-                className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400"
+                className="w-full px-3 py-1.5 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-slate-400"
               >
                 <option value="MCQ">MCQ (Single Choice)</option>
                 <option value="MSQ">MSQ (Multiple Choice)</option>
@@ -388,20 +385,20 @@ export default function AddQuestionModal({
 
             {/* Tags Chip Input */}
             <div>
-              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Concept Tags (Press Enter)
               </label>
-              <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg min-h-[34px]">
+              <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg min-h-[34px]">
                 {tags.map((tag) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[11px]"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 text-[11px]"
                   >
                     <span>{tag}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveTag(tag)}
-                      className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-100"
+                      className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-100"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -413,7 +410,7 @@ export default function AddQuestionModal({
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleAddTag}
                   placeholder={tags.length === 0 ? "Type tag & Enter" : ""}
-                  className="flex-1 min-w-[80px] bg-transparent text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none px-1"
+                  className="flex-1 min-w-[80px] bg-transparent text-xs text-slate-900 dark:text-slate-100 focus:outline-none px-1"
                 />
               </div>
             </div>
@@ -422,31 +419,30 @@ export default function AddQuestionModal({
           {/* Statement Editor with Live KaTeX Preview */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
                 Question Statement (LaTeX formatted via $inline$ or $$block$$)
               </label>
             </div>
 
-            <div className={`grid gap-3 ${
-              previewMode === 'split' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'
-            }`}>
+            <div className={`grid gap-3 ${previewMode === 'split' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'
+              }`}>
               {previewMode !== 'preview' && (
                 <textarea
                   rows={4}
                   value={questionText}
                   onChange={(e) => setQuestionText(e.target.value)}
                   placeholder="Enter problem statement... e.g. Solve the integral $\int_0^\pi \sin(x) dx$"
-                  className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-zinc-400 font-mono"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-slate-400 font-mono"
                 />
               )}
 
               {previewMode !== 'edit' && (
-                <div className="p-3 bg-zinc-50 dark:bg-zinc-850 border border-zinc-200 dark:border-zinc-750 rounded-lg min-h-[96px] text-xs text-zinc-800 dark:text-zinc-200 overflow-y-auto">
-                  <div className="text-[10px] uppercase font-semibold text-zinc-400 mb-1">Live Math Preview:</div>
+                <div className="p-3 bg-slate-50 dark:bg-[#162030] border border-slate-200 dark:border-slate-800/80 rounded-lg min-h-[96px] text-xs text-slate-800 dark:text-slate-200 overflow-y-auto">
+                  <div className="text-[10px] uppercase font-semibold text-slate-400 mb-1">Live Math Preview:</div>
                   {questionText.trim() ? (
                     <MathRenderer text={questionText} />
                   ) : (
-                    <span className="italic text-zinc-400">Statement preview will appear here...</span>
+                    <span className="italic text-slate-400">Statement preview will appear here...</span>
                   )}
                 </div>
               )}
@@ -456,7 +452,7 @@ export default function AddQuestionModal({
           {/* Diagram Upload & URL */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
                 Optional Diagram Image
               </label>
 
@@ -477,16 +473,16 @@ export default function AddQuestionModal({
                   type="button"
                   onClick={() => diagramFileRef.current?.click()}
                   disabled={isUploadingDiagram}
-                  className="px-2.5 py-1 rounded bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-750 text-zinc-700 dark:text-zinc-300 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-[#162030] text-slate-700 dark:text-slate-300 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {isUploadingDiagram ? (
                     <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-500" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />
                       <span>Uploading to Cloudinary...</span>
                     </>
                   ) : (
                     <>
-                      <ImageIcon className="w-3.5 h-3.5 text-zinc-500" />
+                      <ImageIcon className="w-3.5 h-3.5 text-slate-500" />
                       <span>{imageAttachment ? 'Change Picture' : 'Upload Image'}</span>
                     </>
                   )}
@@ -499,21 +495,21 @@ export default function AddQuestionModal({
               value={imageAttachment}
               onChange={(e) => setImageAttachment(e.target.value)}
               placeholder="Or paste direct image URL (https://... or Cloudinary link)"
-              className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400"
+              className="w-full px-3 py-1.5 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-slate-400"
             />
 
             {/* Attached Diagram Preview Card */}
             {imageAttachment && (
-              <div className="p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 flex items-center justify-between gap-3">
+              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-12 h-12 rounded overflow-hidden bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shrink-0 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded overflow-hidden bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shrink-0 flex items-center justify-center">
                     <img src={imageAttachment} alt="Diagram preview" className="w-full h-full object-contain" />
                   </div>
                   <div className="min-w-0">
-                    <span className="text-xs font-medium text-zinc-900 dark:text-zinc-100 block truncate">
+                    <span className="text-xs font-medium text-slate-900 dark:text-slate-100 block truncate">
                       Diagram Image Attached
                     </span>
-                    <span className="text-[10px] text-zinc-400 truncate block font-mono">
+                    <span className="text-[10px] text-slate-400 truncate block font-mono">
                       {imageAttachment}
                     </span>
                   </div>
@@ -521,7 +517,7 @@ export default function AddQuestionModal({
                 <button
                   type="button"
                   onClick={() => setImageAttachment('')}
-                  className="p-1.5 text-zinc-400 hover:text-rose-600 rounded hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+                  className="p-1.5 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
                   title="Remove diagram"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -534,14 +530,14 @@ export default function AddQuestionModal({
           {questionType !== 'NAT' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
                   Options ({questionType === 'MCQ' ? 'Select 1 correct' : 'Select all correct'})
                 </label>
                 {options.length < 6 && (
                   <button
                     type="button"
                     onClick={handleAddOption}
-                    className="text-xs text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white flex items-center gap-1 cursor-pointer"
+                    className="text-xs text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add Option
                   </button>
@@ -557,22 +553,20 @@ export default function AddQuestionModal({
                   return (
                     <div
                       key={idx}
-                      className={`p-2.5 rounded-lg border transition-colors space-y-2 ${
-                        isCorrect
+                      className={`p-2.5 rounded-lg border transition-colors space-y-2 ${isCorrect
                           ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800'
-                          : 'bg-white dark:bg-zinc-850 border-zinc-200 dark:border-zinc-700'
-                      }`}
+                          : 'bg-white dark:bg-[#162030] border-slate-200 dark:border-slate-700'
+                        }`}
                     >
                       <div className="flex items-start gap-2.5">
                         {/* Checkbox / Radio */}
                         <button
                           type="button"
                           onClick={() => toggleCorrectAnswer(idx)}
-                          className={`w-6 h-6 rounded flex items-center justify-center font-mono text-xs font-semibold shrink-0 cursor-pointer transition-colors ${
-                            isCorrect
+                          className={`w-6 h-6 rounded flex items-center justify-center font-mono text-xs font-semibold shrink-0 cursor-pointer transition-colors ${isCorrect
                               ? 'bg-emerald-600 text-white'
-                              : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200'
-                          }`}
+                              : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                            }`}
                           title={isCorrect ? 'Marked Correct' : 'Click to mark correct'}
                         >
                           {isCorrect ? '✓' : letter}
@@ -584,7 +578,7 @@ export default function AddQuestionModal({
                             value={opt.text}
                             onChange={(e) => handleOptionTextChange(idx, e.target.value)}
                             placeholder={`Option ${letter} text (LaTeX supported: $x^2$)`}
-                            className="w-full px-2.5 py-1 text-xs bg-transparent border-b border-zinc-200 dark:border-zinc-700 focus:outline-none focus:border-zinc-400 text-zinc-900 dark:text-zinc-100"
+                            className="w-full px-2.5 py-1 text-xs bg-transparent border-b border-slate-200 dark:border-slate-700 focus:outline-none focus:border-slate-400 text-slate-900 dark:text-slate-100"
                           />
                         </div>
 
@@ -604,7 +598,7 @@ export default function AddQuestionModal({
                           type="button"
                           onClick={() => optionFileRefs.current[idx]?.click()}
                           disabled={isUploadingThisOpt}
-                          className="p-1 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors cursor-pointer shrink-0"
+                          className="p-1 rounded bg-slate-100 dark:bg-slate-800/80 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer shrink-0"
                           title="Attach option picture"
                         >
                           {isUploadingThisOpt ? (
@@ -618,7 +612,7 @@ export default function AddQuestionModal({
                           <button
                             type="button"
                             onClick={() => handleRemoveOption(idx)}
-                            className="p-1 text-zinc-400 hover:text-rose-500 rounded cursor-pointer shrink-0"
+                            className="p-1 text-slate-400 hover:text-rose-500 rounded cursor-pointer shrink-0"
                             title="Remove option"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -628,21 +622,21 @@ export default function AddQuestionModal({
 
                       {/* Option Image Preview if attached */}
                       {opt.image && (
-                        <div className="ml-8 flex items-center justify-between p-1.5 rounded bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
+                        <div className="ml-8 flex items-center justify-between p-1.5 rounded bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
                           <div className="flex items-center gap-2 min-w-0">
                             <img
                               src={opt.image}
                               alt={`Option ${letter}`}
-                              className="w-8 h-8 object-contain rounded border border-zinc-200 dark:border-zinc-700 bg-white"
+                              className="w-8 h-8 object-contain rounded border border-slate-200 dark:border-slate-700 bg-white"
                             />
-                            <span className="text-[10px] text-zinc-400 truncate font-mono">
+                            <span className="text-[10px] text-slate-400 truncate font-mono">
                               {opt.image}
                             </span>
                           </div>
                           <button
                             type="button"
                             onClick={() => handleOptionImageChange(idx, '')}
-                            className="p-1 text-zinc-400 hover:text-rose-500 rounded cursor-pointer"
+                            className="p-1 text-slate-400 hover:text-rose-500 rounded cursor-pointer"
                             title="Remove option picture"
                           >
                             <X className="w-3.5 h-3.5" />
@@ -659,31 +653,31 @@ export default function AddQuestionModal({
 
           {/* Numerical Range for NAT */}
           {questionType === 'NAT' && (
-            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-850 border border-zinc-200 dark:border-zinc-750 space-y-3">
-              <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#162030] border border-slate-200 dark:border-slate-800/80 space-y-3">
+              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
                 Accepted Numerical Value or Range
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-[11px] text-zinc-500 block mb-1">Exact Value / Min Range:</span>
+                  <span className="text-[11px] text-slate-500 block mb-1">Exact Value / Min Range:</span>
                   <input
                     type="number"
                     step="any"
                     value={natMin}
                     onChange={(e) => setNatMin(e.target.value)}
                     placeholder="e.g. 42 or 3.14"
-                    className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs text-zinc-900 dark:text-zinc-100 font-mono"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 font-mono"
                   />
                 </div>
                 <div>
-                  <span className="text-[11px] text-zinc-500 block mb-1">Max Range (Optional):</span>
+                  <span className="text-[11px] text-slate-500 block mb-1">Max Range (Optional):</span>
                   <input
                     type="number"
                     step="any"
                     value={natMax}
                     onChange={(e) => setNatMax(e.target.value)}
                     placeholder="Leave blank for exact"
-                    className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs text-zinc-900 dark:text-zinc-100 font-mono"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 font-mono"
                   />
                 </div>
               </div>
@@ -692,8 +686,8 @@ export default function AddQuestionModal({
 
           {/* Pedagogical Explanation */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-              <HelpCircle className="w-3.5 h-3.5 text-zinc-400" />
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
               <span>Pedagogical Explanation & Hint (shown during review)</span>
             </label>
             <textarea
@@ -701,17 +695,17 @@ export default function AddQuestionModal({
               value={explanation}
               onChange={(e) => setExplanation(e.target.value)}
               placeholder="Explain the step-by-step logic, theorems, or formulas used to reach the answer..."
-              className="w-full px-3 py-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-zinc-400"
+              className="w-full px-3 py-2 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-slate-400"
             />
           </div>
 
           {/* Modal Actions */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-lg text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+              className="px-4 py-2 rounded-lg text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#162030] cursor-pointer"
             >
               Cancel
             </button>
@@ -719,7 +713,7 @@ export default function AddQuestionModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium hover:bg-zinc-800 dark:hover:bg-white transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium shadow-sm shadow-indigo-600/20 active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>{isEdit ? 'Save Changes' : 'Add to Question Bank'}</span>

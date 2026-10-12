@@ -137,35 +137,35 @@ export default function UnderDevelopmentPage({ featureKey }) {
 
   const Icon = config.icon;
   const [notified, setNotified] = React.useState(false);  return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0C0F17] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
       <Navbar />
 
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
         <Breadcrumbs items={[{ label: 'Dashboard', path: '/dashboard' }, { label: config.title }]} />
 
         {/* Hero Card */}
-        <div className="rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-8 space-y-6 shadow-none">
+        <div className="rounded-lg bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none p-6 sm:p-8 space-y-6 shadow-none">
           <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 <span>{config.tag}</span>
               </span>
-              <span className="text-zinc-300 dark:text-zinc-700">•</span>
-              <span className="text-xs text-zinc-500 font-medium">
+              <span className="text-slate-300 dark:text-slate-700">•</span>
+              <span className="text-xs text-slate-500 font-medium">
                 {config.badge}
               </span>
             </div>
 
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-md bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40 flex items-center justify-center shrink-0">
                 <Icon className="w-5 h-5" />
               </div>
               <div className="space-y-2">
-                <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+                <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                   {config.title}
                 </h1>
-                <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-2xl leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
                   {config.description}
                 </p>
               </div>
@@ -205,8 +205,8 @@ export default function UnderDevelopmentPage({ featureKey }) {
         {/* Feature Highlights Grid */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <Cpu className="w-4 h-4 text-zinc-400" />
-            <h2 className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+            <Cpu className="w-4 h-4 text-slate-400" />
+            <h2 className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
               Planned Capabilities in this Module
             </h2>
           </div>
@@ -215,15 +215,15 @@ export default function UnderDevelopmentPage({ featureKey }) {
             {config.highlights.map((h, idx) => (
               <div
                 key={idx}
-                className="p-5 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2 shadow-none"
+                className="p-5 rounded-lg bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none space-y-2 shadow-none"
               >
-                <div className="flex items-center gap-2 text-xs font-medium text-zinc-900 dark:text-zinc-100">
-                  <span className="w-5 h-5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center text-[10px] font-mono">
+                <div className="flex items-center gap-2 text-xs font-medium text-slate-900 dark:text-slate-100">
+                  <span className="w-5 h-5 rounded bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 flex items-center justify-center text-[10px] font-mono">
                     {idx + 1}
                   </span>
                   <span>{h.title}</span>
                 </div>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed pl-7">
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed pl-7">
                   {h.desc}
                 </p>
               </div>
@@ -232,12 +232,12 @@ export default function UnderDevelopmentPage({ featureKey }) {
         </div>
 
         {/* Available Capabilities Banner */}
-        <div className="p-5 rounded-lg bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-4">
+        <div className="p-5 rounded-lg bg-slate-50/70 dark:bg-[#131926]/50 border border-slate-200/80 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-0.5">
-            <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+            <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
               Ready to test the live examination features right now?
             </p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               You can immediately compose KaTeX papers with AI ingestion or run candidate proctored sessions.
             </p>
           </div>

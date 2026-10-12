@@ -47,15 +47,15 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0C0F17]/95 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between gap-6">
         {/* Brand */}
         <div className="flex items-center gap-8 h-full">
           <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
-            <div className="w-6 h-6 rounded-md bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center text-white dark:text-zinc-900">
+            <div className="w-6 h-6 rounded-md bg-indigo-600 dark:bg-indigo-500 flex items-center justify-center text-white shadow-sm shadow-indigo-600/20">
               <ShieldCheck className="w-3.5 h-3.5" />
             </div>
-            <span className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+            <span className="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               Mock Test Canvas
             </span>
           </Link>
@@ -72,11 +72,10 @@ export default function Navbar() {
                 <Link
                   key={item.label}
                   to={item.path}
-                  className={`h-full flex items-center text-xs tracking-tight transition-colors border-b-2 -mb-[1px] ${
-                    isActive
-                      ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-zinc-50 font-medium'
-                      : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 font-normal'
-                  }`}
+                  className={`h-full flex items-center text-xs tracking-tight transition-colors -mb-[1px] ${isActive
+                      ? 'text-slate-900 dark:text-slate-100 border-b-2 border-indigo-600 font-medium'
+                      : 'border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-normal'
+                    }`}
                 >
                   {item.label}
                 </Link>
@@ -92,30 +91,30 @@ export default function Navbar() {
           <ThemeToggle />
 
           {isAuthenticated && user ? (
-            <div className="relative pl-2 border-l border-zinc-200 dark:border-zinc-800" ref={userMenuRef}>
+            <div className="relative pl-2 border-l border-slate-200/80 dark:border-slate-800/80" ref={userMenuRef}>
               <button
                 type="button"
                 onClick={() => setUserMenuOpen((prev) => !prev)}
-                className="flex items-center gap-2 py-1 px-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer"
+                className="flex items-center gap-2 py-1 px-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-[#162030] transition-colors cursor-pointer"
               >
-                <div className="w-6 h-6 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300 text-xs font-medium">
+                <div className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 text-xs font-medium">
                   {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon className="w-3 h-3" />}
                 </div>
                 <div className="hidden sm:flex flex-col text-left">
-                  <span className="text-xs font-medium text-zinc-900 dark:text-zinc-100 leading-none truncate max-w-[120px]">
+                  <span className="text-xs font-medium text-slate-900 dark:text-slate-100 leading-none truncate max-w-[120px]">
                     {user.name || 'Candidate'}
                   </span>
                 </div>
-                <ChevronDown className="w-3 h-3 text-zinc-400" />
+                <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-1 w-52 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-1 shadow-sm z-50">
-                  <div className="px-2.5 py-2 border-b border-zinc-100 dark:border-zinc-800 mb-1">
-                    <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                <div className="absolute right-0 mt-1 w-52 rounded-lg bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none p-1 z-50">
+                  <div className="px-2.5 py-2 border-b border-slate-100 dark:border-slate-800/80 mb-1">
+                    <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
                       {user.name || 'Candidate'}
                     </p>
-                    <p className="text-[11px] text-zinc-400 truncate">
+                    <p className="text-[11px] text-slate-400 truncate">
                       {user.email}
                     </p>
                   </div>
@@ -124,18 +123,18 @@ export default function Navbar() {
                     <Link
                       to="/assessments-overview"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030] transition-colors"
                     >
-                      <LayoutDashboard className="w-3.5 h-3.5 text-zinc-400" />
+                      <LayoutDashboard className="w-3.5 h-3.5 text-slate-400" />
                       <span>Assessments</span>
                     </Link>
 
                     <Link
                       to="/telemetry"
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030] transition-colors"
                     >
-                      <BarChart3 className="w-3.5 h-3.5 text-zinc-400" />
+                      <BarChart3 className="w-3.5 h-3.5 text-slate-400" />
                       <span>Telemetry</span>
                     </Link>
 
@@ -152,11 +151,11 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <div className="flex items-center pl-2 border-l border-zinc-200 dark:border-zinc-800">
+            <div className="flex items-center pl-2 border-l border-slate-200/80 dark:border-slate-800/80">
               <button
                 type="button"
                 onClick={() => openAuthModal()}
-                className="btn-primary"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-sm shadow-indigo-600/20 active:scale-[0.98] dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white dark:shadow-indigo-500/10 text-xs py-1.5 px-3 rounded-lg flex items-center gap-1.5 transition-all duration-150 cursor-pointer"
               >
                 Sign In
               </button>

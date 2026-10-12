@@ -331,12 +331,12 @@ export default function CameraMonitor({
       {/* Video preview */}
       {faceCheckEnabled && (
         <div
-          className={`w-36 h-28 rounded-md overflow-hidden border shadow-sm bg-zinc-950 pointer-events-auto transition-colors ${
+          className={`w-36 h-28 rounded-md overflow-hidden border shadow-sm bg-slate-950 pointer-events-auto transition-colors ${
             alertState === 'MULTI_FACE' || objectAlert
               ? 'border-rose-500'
               : alertState === 'NO_FACE' || isNoiseAlert
               ? 'border-amber-500'
-              : 'border-zinc-800'
+              : 'border-slate-800'
           }`}
         >
           <video
@@ -351,7 +351,7 @@ export default function CameraMonitor({
           />
 
           {permissionStatus === 'pending' && (
-            <div className="w-full h-full flex items-center justify-center text-zinc-400">
+            <div className="w-full h-full flex items-center justify-center text-slate-400">
               <Loader2 className="w-5 h-5 animate-spin" />
             </div>
           )}
@@ -372,7 +372,7 @@ export default function CameraMonitor({
       )}
 
       {/* Status indicator */}
-      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900/95 backdrop-blur-xs border border-zinc-800 text-zinc-200 text-xs font-medium pointer-events-auto shadow-sm">
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-900/95 backdrop-blur-xs border border-slate-800 text-slate-200 text-xs font-medium pointer-events-auto shadow-sm">
         {/* Status dot */}
         <span
           className={`w-1.5 h-1.5 rounded-full shrink-0 ${
@@ -388,9 +388,9 @@ export default function CameraMonitor({
 
         {/* Audio level indicator */}
         {audioCheckEnabled && permissionStatus === 'granted' && (
-          <div className="flex items-center gap-1.5 ml-1 border-l border-zinc-700/80 pl-1.5">
-            {isNoiseAlert ? <Volume2 className="w-3 h-3 text-rose-400" /> : <Mic className="w-3 h-3 text-zinc-400" />}
-            <div className="w-6 h-1 rounded-sm bg-zinc-800 overflow-hidden">
+          <div className="flex items-center gap-1.5 ml-1 border-l border-slate-700/80 pl-1.5">
+            {isNoiseAlert ? <Volume2 className="w-3 h-3 text-rose-400" /> : <Mic className="w-3 h-3 text-slate-400" />}
+            <div className="w-6 h-1 rounded-sm bg-slate-800 overflow-hidden">
               <div
                 className={`h-full transition-all duration-150 rounded-sm ${
                   isNoiseAlert ? 'bg-rose-500' : currentRMS > 40 ? 'bg-amber-500' : 'bg-emerald-500'

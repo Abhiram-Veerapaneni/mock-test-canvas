@@ -597,146 +597,170 @@ export default function ExamSessionPage() {
     }
 
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-4 text-zinc-900 dark:text-zinc-100">
-        <div className="max-w-md w-full space-y-4">
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0C0F17] flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100 font-sans">
+        <div className="max-w-md w-full bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-2xl p-5 sm:p-6 space-y-4">
 
-          {/* Header card */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-6 text-center shadow-none">
-            <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3">
-              <CheckCircle2 className="w-5 h-5" />
+          {/* Header row: Left icon + text, Right badge */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-base font-semibold text-slate-900 dark:text-slate-100 tracking-tight truncate">
+                  Examination Submitted
+                </h1>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                  {snap?.title || 'Your responses have been recorded.'}
+                </p>
+              </div>
             </div>
+
             {isPreview ? (
-              <div className="inline-flex items-center gap-1.5 text-xs text-purple-700 dark:text-purple-400 font-medium mb-2 bg-purple-50 dark:bg-purple-950/40 px-2.5 py-1 rounded-md border border-purple-200 dark:border-purple-900/50">
-                <FlaskConical className="w-3.5 h-3.5" />
-                <span>Examiner Preview Test Run</span>
-              </div>
+              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-200/80 dark:border-slate-700/80 shrink-0">
+                <FlaskConical className="w-3 h-3 text-slate-500 dark:text-slate-400" />
+                <span>Preview</span>
+              </span>
             ) : isPractice ? (
-              <div className="inline-flex items-center gap-1.5 text-xs text-indigo-700 dark:text-indigo-400 font-medium mb-2">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-200/80 dark:border-slate-700/80 shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                <span>Practice Session</span>
-              </div>
+                <span>Practice</span>
+              </span>
             ) : null}
-            <h2 className="text-base font-semibold text-zinc-900 dark:text-white mb-1">Examination Submitted</h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              {snap?.title || 'Your answers have been recorded.'}
-            </p>
           </div>
 
-          {/* Score card */}
+          {/* Unified Score Board */}
           {result ? (
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 shadow-none">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">Your Score</span>
-                <Trophy className="w-4 h-4 text-zinc-400" />
-              </div>
-              <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-semibold tracking-tight text-zinc-900 dark:text-white tabular-nums">{result.score}</span>
-                <span className="text-zinc-400 text-sm">/ {result.totalMarks ?? snap?.totalMarks ?? '?'}</span>
-              </div>
-              <div className="grid grid-cols-3 divide-x divide-zinc-200 dark:divide-zinc-800 border-t border-zinc-100 dark:border-zinc-800/80 pt-3 text-center">
+            <div className="bg-slate-50 dark:bg-[#0C0F17] rounded-xl p-4 border border-slate-200/70 dark:border-slate-800/70 space-y-3.5">
+              {/* Score & Accuracy in a balanced top row */}
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[11px] text-zinc-400 uppercase font-medium">Accuracy</div>
-                  <div className="text-base font-semibold text-zinc-900 dark:text-white tabular-nums mt-0.5">{result.accuracy}%</div>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
+                    Final Score
+                  </span>
+                  <div className="flex items-baseline gap-1 mt-0.5">
+                    <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tabular-nums">
+                      {result.score}
+                    </span>
+                    <span className="text-xs text-slate-400 font-medium">
+                      / {result.totalMarks ?? snap?.totalMarks ?? 0}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
+                    Accuracy
+                  </span>
+                  <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums mt-0.5 block">
+                    {result.accuracy}%
+                  </span>
+                </div>
+              </div>
+
+              {/* 3-Column Performance Breakdown (Correct / Wrong / Unanswered) */}
+              <div className="grid grid-cols-3 divide-x divide-slate-200/80 dark:divide-slate-800/80 border-t border-slate-200/70 dark:border-slate-800/70 pt-3 text-center">
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Correct</div>
+                  <div className="text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums mt-0.5">
+                    {result.correct}
+                  </div>
                 </div>
                 <div>
-                  <div className="text-[11px] text-zinc-400 uppercase font-medium">Correct</div>
-                  <div className="text-base font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums mt-0.5">{result.correct}</div>
+                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Wrong</div>
+                  <div className="text-base font-bold text-rose-600 dark:text-rose-400 tabular-nums mt-0.5">
+                    {result.incorrect}
+                  </div>
                 </div>
                 <div>
-                  <div className="text-[11px] text-zinc-400 uppercase font-medium">Wrong</div>
-                  <div className="text-base font-semibold text-rose-600 dark:text-rose-400 tabular-nums mt-0.5">{result.incorrect}</div>
+                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Unanswered</div>
+                  <div className="text-base font-bold text-slate-700 dark:text-slate-300 tabular-nums mt-0.5">
+                    {result.unanswered ?? Math.max(0, (snap?.totalQuestions ?? 0) - answeredCount)}
+                  </div>
                 </div>
               </div>
             </div>
           ) : (
-            // Fallback if API failed — show attempted count
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5">
-              <div className="grid grid-cols-2 gap-3 text-center">
-                <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-md border border-zinc-200 dark:border-zinc-800">
-                  <div className="text-[11px] text-zinc-400 uppercase font-medium mb-1">Total Questions</div>
-                  <div className="text-xl font-semibold text-zinc-900 dark:text-white tabular-nums">{snap?.totalQuestions ?? 0}</div>
+            <div className="bg-slate-50 dark:bg-[#0C0F17] rounded-xl p-4 border border-slate-200/70 dark:border-slate-800/70 grid grid-cols-2 gap-3 text-center">
+              <div>
+                <div className="text-[10px] text-slate-400 uppercase font-semibold">Total Questions</div>
+                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-0.5">
+                  {snap?.totalQuestions ?? 0}
                 </div>
-                <div className="p-3 bg-zinc-50 dark:bg-zinc-950 rounded-md border border-zinc-200 dark:border-zinc-800">
-                  <div className="text-[11px] text-zinc-400 uppercase font-medium mb-1">Answered</div>
-                  <div className="text-xl font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">{answeredCount}</div>
+              </div>
+              <div>
+                <div className="text-[10px] text-slate-400 uppercase font-semibold">Answered</div>
+                <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums mt-0.5">
+                  {answeredCount}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Unanswered + violations summary */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4">
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
-                <MinusCircle className="w-3.5 h-3.5" />
-                <span>Unanswered: <strong className="text-zinc-700 dark:text-zinc-300 tabular-nums">{result?.unanswered ?? (snap?.totalQuestions ?? 0) - answeredCount}</strong></span>
-              </div>
-              {submittedViolations.length > 0 && (
-                <div className="flex items-center gap-1.5 text-rose-600 dark:text-rose-400">
+          {/* S3: Violation log or Clean session badge */}
+          {submittedViolations.length > 0 ? (
+            <div className="rounded-xl bg-rose-50/50 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900/40 p-3 space-y-2">
+              <div className="flex items-center justify-between text-xs text-rose-700 dark:text-rose-400 font-medium">
+                <div className="flex items-center gap-1.5">
                   <ShieldAlert className="w-3.5 h-3.5" />
-                  <span>{submittedViolations.length} violation{submittedViolations.length !== 1 ? 's' : ''} recorded</span>
+                  <span>{submittedViolations.length} Proctoring Infraction{submittedViolations.length !== 1 ? 's' : ''}</span>
                 </div>
-              )}
-            </div>
-          </div>
-
-          {/* S3: Violation log — shown if any violations occurred */}
-          {submittedViolations.length > 0 && (
-            <div className="bg-white dark:bg-zinc-900 border border-rose-200 dark:border-rose-900/50 rounded-lg overflow-hidden">
-              <div className="px-4 py-2.5 bg-rose-50/60 dark:bg-rose-950/40 border-b border-rose-200/60 dark:border-rose-900/60 flex items-center gap-2">
-                <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />
-                <span className="text-[11px] font-medium uppercase tracking-wider text-rose-700 dark:text-rose-400">
-                  Proctoring Violation Log
-                </span>
+                <span className="text-[10px] uppercase font-mono">Logged</span>
               </div>
-              <ul className="divide-y divide-zinc-100 dark:divide-zinc-800 max-h-40 overflow-y-auto">
+              <ul className="divide-y divide-rose-100 dark:divide-rose-900/30 max-h-32 overflow-y-auto">
                 {submittedViolations.map((v, i) => (
-                  <li key={i} className="flex items-center justify-between px-4 py-2 text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="w-4 h-4 rounded-sm bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center text-[9px] font-mono font-medium text-rose-700 dark:text-rose-400 shrink-0">
-                        {i + 1}
-                      </span>
-                      <span className="text-zinc-700 dark:text-zinc-300">
-                        {VIOLATION_LABELS[v.type] ?? v.type}
-                      </span>
-                    </div>
-                    <span className="text-zinc-400 tabular-nums text-[11px] flex items-center gap-1 font-mono">
-                      <ClockIcon className="w-3 h-3" />
+                  <li key={i} className="flex items-center justify-between py-1.5 text-[11px]">
+                    <span className="text-slate-700 dark:text-slate-300">
+                      {VIOLATION_LABELS[v.type] ?? v.type}
+                    </span>
+                    <span className="text-slate-400 font-mono text-[10px]">
                       {formatTime12h(v.timestamp, { includeSeconds: true })}
                     </span>
                   </li>
                 ))}
               </ul>
             </div>
+          ) : (
+            <div className="flex items-center justify-between px-3.5 py-2 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-900/30 text-xs text-emerald-700 dark:text-emerald-400">
+              <div className="flex items-center gap-1.5 font-medium">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Session Verified</span>
+              </div>
+              <span className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80 font-medium">0 Infractions</span>
+            </div>
           )}
 
           {/* Actions */}
-          <div className="space-y-2.5">
+          <div className="space-y-2 pt-1">
             {(result?.attemptId || savedResultData?.result?.attemptId || attemptId) && (
               <button
+                type="button"
                 onClick={() => navigate(`/test/${submittedExamId || examId}/review/${result?.attemptId || savedResultData?.result?.attemptId || attemptId}`)}
-                className="w-full py-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-medium text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-sm shadow-indigo-600/20 active:scale-[0.98] transition-all cursor-pointer"
               >
-                <CheckCheck className="w-3.5 h-3.5" />
+                <CheckCheck className="w-4 h-4" />
                 <span>Review Responses & Solutions</span>
               </button>
             )}
-            <div className="flex gap-3">
+            <div className="flex gap-2.5">
               <button
+                type="button"
                 onClick={() => navigate(`/test/${submittedExamId || examId}`)}
-                className="flex-1 py-2 rounded-md border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium text-xs hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-sm"
+                className="flex-1 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm active:scale-[0.98] dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-xs font-medium transition cursor-pointer"
               >
                 View Attempts
               </button>
               <button
+                type="button"
                 onClick={() => navigate('/dashboard')}
-                className="flex-1 py-2 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-medium text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                className="flex-1 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm active:scale-[0.98] dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-xs font-medium transition cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <span>Dashboard</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
               </button>
             </div>
           </div>
+
         </div>
       </div>
     );
@@ -745,8 +769,8 @@ export default function ExamSessionPage() {
   // ── Loading ───────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center text-zinc-500 dark:text-zinc-400">
-        <Loader2 className="w-5 h-5 animate-spin text-zinc-900 dark:text-zinc-100 mb-2" />
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0C0F17] flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
+        <Loader2 className="w-5 h-5 animate-spin text-slate-900 dark:text-slate-100 mb-2" />
         <p className="text-xs font-medium">Preparing test environment...</p>
       </div>
     );
@@ -754,14 +778,14 @@ export default function ExamSessionPage() {
 
   if (fetchError || !exam) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-4 text-zinc-900 dark:text-zinc-100">
-        <div className="max-w-sm w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-6 text-center shadow-none">
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0C0F17] flex flex-col items-center justify-center p-4 text-slate-900 dark:text-slate-100">
+        <div className="max-w-sm w-full bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg p-6 text-center shadow-none">
           <AlertCircle className="w-8 h-8 text-rose-500 mx-auto mb-2" />
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white mb-1">Examination Unavailable</h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4">{fetchError || 'Unable to locate examination.'}</p>
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">Examination Unavailable</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{fetchError || 'Unable to locate examination.'}</p>
           <button
             onClick={() => navigate(examId ? `/test/${examId}` : '/dashboard')}
-            className="px-4 py-2 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-medium transition-colors"
+            className="px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white shadow-sm shadow-indigo-600/20 active:scale-[0.98] text-xs font-medium transition-colors"
           >
             Back to Exam Page
           </button>
@@ -787,14 +811,14 @@ export default function ExamSessionPage() {
   // Show a click-to-enter-fullscreen screen so the user initiates it themselves.
   if (needsFullscreenGate && !isSubmitted) {
     return (
-      <div className="h-screen w-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col items-center justify-center p-6 text-center transition-colors duration-200">
-        <div className="max-w-md w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-7 sm:p-8 shadow-sm space-y-4">
-          <div className="w-12 h-12 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center mx-auto">
-            <Maximize className="w-6 h-6 text-zinc-700 dark:text-zinc-300" />
+      <div className="h-screen w-screen bg-[#F8FAFC] dark:bg-[#0C0F17] flex flex-col items-center justify-center p-6 text-center transition-colors duration-200">
+        <div className="max-w-md w-full bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg p-7 sm:p-8 shadow-sm space-y-4">
+          <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-center mx-auto">
+            <Maximize className="w-6 h-6 text-slate-700 dark:text-slate-300" />
           </div>
           <div className="space-y-1.5">
-            <h2 className="text-base font-semibold tracking-tight text-zinc-900 dark:text-white">Fullscreen Required</h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-sm mx-auto">
+            <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white">Fullscreen Required</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
               This examination must be completed in a secured fullscreen environment. Click the button below to initiate full lockdown mode.
             </p>
           </div>
@@ -803,12 +827,12 @@ export default function ExamSessionPage() {
               dismissBlocker();
               setNeedsFullscreenGate(false);
             }}
-            className="w-full py-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-medium text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+            className="w-full py-2.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white shadow-sm shadow-indigo-600/20 active:scale-[0.98] font-medium text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
           >
             <Maximize className="w-4 h-4" />
             <span>Enter Fullscreen Assessment</span>
           </button>
-          <p className="text-[11px] text-zinc-400">Your questions and answers are saved automatically.</p>
+          <p className="text-[11px] text-slate-400">Your questions and answers are saved automatically.</p>
         </div>
       </div>
     );
@@ -816,15 +840,15 @@ export default function ExamSessionPage() {
 
   // ── Main Exam UI ──────────────────────────────────────────────────────────────
   return (
-    <div className="h-screen w-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col overflow-hidden select-none transition-colors duration-200">
+    <div className="h-screen w-screen bg-[#F8FAFC] dark:bg-[#0C0F17] flex flex-col overflow-hidden select-none transition-colors duration-200">
       {/* Practice Mode Strip */}
       {isPractice && (
-        <div className="bg-zinc-900 dark:bg-zinc-800 text-white text-[11px] font-medium py-1 px-4 flex items-center justify-between border-b border-zinc-800 z-30 shrink-0">
+        <div className="bg-slate-900 dark:bg-slate-800/80 text-white text-[11px] font-medium py-1 px-4 flex items-center justify-between border-b border-slate-800 z-30 shrink-0">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
             <span>Practice Assessment — Proctoring is disabled. Examiner will not be notified.</span>
           </div>
-          <span className="text-[10px] bg-zinc-800 dark:bg-zinc-700 text-zinc-300 px-2 py-0.5 rounded font-mono">
+          <span className="text-[10px] bg-slate-800 dark:bg-slate-800/80 text-slate-300 px-2 py-0.5 rounded font-mono">
             Unproctored
           </span>
         </div>
@@ -872,15 +896,15 @@ export default function ExamSessionPage() {
 
       {/* 3a. Fullscreen Blocked Overlay */}
       {isFullscreenBlocked && (
-        <div className="fixed inset-0 z-[9999] bg-zinc-950/70 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-150">
-          <div className="max-w-md w-full bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg p-6 md:p-8 shadow-2xl text-zinc-900 dark:text-zinc-100">
+        <div className="fixed inset-0 z-[9999] bg-slate-950/70 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-150">
+          <div className="max-w-md w-full bg-white dark:bg-[#131926] border border-slate-100 dark:border-slate-800/80 rounded-lg p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100">
             <div className="bg-red-50 text-red-600 border border-red-100/50 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
               <ShieldAlert className="w-6 h-6 stroke-[1.75]" />
             </div>
-            <h2 className="text-zinc-900 dark:text-zinc-100 font-semibold tracking-tight text-lg text-center mb-2">
+            <h2 className="text-slate-900 dark:text-slate-100 font-semibold tracking-tight text-lg text-center mb-2">
               Fullscreen Mode Exited
             </h2>
-            <p className="text-zinc-500 dark:text-zinc-400 text-xs leading-relaxed text-center mb-5 max-w-sm mx-auto">
+            <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed text-center mb-5 max-w-sm mx-auto">
               Exiting fullscreen during an examination is a recorded proctoring infraction. Your answers and timer have been paused until re-entry.
             </p>
             <div className="w-full text-center bg-red-50/70 border border-red-100 py-2.5 px-4 rounded-md text-[12px] font-semibold text-red-700 tracking-wide mb-6 dark:bg-red-950/40 dark:border-red-900/40 dark:text-red-400 tabular-nums">
@@ -888,44 +912,44 @@ export default function ExamSessionPage() {
             </div>
             <button
               onClick={dismissBlocker}
-              className="w-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 text-sm font-medium py-2.5 rounded-md transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white shadow-sm shadow-indigo-600/20 active:scale-[0.98] text-sm font-medium py-2.5 rounded-md transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
             >
-              <Maximize className="w-4 h-4 text-zinc-300 dark:text-zinc-600" />
+              <Maximize className="w-4 h-4 text-slate-300 dark:text-slate-600" />
               <span>Re-enter Fullscreen to Continue Exam</span>
             </button>
-            <p className="text-zinc-400 text-[11px] text-center mt-4">All progress is safely preserved in real-time.</p>
+            <p className="text-slate-400 text-[11px] text-center mt-4">All progress is safely preserved in real-time.</p>
           </div>
         </div>
       )}
 
       {/* 3b. Alt+Tab / Window Blur Overlay — blurs screen when user switches apps */}
       {isWindowBlurred && !isFullscreenBlocked && (
-        <div className="fixed inset-0 z-[9997] bg-zinc-950/70 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-150">
-          <div className="max-w-md w-full bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg p-6 md:p-8 shadow-2xl text-zinc-900 dark:text-zinc-100">
+        <div className="fixed inset-0 z-[9997] bg-slate-950/70 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-150">
+          <div className="max-w-md w-full bg-white dark:bg-[#131926] border border-slate-100 dark:border-slate-800/80 rounded-lg p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100">
             <div className="bg-amber-50 text-amber-600 border border-amber-100/50 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="w-6 h-6 stroke-[1.75]" />
             </div>
-            <h2 className="text-zinc-900 dark:text-zinc-100 font-semibold tracking-tight text-lg text-center mb-2">
+            <h2 className="text-slate-900 dark:text-slate-100 font-semibold tracking-tight text-lg text-center mb-2">
               Window Focus Lost
             </h2>
-            <p className="text-zinc-500 dark:text-zinc-400 text-xs leading-relaxed text-center mb-5 max-w-sm mx-auto">
+            <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed text-center mb-5 max-w-sm mx-auto">
               You switched away from the exam window. This event has been recorded in your candidate proctoring audit log.
             </p>
             <button
               onClick={() => setIsWindowBlurred(false)}
-              className="w-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 text-sm font-medium py-2.5 rounded-md transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white shadow-sm shadow-indigo-600/20 active:scale-[0.98] text-sm font-medium py-2.5 rounded-md transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
             >
               <span>Click to Return to Exam</span>
             </button>
-            <p className="text-zinc-400 text-[11px] text-center mt-4">All progress is safely preserved in real-time.</p>
+            <p className="text-slate-400 text-[11px] text-center mt-4">All progress is safely preserved in real-time.</p>
           </div>
         </div>
       )}
 
       {/* 4a. Per-violation warning popup */}
       {violationWarning.open && (
-        <div className="fixed inset-0 z-[9998] bg-zinc-950/80 backdrop-blur-xs flex items-center justify-center p-6">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-sm w-full max-w-sm overflow-hidden">
+        <div className="fixed inset-0 z-[9998] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-6">
+          <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-sm w-full max-w-sm overflow-hidden">
             <div className="h-1 bg-rose-500" />
             <div className="p-6">
               {/* Icon + title */}
@@ -934,10 +958,10 @@ export default function ExamSessionPage() {
                   <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-white mb-0.5">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white mb-0.5">
                     Proctoring Infraction
                   </p>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     {VIOLATION_LABELS[violationWarning.type] ?? violationWarning.type}
                   </p>
                 </div>
@@ -956,7 +980,7 @@ export default function ExamSessionPage() {
                     ? 'bg-orange-50/60 dark:bg-orange-950/40 border-orange-200/60 dark:border-orange-900/60'
                     : 'bg-rose-50/60 dark:bg-rose-950/40 border-rose-200/60 dark:border-rose-900/60'
                 }`}>
-                  <p className="text-[10px] uppercase font-medium text-zinc-500 dark:text-zinc-400 mb-0.5">Trust Score</p>
+                  <p className="text-[10px] uppercase font-medium text-slate-500 dark:text-slate-400 mb-0.5">Trust Score</p>
                   <p className={`text-xl font-semibold tabular-nums ${
                     trustScore >= 70 ? 'text-amber-700 dark:text-amber-400'
                     : trustScore >= 40 ? 'text-orange-700 dark:text-orange-400'
@@ -965,7 +989,7 @@ export default function ExamSessionPage() {
                 </div>
               </div>
 
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 text-center mb-5">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center mb-5">
                 Repeated infractions will result in immediate examination termination.
               </p>
 
@@ -974,7 +998,7 @@ export default function ExamSessionPage() {
                   clearTimeout(violationTimerRef.current);
                   setViolationWarning({ open: false, type: null });
                 }}
-                className="w-full py-2 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-medium transition-all cursor-pointer shadow-sm"
+                className="w-full py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white shadow-sm shadow-indigo-600/20 active:scale-[0.98] text-xs font-medium transition-all cursor-pointer shadow-sm"
               >
                 I Acknowledge & Understand
               </button>
@@ -985,16 +1009,16 @@ export default function ExamSessionPage() {
 
       {/* 4b. S4: Final warning modal — shown once when trust score ≤ 30 */}
       {finalWarningModal && (
-        <div className="fixed inset-0 z-[9998] bg-zinc-950/80 backdrop-blur-xs flex items-center justify-center p-6">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-sm w-full max-w-sm overflow-hidden">
+        <div className="fixed inset-0 z-[9998] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-6">
+          <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-sm w-full max-w-sm overflow-hidden">
             <div className="h-1 bg-amber-500" />
             <div className="p-6 text-center space-y-4">
               <div className="w-12 h-12 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200/60 dark:border-amber-800/60 flex items-center justify-center mx-auto">
                 <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
               </div>
               <div className="space-y-1">
-                <h2 className="text-base font-semibold tracking-tight text-zinc-900 dark:text-white">Critical Final Warning</h2>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white">Critical Final Warning</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                   Your candidate trust score has dropped to{' '}
                   <strong className="text-amber-600 dark:text-amber-400 tabular-nums">{trustScore}/100</strong>.{' '}
                   Any further violation will trigger automatic termination.
@@ -1013,16 +1037,16 @@ export default function ExamSessionPage() {
 
       {/* 4c. Trust-score-zero termination modal */}
       {trustZeroModal && (
-        <div className="fixed inset-0 z-[10000] bg-zinc-950/85 backdrop-blur-xs flex items-center justify-center p-6">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-sm w-full max-w-sm overflow-hidden">
+        <div className="fixed inset-0 z-[10000] bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-6">
+          <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-sm w-full max-w-sm overflow-hidden">
             <div className="h-1 bg-rose-600" />
             <div className="p-6 text-center space-y-4">
               <div className="w-12 h-12 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200/60 dark:border-rose-800/60 flex items-center justify-center mx-auto">
                 <ShieldOff className="w-6 h-6 text-rose-600 dark:text-rose-400" />
               </div>
               <div className="space-y-1">
-                <h2 className="text-base font-semibold tracking-tight text-zinc-900 dark:text-white">Assessment Terminated</h2>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white">Assessment Terminated</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                   Your trust score reached <strong className="text-rose-600 dark:text-rose-400">zero</strong> due to persistent infractions.
                   The test session is being finalized.
                 </p>
@@ -1031,7 +1055,7 @@ export default function ExamSessionPage() {
                 <p className="text-[10px] uppercase font-medium text-rose-700 dark:text-rose-400 mb-1">Total Violations</p>
                 <p className="text-3xl font-semibold text-rose-700 dark:text-rose-300 tabular-nums">{violationCount}</p>
               </div>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Submitting answers in <span className="font-mono font-medium text-rose-600 dark:text-rose-400 tabular-nums">{trustZeroCountdown}s</span>…
               </p>
             </div>
@@ -1070,7 +1094,7 @@ export default function ExamSessionPage() {
             <button
               type="button"
               onClick={handleConfirmSubmit}
-              className="px-3.5 py-1.5 rounded-md text-xs font-medium text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200 shadow-sm transition-colors"
+              className="px-3.5 py-1.5 rounded-md text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 shadow-sm transition-colors"
             >
               Submit Exam
             </button>

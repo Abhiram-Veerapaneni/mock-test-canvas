@@ -138,13 +138,13 @@ export default function NotificationBell() {
         aria-label="Open notifications"
         aria-expanded={isOpen}
         title="Notifications"
-        className="relative inline-flex items-center justify-center w-8 h-8 rounded-md text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 transition-colors cursor-pointer shadow-sm"
+        className="relative inline-flex items-center justify-center w-8 h-8 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-[#131926] hover:bg-slate-50 dark:hover:bg-[#162030] border border-slate-200/80 dark:border-slate-800/80 transition-colors cursor-pointer shadow-sm"
       >
         <Bell className="w-4 h-4" />
 
         {/* Unread Counter Badge */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-3.5 min-w-3.5 px-0.5 items-center justify-center rounded-full bg-zinc-900 dark:bg-zinc-100 text-[9px] font-mono font-medium text-white dark:text-zinc-900 shadow-none ring-1 ring-white dark:ring-zinc-950">
+          <span className="absolute -top-1 -right-1 flex h-3.5 min-w-3.5 px-0.5 items-center justify-center rounded-full bg-indigo-600 dark:bg-indigo-400 text-[9px] font-mono font-medium text-white dark:text-[#0C0F17] shadow-none ring-1 ring-white dark:ring-[#0C0F17]">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -152,15 +152,15 @@ export default function NotificationBell() {
 
       {/* Dropdown Panel */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm z-50 overflow-hidden animate-in fade-in-50 duration-150">
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-lg bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none z-50 overflow-hidden animate-in fade-in-50 duration-150">
           {/* Header */}
-          <div className="px-4 py-2.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/75 dark:bg-zinc-950/50">
+          <div className="px-4 py-2.5 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/75 dark:bg-[#0C0F17]/50">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-zinc-900 dark:text-white">
+              <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
                 Notifications
               </span>
               {unreadCount > 0 && (
-                <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 font-mono">
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 font-mono">
                   ({unreadCount} unread)
                 </span>
               )}
@@ -169,7 +169,7 @@ export default function NotificationBell() {
             {unreadCount > 0 && (
               <button
                 onClick={() => markAllAsRead()}
-                className="text-[11px] font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center gap-1 cursor-pointer transition-colors"
+                className="text-[11px] font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 flex items-center gap-1 cursor-pointer transition-colors"
               >
                 <CheckCheck className="w-3 h-3" />
                 <span>Mark all read</span>
@@ -178,16 +178,16 @@ export default function NotificationBell() {
           </div>
 
           {/* List */}
-          <div className="max-h-[340px] overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800">
+          <div className="max-h-[340px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80">
             {recentNotifications.length === 0 ? (
               <div className="py-8 text-center px-4">
-                <div className="w-8 h-8 mx-auto mb-2 rounded-md bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
+                <div className="w-8 h-8 mx-auto mb-2 rounded-md bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center text-slate-400">
                   <Bell className="w-4 h-4 opacity-60" />
                 </div>
-                <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
                   No notifications yet
                 </p>
-                <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5">
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                   Live proctoring alerts and submission updates will appear here
                 </p>
               </div>
@@ -205,9 +205,9 @@ export default function NotificationBell() {
                         markAsRead(n._id);
                       }
                     }}
-                    className={`p-3 transition-colors cursor-pointer flex items-start gap-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 ${
+                    className={`p-3 transition-colors cursor-pointer flex items-start gap-3 text-left hover:bg-slate-50 dark:hover:bg-[#162030] ${
                       !n.read
-                        ? 'bg-zinc-50/50 dark:bg-zinc-800/30'
+                        ? 'bg-indigo-50/40 dark:bg-indigo-950/20'
                         : 'bg-white dark:bg-transparent'
                     }`}
                   >
@@ -216,7 +216,7 @@ export default function NotificationBell() {
                       className={`w-7 h-7 rounded-md shrink-0 flex items-center justify-center border mt-0.5 ${
                         isViolation
                           ? 'bg-rose-50/60 dark:bg-rose-950/40 border-rose-200/60 dark:border-rose-900/60 text-rose-600'
-                          : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300'
+                          : 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'
                       }`}
                     >
                       {getNotificationIcon(n.type, vType)}
@@ -225,21 +225,21 @@ export default function NotificationBell() {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1">
-                        <p className="text-xs font-semibold text-zinc-900 dark:text-white truncate">
+                        <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
                           {n.title}
                         </p>
-                        <span className="text-[10px] text-zinc-400 font-mono shrink-0">
+                        <span className="text-[10px] text-slate-400 font-mono shrink-0">
                           {formatTimeAgo(n.createdAt)}
                         </span>
                       </div>
 
-                      <p className="text-[11px] text-zinc-600 dark:text-zinc-300 line-clamp-2 mt-0.5">
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 mt-0.5">
                         {n.message}
                       </p>
 
                       {isViolation && n.data?.candidateName && (
-                        <div className="flex items-center gap-2 mt-1 text-[10px] text-zinc-400">
-                          <span className="font-medium text-zinc-700 dark:text-zinc-300 truncate">
+                        <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-400">
+                          <span className="font-medium text-slate-700 dark:text-slate-300 truncate">
                             {n.data.candidateName}
                           </span>
                           {n.data.trustScore != null && (
@@ -253,7 +253,7 @@ export default function NotificationBell() {
 
                     {/* Unread indicator dot */}
                     {!n.read && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100 shrink-0 mt-2" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400 shrink-0 mt-2" />
                     )}
                   </div>
                 );
@@ -262,11 +262,11 @@ export default function NotificationBell() {
           </div>
 
           {/* Footer */}
-          <div className="p-2 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/75 dark:bg-zinc-950/50 text-center">
+          <div className="p-2 border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/75 dark:bg-[#0C0F17]/50 text-center">
             <Link
               to="/notifications"
               onClick={() => setIsOpen(false)}
-              className="w-full py-1 px-3 rounded-md text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center justify-center gap-1.5 transition-colors"
+              className="w-full py-1 px-3 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center justify-center gap-1.5 transition-colors"
             >
               <span>View all notifications</span>
               <ChevronRight className="w-3.5 h-3.5" />

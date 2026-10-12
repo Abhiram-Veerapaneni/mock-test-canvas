@@ -207,7 +207,7 @@ export default function QuestionBankPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0C0F17] text-slate-900 dark:text-slate-100 flex flex-col">
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -229,17 +229,17 @@ export default function QuestionBankPage() {
         )}
 
         {/* Top Header & Action Controls */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800/80">
           <div>
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40 flex items-center justify-center">
                 <Database className="w-4 h-4" />
               </div>
-              <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                 Question Bank
               </h1>
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Global repository of verified STEM questions. Filter by stream and tags, contribute problems, or instantly generate practice exams.
             </p>
           </div>
@@ -249,7 +249,7 @@ export default function QuestionBankPage() {
             <button
               type="button"
               onClick={handleOpenAddModal}
-              className="px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-850 text-xs font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+              className="px-3.5 py-2 rounded-xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none hover:bg-slate-50 dark:hover:bg-[#162030] text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Question</span>
@@ -269,8 +269,8 @@ export default function QuestionBankPage() {
         {/* Stat Strip & Search Bar Row */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Stat Strip */}
-          <div className="flex items-center gap-4 text-xs text-zinc-500 dark:text-zinc-400">
-            <span className="font-medium text-zinc-900 dark:text-zinc-100">
+          <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+            <span className="font-medium text-slate-900 dark:text-slate-100">
               {totalCount} {totalCount === 1 ? 'question' : 'questions'} available
             </span>
             <span>·</span>
@@ -291,26 +291,25 @@ export default function QuestionBankPage() {
             <button
               type="button"
               onClick={handleToggleAnswerKeys}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-colors cursor-pointer border shrink-0 ${
-                showAnswerKeys
-                  ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-700 font-medium'
-                  : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100'
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-colors cursor-pointer border shrink-0 ${showAnswerKeys
+                  ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700 font-medium'
+                  : 'bg-white dark:bg-[#131926] text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
+                }`}
               title={showAnswerKeys ? 'Hide verified answers across cards for practice' : 'Display verified answers across question cards'}
             >
-              {showAnswerKeys ? <EyeOff className="w-3.5 h-3.5 text-zinc-500" /> : <Eye className="w-3.5 h-3.5 text-zinc-500" />}
+              {showAnswerKeys ? <EyeOff className="w-3.5 h-3.5 text-slate-500" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
               <span>{showAnswerKeys ? 'Hide Answers' : 'Show Answers'}</span>
             </button>
 
             {/* Search Input */}
             <div className="relative flex-1 md:w-80">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={handleSearchChange}
                 placeholder="Search problem text..."
-                className="w-full pl-9 pr-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-600 shadow-sm"
+                className="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-1 focus:ring-indigo-500/20 shadow-sm"
               />
             </div>
           </div>
@@ -330,8 +329,8 @@ export default function QuestionBankPage() {
           {/* Questions Grid & Pagination */}
           <div className="flex-1 w-full space-y-6">
             {isLoading ? (
-              <div className="py-20 flex flex-col items-center justify-center text-zinc-400 space-y-3">
-                <Loader2 className="w-6 h-6 animate-spin text-zinc-500" />
+              <div className="py-20 flex flex-col items-center justify-center text-slate-400 space-y-3">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-500" />
                 <span className="text-xs">Loading Question Bank...</span>
               </div>
             ) : error ? (
@@ -341,21 +340,21 @@ export default function QuestionBankPage() {
                 <button
                   type="button"
                   onClick={fetchQuestions}
-                  className="px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-900 text-xs font-medium border text-zinc-700 dark:text-zinc-300"
+                  className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#131926] text-xs font-medium border text-slate-700 dark:text-slate-300"
                 >
                   Retry
                 </button>
               </div>
             ) : questions.length === 0 ? (
-              <div className="py-16 text-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 space-y-4 shadow-sm">
-                <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto text-zinc-400">
+              <div className="py-16 text-center bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-2xl p-8 space-y-4 shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center mx-auto text-slate-400">
                   <Database className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                     No questions found
                   </h3>
-                  <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
                     {debouncedSearch || selectedStream !== 'ALL' || selectedTags.length > 0
                       ? 'No items matched your current filter criteria. Try adjusting or resetting your search filters.'
                       : 'The question bank is currently empty. Be the first contributor to add a question!'}
@@ -367,7 +366,7 @@ export default function QuestionBankPage() {
                     <button
                       type="button"
                       onClick={handleClearFilters}
-                      className="px-3.5 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030] cursor-pointer"
                     >
                       Clear Filters
                     </button>
@@ -375,7 +374,7 @@ export default function QuestionBankPage() {
                   <button
                     type="button"
                     onClick={handleOpenAddModal}
-                    className="px-3.5 py-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-medium hover:bg-zinc-800 dark:hover:bg-white cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40 text-xs font-medium hover:bg-slate-800 dark:hover:bg-white cursor-pointer"
                   >
                     + Add New Question
                   </button>
@@ -398,7 +397,7 @@ export default function QuestionBankPage() {
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-4 border-t border-zinc-200 dark:border-zinc-800 text-xs text-zinc-500">
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-500">
                     <span>
                       Showing {(page - 1) * limit + 1}–{Math.min(page * limit, totalCount)} of {totalCount} questions
                     </span>
@@ -408,13 +407,13 @@ export default function QuestionBankPage() {
                         type="button"
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page <= 1}
-                        className="px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 dark:hover:bg-zinc-850 flex items-center gap-1 cursor-pointer"
+                        className="px-2.5 py-1.5 rounded-lg border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#131926] text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-[#162030] flex items-center gap-1 cursor-pointer"
                       >
                         <ChevronLeft className="w-3.5 h-3.5" />
                         <span>Prev</span>
                       </button>
 
-                      <span className="px-2 font-medium text-zinc-800 dark:text-zinc-200">
+                      <span className="px-2 font-medium text-slate-800 dark:text-slate-200">
                         {page} / {totalPages}
                       </span>
 
@@ -422,7 +421,7 @@ export default function QuestionBankPage() {
                         type="button"
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         disabled={page >= totalPages}
-                        className="px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-zinc-50 dark:hover:bg-zinc-850 flex items-center gap-1 cursor-pointer"
+                        className="px-2.5 py-1.5 rounded-lg border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#131926] text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-[#162030] flex items-center gap-1 cursor-pointer"
                       >
                         <span>Next</span>
                         <ChevronRight className="w-3.5 h-3.5" />

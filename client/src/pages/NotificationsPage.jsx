@@ -139,7 +139,7 @@ export default function NotificationsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0C0F17] text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -152,14 +152,14 @@ export default function NotificationsPage() {
         />
 
         {/* Page Header Banner */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-none">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-lg bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none">
           <div className="space-y-1">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-md bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40 flex items-center justify-center shrink-0">
                 <BellRing className="w-4 h-4" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <span>Notifications & Alerts</span>
                   {unreadCount > 0 && (
                     <span className="flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 font-medium ml-1">
@@ -168,7 +168,7 @@ export default function NotificationsPage() {
                     </span>
                   )}
                 </h1>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Real-time proctoring violations, exam submissions, and system notices
                 </p>
               </div>
@@ -194,7 +194,7 @@ export default function NotificationsPage() {
                     clearAll();
                   }
                 }}
-                className="btn-secondary text-xs px-3 py-1.5 inline-flex items-center gap-1.5 text-zinc-600 hover:text-rose-600 cursor-pointer"
+                className="btn-secondary text-xs px-3 py-1.5 inline-flex items-center gap-1.5 text-slate-600 hover:text-rose-600 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Clear all</span>
@@ -204,19 +204,19 @@ export default function NotificationsPage() {
         </div>
 
         {/* Filters and Search Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800/80">
           {/* Horizontal Underline Tabs */}
           <div className="flex items-center gap-6 overflow-x-auto -mb-[1px]">
             <button
               onClick={() => setActiveTab('ALL')}
               className={`pb-3 text-xs transition-colors shrink-0 cursor-pointer border-b-2 flex items-center gap-1.5 ${
                 activeTab === 'ALL'
-                  ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-zinc-50 font-semibold'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 font-medium'
+                  ? 'border-indigo-600 dark:border-indigo-400 text-slate-900 dark:text-slate-100 font-semibold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
               }`}
             >
               <span>All</span>
-              <span className="text-[11px] text-zinc-400 tabular-nums">
+              <span className="text-[11px] text-slate-400 tabular-nums">
                 ({notifications.length})
               </span>
             </button>
@@ -225,14 +225,14 @@ export default function NotificationsPage() {
               onClick={() => setActiveTab('VIOLATION')}
               className={`pb-3 text-xs transition-colors shrink-0 cursor-pointer border-b-2 flex items-center gap-1.5 ${
                 activeTab === 'VIOLATION'
-                  ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-zinc-50 font-semibold'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 font-medium'
+                  ? 'border-indigo-600 dark:border-indigo-400 text-slate-900 dark:text-slate-100 font-semibold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
               }`}
             >
               <ShieldAlert className="w-3.5 h-3.5" />
               <span>Violations</span>
               {violationCount > 0 && (
-                <span className="text-[11px] text-zinc-400 tabular-nums">
+                <span className="text-[11px] text-slate-400 tabular-nums">
                   ({violationCount})
                 </span>
               )}
@@ -242,14 +242,14 @@ export default function NotificationsPage() {
               onClick={() => setActiveTab('EXAM_SUBMISSION')}
               className={`pb-3 text-xs transition-colors shrink-0 cursor-pointer border-b-2 flex items-center gap-1.5 ${
                 activeTab === 'EXAM_SUBMISSION'
-                  ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-zinc-50 font-semibold'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 font-medium'
+                  ? 'border-indigo-600 dark:border-indigo-400 text-slate-900 dark:text-slate-100 font-semibold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
               }`}
             >
               <FileCheck className="w-3.5 h-3.5" />
               <span>Submissions</span>
               {submissionCount > 0 && (
-                <span className="text-[11px] text-zinc-400 tabular-nums">
+                <span className="text-[11px] text-slate-400 tabular-nums">
                   ({submissionCount})
                 </span>
               )}
@@ -259,8 +259,8 @@ export default function NotificationsPage() {
               onClick={() => setActiveTab('UNREAD')}
               className={`pb-3 text-xs transition-colors shrink-0 cursor-pointer border-b-2 flex items-center gap-1.5 ${
                 activeTab === 'UNREAD'
-                  ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-zinc-50 font-semibold'
-                  : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 font-medium'
+                  ? 'border-indigo-600 dark:border-indigo-400 text-slate-900 dark:text-slate-100 font-semibold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
               }`}
             >
               <span>Unread</span>
@@ -274,7 +274,7 @@ export default function NotificationsPage() {
 
           {/* Search Input */}
           <div className="relative w-full sm:w-64 pb-2 sm:pb-0">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
@@ -285,7 +285,7 @@ export default function NotificationsPage() {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -302,15 +302,15 @@ export default function NotificationsPage() {
             </p>
           </div>
         ) : filteredNotifications.length === 0 ? (
-          <div className="py-16 px-4 text-center rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-none space-y-3">
-            <div className="w-10 h-10 mx-auto rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
+          <div className="py-16 px-4 text-center rounded-lg bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none space-y-3">
+            <div className="w-10 h-10 mx-auto rounded-full bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center text-slate-400">
               <Inbox className="w-5 h-5 opacity-60" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 No notifications found
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1">
                 {searchQuery
                   ? 'No notifications matched your search criteria. Try a different query.'
                   : activeTab === 'VIOLATION'
@@ -333,7 +333,7 @@ export default function NotificationsPage() {
             )}
           </div>
         ) : (
-          <div className="divide-y divide-zinc-200 dark:divide-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-zinc-900 overflow-hidden shadow-none">
+          <div className="divide-y divide-slate-200/80 dark:divide-slate-800/80 border border-slate-200/80 dark:border-slate-800/80 rounded-lg bg-white dark:bg-[#131926] overflow-hidden shadow-none">
             {filteredNotifications.map((notification) => {
               const isViolation = notification.type === 'VIOLATION';
               const isSubmission = notification.type === 'EXAM_SUBMISSION';
@@ -348,24 +348,24 @@ export default function NotificationsPage() {
                       markAsRead(notification._id);
                     }
                   }}
-                  className={`p-4 sm:p-5 flex flex-col sm:flex-row items-start gap-4 transition-colors hover:bg-zinc-50/50 dark:hover:bg-zinc-850/50 cursor-pointer ${
-                    !notification.read ? 'bg-zinc-50/40 dark:bg-zinc-850/40' : ''
+                  className={`p-4 sm:p-5 flex flex-col sm:flex-row items-start gap-4 transition-colors hover:bg-slate-50/50 dark:hover:bg-[#162030]/50 cursor-pointer ${
+                    !notification.read ? 'bg-slate-50/40 dark:bg-[#162030]/40' : ''
                   }`}
                 >
                   {/* Status Indicator Dot & Icon */}
                   <div className="flex items-center gap-2 shrink-0 mt-0.5">
                     {!notification.read ? (
-                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100 shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-slate-100 shrink-0" />
                     ) : (
                       <span className="w-1.5 h-1.5 rounded-full bg-transparent shrink-0" />
                     )}
-                    <div className="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 shrink-0">
+                    <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center text-slate-500 shrink-0">
                       {isViolation ? (
                         getViolationIcon(vType)
                       ) : isSubmission ? (
                         <FileCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       ) : (
-                        <ShieldAlert className="w-4 h-4 text-zinc-500" />
+                        <ShieldAlert className="w-4 h-4 text-slate-500" />
                       )}
                     </div>
                   </div>
@@ -374,34 +374,34 @@ export default function NotificationsPage() {
                   <div className="flex-1 min-w-0 space-y-2">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">
+                        <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
                           {isViolation
                             ? VIOLATION_LABELS[vType] || 'Proctor Violation'
                             : isSubmission
                             ? 'Submission Completed'
                             : 'Notice'}
                         </span>
-                        <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                        <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                           {notification.title}
                         </h2>
                       </div>
 
-                      <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-mono tabular-nums shrink-0">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-400 font-mono tabular-nums shrink-0">
                         <Clock className="w-3 h-3" />
                         <span>{formatTimeAgo(notification.createdAt)}</span>
                       </div>
                     </div>
 
                     {/* Main Message */}
-                    <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                       {notification.message}
                     </p>
 
                     {/* Detailed Metadata Group */}
-                    <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500">
+                    <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-500">
                       {notification.data?.candidateName && (
                         <span className="inline-flex items-center gap-1">
-                          <User className="w-3 h-3 text-zinc-400" />
+                          <User className="w-3 h-3 text-slate-400" />
                           <span>{notification.data.candidateName}</span>
                         </span>
                       )}
@@ -410,7 +410,7 @@ export default function NotificationsPage() {
                         <>
                           <span>•</span>
                           <span className="inline-flex items-center gap-1">
-                            <Shield className="w-3 h-3 text-zinc-400" />
+                            <Shield className="w-3 h-3 text-slate-400" />
                             <span className="truncate max-w-[200px]">
                               {notification.data.examTitle}
                             </span>
@@ -450,7 +450,7 @@ export default function NotificationsPage() {
                             }}
                             className="btn-secondary text-xs px-2.5 py-1 inline-flex items-center gap-1.5 cursor-pointer"
                           >
-                            <Eye className="w-3.5 h-3.5 text-zinc-500" />
+                            <Eye className="w-3.5 h-3.5 text-slate-500" />
                             <span>View Snapshot</span>
                           </button>
                         )}
@@ -463,7 +463,7 @@ export default function NotificationsPage() {
                               e.stopPropagation();
                               if (!notification.read) markAsRead(notification._id);
                             }}
-                            className="inline-flex items-center gap-1 text-xs font-medium text-zinc-600 hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors cursor-pointer"
                           >
                             <span>Inspect in Audit Report</span>
                             <ExternalLink className="w-3.5 h-3.5" />
@@ -479,7 +479,7 @@ export default function NotificationsPage() {
                             markAsRead(notification._id);
                           }}
                           title={notification.read ? 'Mark unread' : 'Mark as read'}
-                          className="p-1 rounded-md text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                          className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
                         >
                           <Check className="w-3.5 h-3.5" />
                         </button>
@@ -490,7 +490,7 @@ export default function NotificationsPage() {
                             deleteNotification(notification._id);
                           }}
                           title="Delete notification"
-                          className="p-1 rounded-md text-zinc-400 hover:text-rose-600 transition-colors cursor-pointer"
+                          className="p-1 rounded-md text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -506,14 +506,14 @@ export default function NotificationsPage() {
                         if (!notification.read) markAsRead(notification._id);
                         setSnapshotPreview(notification.data);
                       }}
-                      className="hidden sm:block w-16 h-16 rounded-md bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 overflow-hidden shrink-0 cursor-pointer group/thumb relative shadow-none hover:border-zinc-400 transition-colors"
+                      className="hidden sm:block w-16 h-16 rounded-md bg-slate-100 dark:bg-[#0C0F17] border border-slate-200/80 dark:border-slate-800/80 overflow-hidden shrink-0 cursor-pointer group/thumb relative shadow-none hover:border-slate-400 transition-colors"
                     >
                       <img
                         src={notification.data.imageUrl}
                         alt="Proctoring violation snapshot evidence"
                         className="w-full h-full object-cover group-hover/thumb:scale-105 transition-transform duration-200"
                       />
-                      <div className="absolute inset-0 bg-zinc-950/30 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
+                      <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center">
                         <Eye className="w-4 h-4 text-white" />
                       </div>
                     </div>
@@ -528,20 +528,20 @@ export default function NotificationsPage() {
       {/* Instant Snapshot Lightbox Modal */}
       {snapshotPreview && (
         <div
-          className="fixed inset-0 z-[10000] bg-zinc-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[10000] bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
           onClick={() => setSnapshotPreview(null)}
         >
           <div
-            className="max-w-xl w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden shadow-sm p-6 text-zinc-900 dark:text-zinc-100 space-y-4 animate-in zoom-in-95 duration-200"
+            className="max-w-xl w-full bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg overflow-hidden shadow-sm p-6 text-slate-900 dark:text-slate-100 space-y-4 animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-rose-500" />
                   <span>Proctoring Violation Evidence Snapshot</span>
                 </h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   {snapshotPreview.candidateName || 'Candidate'} •{' '}
                   {VIOLATION_LABELS[snapshotPreview.violationType] || snapshotPreview.violationType} •{' '}
                   {snapshotPreview.timestamp
@@ -551,13 +551,13 @@ export default function NotificationsPage() {
               </div>
               <button
                 onClick={() => setSnapshotPreview(null)}
-                className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1 rounded-md transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-md transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="rounded-md overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-950 flex items-center justify-center min-h-[260px] max-h-[440px]">
+            <div className="rounded-md overflow-hidden border border-slate-200/80 dark:border-slate-800/80 bg-slate-950 flex items-center justify-center min-h-[260px] max-h-[440px]">
               <img
                 src={snapshotPreview.imageUrl}
                 alt="Proctoring violation snapshot"
@@ -565,7 +565,7 @@ export default function NotificationsPage() {
               />
             </div>
 
-            <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 pt-1">
+            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1">
               <span className="font-mono">
                 Trust Score:{' '}
                 <strong className="text-rose-600 dark:text-rose-400 font-medium">

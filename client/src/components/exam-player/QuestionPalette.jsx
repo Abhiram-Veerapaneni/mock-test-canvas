@@ -96,17 +96,17 @@ export default function QuestionPalette() {
       // 1. Default (Not Visited): Gray-scale neutral outline
       case 'NOT_VISITED':
       default:
-        return `${base} bg-zinc-50 border border-zinc-200 text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-800/60 dark:border-zinc-700 dark:text-zinc-300`;
+        return `${base} bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-[#162030] dark:border-slate-700 dark:text-slate-300`;
     }
   };
 
   return (
-    <aside className="w-full md:w-72 lg:w-80 bg-white dark:bg-zinc-900 border-t md:border-t-0 md:border-l border-zinc-200/80 dark:border-zinc-800 flex flex-col h-auto md:h-full overflow-hidden select-none shrink-0 transition-colors duration-200">
+    <aside className="w-full md:w-72 lg:w-80 bg-white dark:bg-[#131926] border-t md:border-t-0 md:border-l border-slate-200/80 dark:border-slate-800/80 flex flex-col h-auto md:h-full overflow-hidden select-none shrink-0 transition-colors duration-200">
       {/* Header */}
-      <div className="p-4 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center justify-between">
+      <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 shrink-0">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center justify-between">
           <span>Question Palette</span>
-          <span className="font-mono text-zinc-400 dark:text-zinc-500 font-normal">
+          <span className="font-mono text-slate-400 dark:text-slate-500 font-normal">
             {questions.length} Questions
           </span>
         </div>
@@ -139,7 +139,7 @@ export default function QuestionPalette() {
                 {/* Answered & Marked: small check tick */}
                 {isAnsweredAndMarked && (
                   <span
-                    className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border border-white dark:border-zinc-900 flex items-center justify-center z-10"
+                    className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border border-white dark:border-slate-900 flex items-center justify-center z-10"
                     title="Answered & Marked for Review"
                   >
                     <Check className="w-2 h-2 text-white stroke-[3.5]" />
@@ -152,45 +152,45 @@ export default function QuestionPalette() {
       </div>
 
       {/* Palette Status Legend */}
-      <div className="mt-auto border-t border-zinc-100 dark:border-zinc-800 p-4 pt-4 flex flex-col gap-2.5 shrink-0 bg-white dark:bg-zinc-900">
-        <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+      <div className="mt-auto border-t border-slate-100 dark:border-slate-800/80 p-4 pt-4 flex flex-col gap-2.5 shrink-0 bg-white dark:bg-[#131926]">
+        <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0" />
             <span>Active View</span>
           </div>
-          <span className="font-mono tabular-nums text-zinc-400">{counts.activeView}</span>
+          <span className="font-mono tabular-nums text-slate-400">{counts.activeView}</span>
         </div>
 
-        <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+        <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0" />
             <span>Answered</span>
           </div>
-          <span className="font-mono tabular-nums text-zinc-400">{counts.answered}</span>
+          <span className="font-mono tabular-nums text-slate-400">{counts.answered}</span>
         </div>
 
-        <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+        <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
             <span>Marked for Review</span>
           </div>
-          <span className="font-mono tabular-nums text-zinc-400">{counts.markedForReview}</span>
+          <span className="font-mono tabular-nums text-slate-400">{counts.markedForReview}</span>
         </div>
 
-        <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+        <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
             <span>Skipped / Unanswered</span>
           </div>
-          <span className="font-mono tabular-nums text-zinc-400">{counts.notAnswered}</span>
+          <span className="font-mono tabular-nums text-slate-400">{counts.notAnswered}</span>
         </div>
 
-        <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+        <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full border border-zinc-400 bg-zinc-100 dark:bg-zinc-800 shrink-0" />
+            <span className="w-2 h-2 rounded-full border border-slate-400 bg-slate-100 dark:bg-slate-800/80 shrink-0" />
             <span>Unvisited</span>
           </div>
-          <span className="font-mono tabular-nums text-zinc-400">{counts.notVisited}</span>
+          <span className="font-mono tabular-nums text-slate-400">{counts.notVisited}</span>
         </div>
       </div>
     </aside>

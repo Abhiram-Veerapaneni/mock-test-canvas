@@ -123,11 +123,11 @@ export default function StrikeModal({ type, strikeCount, trustScore, maxWarnings
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-[2px] animate-in fade-in duration-150"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-[2px] animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg overflow-hidden shadow-2xl"
+        className="w-full max-w-sm bg-white dark:bg-[#131926] border border-slate-100 dark:border-slate-800/80 rounded-lg overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top accent bar */}
@@ -146,10 +146,10 @@ export default function StrikeModal({ type, strikeCount, trustScore, maxWarnings
               <IconComponent className="w-4 h-4 text-rose-600 dark:text-rose-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
                 {info.label}
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mt-1">
                 {info.description}
               </p>
             </div>
@@ -158,26 +158,26 @@ export default function StrikeModal({ type, strikeCount, trustScore, maxWarnings
           {/* Stats row */}
           <div className="grid grid-cols-2 gap-2.5 mb-4">
             {/* Strike count */}
-            <div className="bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-md p-3 text-center">
-              <div className="text-[10px] font-medium uppercase tracking-wider text-zinc-400 mb-0.5">
+            <div className="bg-slate-50 dark:bg-[#162030] border border-slate-200 dark:border-slate-700/80 rounded-md p-3 text-center">
+              <div className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mb-0.5">
                 Strikes
               </div>
               <div className="text-xl font-semibold text-rose-600 dark:text-rose-400 tabular-nums">
                 {strikeCount}
-                <span className="text-xs font-normal text-zinc-400 ml-1">
+                <span className="text-xs font-normal text-slate-400 ml-1">
                   / {maxWarnings || '∞'}
                 </span>
               </div>
             </div>
 
             {/* Trust score */}
-            <div className="bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-md p-3 text-center">
-              <div className="text-[10px] font-medium uppercase tracking-wider text-zinc-400 mb-0.5">
+            <div className="bg-slate-50 dark:bg-[#162030] border border-slate-200 dark:border-slate-700/80 rounded-md p-3 text-center">
+              <div className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mb-0.5">
                 Trust Score
               </div>
-              <div className="text-xl font-semibold text-zinc-900 dark:text-white tabular-nums">
+              <div className="text-xl font-semibold text-slate-900 dark:text-white tabular-nums">
                 {trustScore}
-                <span className="text-xs font-normal text-zinc-400 ml-1">
+                <span className="text-xs font-normal text-slate-400 ml-1">
                   /100
                 </span>
               </div>
@@ -185,7 +185,7 @@ export default function StrikeModal({ type, strikeCount, trustScore, maxWarnings
           </div>
 
           {/* Trust score progress bar */}
-          <div className="w-full h-1 bg-zinc-200 dark:bg-zinc-800 rounded-sm overflow-hidden mb-4">
+          <div className="w-full h-1 bg-slate-200 dark:bg-slate-800/80 rounded-sm overflow-hidden mb-4">
             <div
               className={`h-full transition-all duration-300 rounded-sm ${
                 trustScore >= 70
@@ -199,14 +199,14 @@ export default function StrikeModal({ type, strikeCount, trustScore, maxWarnings
           </div>
 
           {/* Warning text */}
-          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 text-center mb-4 leading-relaxed">
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center mb-4 leading-relaxed">
             Repeated violations will result in automatic exam termination.
           </p>
 
           {/* Dismiss button */}
           <button
             onClick={onClose}
-            className="w-full py-2 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-medium transition-colors cursor-pointer shadow-sm"
+            className="w-full py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white shadow-sm shadow-indigo-600/20 active:scale-[0.98] text-xs font-medium transition-colors cursor-pointer shadow-sm"
           >
             I Understand
           </button>
