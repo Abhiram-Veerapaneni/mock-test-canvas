@@ -28,6 +28,12 @@ export default function QuestionEditModal({
   const [imageAttachment, setImageAttachment] = useState(question.imageAttachment || '');
   const [subject, setSubject] = useState(question.subject || 'Mathematics');
   const [topic, setTopic] = useState(question.topic || '');
+  const [stream, setStream] = useState(question.stream || question.subject || 'Mathematics');
+  const [tags, setTags] = useState(
+    Array.isArray(question.tags) ? question.tags : (question.topic && question.topic !== 'General' ? [question.topic] : [])
+  );
+  const [tagInput, setTagInput] = useState('');
+  const [streamSuggestions, setStreamSuggestions] = useState([]);
   
   // Format options into [{ text, image }]
   const [options, setOptions] = useState(() => {
@@ -70,6 +76,29 @@ export default function QuestionEditModal({
 
   const questionFileRef = useRef(null);
   const optionFileRefs = useRef({});
+
+  React.useEffect(() => {
+    api.get('/questions/meta/streams')
+      .then((res) => {
+        if (res.data?.success) setStreamSuggestions(res.data.streams || []);
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  const handleAddTag = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = tagInput.trim().replace(/^,+|,+$/g, '');
+      if (val && !tags.includes(val)) {
+        setTags([...tags, val]);
+      }
+      setTagInput('');
+    }
+  };
+
+  const handleRemoveTag = (tg) => {
+    setTags(tags.filter((item) => item !== tg));
+  };
 
   // Question Image Upload to Cloudinary
   const handleQuestionImageUpload = async (file) => {
@@ -224,13 +253,18 @@ export default function QuestionEditModal({
       finalCorrectAnswers = [minVal, maxVal];
     }
 
+    const cleanStream = stream.trim() || subject.trim() || 'General';
+    const cleanTags = tags.length > 0 ? tags : (topic.trim() ? [topic.trim()] : []);
+
     const updatedQuestion = {
       ...question,
       questionText: questionText.trim(),
       questionType,
       imageAttachment: imageAttachment.trim(),
-      subject: subject.trim(),
-      topic: topic.trim() || 'General',
+      subject: cleanStream,
+      topic: cleanTags.length > 0 ? cleanTags[0] : (topic.trim() || 'General'),
+      stream: cleanStream,
+      tags: cleanTags,
       options: questionType === 'NAT' ? [] : options.map((o) => ({
         text: o.text.trim(),
         image: o.image || ''
@@ -383,6 +417,59 @@ export default function QuestionEditModal({
                   placeholder="e.g. Thermodynamics"
                   className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
+              </div>
+            </div>
+
+            {/* Stream and Tags for Question Bank */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Stream (Bank Category)
+                </label>
+                <input
+                  list="edit-modal-streams"
+                  type="text"
+                  value={stream}
+                  onChange={(e) => setStream(e.target.value)}
+                  placeholder="e.g. Physics, Chemistry"
+                  className="w-full px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none"
+                />
+                <datalist id="edit-modal-streams">
+                  {streamSuggestions.map((st) => (
+                    <option key={st} value={st} />
+                  ))}
+                </datalist>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  Tags (Press Enter or comma)
+                </label>
+                <div className="flex flex-wrap items-center gap-1 p-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg min-h-[32px]">
+                  {tags.map((tg) => (
+                    <span
+                      key={tg}
+                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-[10px]"
+                    >
+                      <span>{tg}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tg)}
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-100"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleAddTag}
+                    placeholder={tags.length === 0 ? "Add tags..." : ""}
+                    className="flex-1 min-w-[70px] bg-transparent text-xs text-slate-900 dark:text-slate-100 focus:outline-none px-1"
+                  />
+                </div>
               </div>
             </div>
 

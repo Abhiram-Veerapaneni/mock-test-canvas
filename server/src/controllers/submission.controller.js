@@ -152,8 +152,10 @@ export const submitExam = async (req, res) => {
     // Grade the attempt
     const result = gradeAttempt(answers, exam.questions, exam.markingScheme);
 
+    const validQuestions = (exam.questions || []).filter(Boolean);
+
     // Build response items for the Attempt document
-    const responses = exam.questions.map((q) => {
+    const responses = validQuestions.map((q) => {
       const qId = q._id.toString();
       const selected = answers[qId] || [];
       return {
@@ -605,7 +607,7 @@ export const getAttemptReview = async (req, res) => {
     const incorrectMark = exam.markingScheme?.incorrect ?? -1;
 
     // Build question reviews with candidate selection and verified solutions
-    const reviewedQuestions = (exam.questions || []).map((q, idx) => {
+    const reviewedQuestions = (exam.questions || []).filter(Boolean).map((q, idx) => {
       const qId = q._id.toString();
       const resp = responseMap.get(qId);
       const selectedAnswers = resp?.selectedAnswers || [];

@@ -18,6 +18,7 @@ import {
   Loader2,
   ShieldCheck,
   Plus,
+  Database,
   Sparkles,
   Sliders,
   HelpCircle,
@@ -36,6 +37,7 @@ import {
   Calendar,
   Clock,
   Eye,
+  EyeOff,
   BookOpen,
   Lock,
   CheckCheck,
@@ -56,6 +58,9 @@ export default function TestCreationPage() {
   const [examStatus, setExamStatus] = useState('draft');
   const [isLoadingExisting, setIsLoadingExisting] = useState(false);
   const [tempExamId] = useState(() => 'exam_' + Date.now());
+
+  // Client-Side View Adjustment: Answer Key visibility
+  const [showAnswerKey, setShowAnswerKey] = useState(true);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -113,7 +118,7 @@ export default function TestCreationPage() {
   useEffect(() => {
     if (!examIdParam) return;
     setIsLoadingExisting(true);
-    api.get(`/exams/${examIdParam}`)
+    api.get(`/exams/${examIdParam}?reveal=true`)
       .then((res) => {
         if (res.data?.success && res.data.exam) {
           const ex = res.data.exam;
@@ -1377,7 +1382,7 @@ export default function TestCreationPage() {
 
             {/* Questions Draft Card */}
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 sm:p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
+              <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
                     Question Items ({questions.length})
@@ -1386,9 +1391,26 @@ export default function TestCreationPage() {
                     • Re-order or edit questions
                   </span>
                 </div>
-                <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium tabular-nums">
-                  Projected Marks: <strong className="text-zinc-900 dark:text-zinc-100">{questions.length * correctMark} pts</strong>
-                </span>
+                <div className="flex items-center gap-3">
+                  {/* Client-Side View Adjustment: Answer Key Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setShowAnswerKey((prev) => !prev)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-colors cursor-pointer border ${
+                      showAnswerKey
+                        ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-700 font-medium'
+                        : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100'
+                    }`}
+                    title={showAnswerKey ? 'Hide answer key styling to preview test as candidate' : 'Show verified answer keys'}
+                  >
+                    {showAnswerKey ? <EyeOff className="w-3.5 h-3.5 text-zinc-500" /> : <Eye className="w-3.5 h-3.5 text-zinc-500" />}
+                    <span>{showAnswerKey ? 'Candidate Preview' : 'Show Answer Key'}</span>
+                  </button>
+
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium tabular-nums">
+                    Projected Marks: <strong className="text-zinc-900 dark:text-zinc-100">{questions.length * correctMark} pts</strong>
+                  </span>
+                </div>
               </div>
 
               {questions.length === 0 ? (
@@ -1430,8 +1452,26 @@ export default function TestCreationPage() {
                             )}
                           </div>
 
-                          {/* Action Buttons: Re-order, Edit, Delete */}
-                          <div className="flex items-center gap-1.5">
+                          {/* Action Buttons: Contribute to Bank, Re-order, Edit, Delete */}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {/* Contribute to Bank Toggle (Phase 8.4) */}
+                            <label className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[11px] font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer select-none hover:bg-zinc-50 dark:hover:bg-zinc-750 transition-colors">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(q.contributeToBank || q.isInBank)}
+                                onChange={(e) => {
+                                  const updated = [...questions];
+                                  updated[idx] = { ...updated[idx], contributeToBank: e.target.checked };
+                                  setQuestions(updated);
+                                }}
+                                className="w-3.5 h-3.5 rounded text-zinc-900 border-zinc-300 focus:ring-0 cursor-pointer"
+                              />
+                              <span className="flex items-center gap-1">
+                                <Database className="w-3 h-3 text-amber-500" />
+                                <span>Contribute to Bank</span>
+                              </span>
+                            </label>
+
                             {/* Move Up */}
                             <button
                               type="button"
@@ -1508,7 +1548,7 @@ export default function TestCreationPage() {
                         {!isNat && opts.length > 0 && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                             {opts.map((opt, optIdx) => {
-                              const isCorrect = correctIndices.includes(optIdx);
+                              const isCorrect = showAnswerKey && correctIndices.includes(optIdx);
 
                               return (
                                 <div
@@ -1550,7 +1590,7 @@ export default function TestCreationPage() {
                                       </div>
                                     )}
 
-                                    {isCorrect && (
+                                    {isCorrect && showAnswerKey && (
                                       <span className="text-[10px] font-medium uppercase tracking-wider text-emerald-700 dark:text-emerald-400 block pt-0.5">
                                         Correct Key
                                       </span>
@@ -1564,20 +1604,26 @@ export default function TestCreationPage() {
 
                         {/* NAT Numerical Range Display */}
                         {isNat && (
-                          <div className="p-2.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs flex items-center gap-2">
-                            <span className="text-zinc-600 dark:text-zinc-400 font-medium">Accepted Answer Range:</span>
-                            <span className="font-mono font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200/50 dark:border-emerald-800/40">
-                              {correctIndices[0] !== undefined
-                                ? correctIndices[0] === correctIndices[1] || correctIndices[1] === undefined
-                                ? `${correctIndices[0]}`
-                                : `[${correctIndices[0]}, ${correctIndices[1]}]`
-                                : 'Not specified'}
-                            </span>
-                          </div>
+                          showAnswerKey ? (
+                            <div className="p-2.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs flex items-center gap-2">
+                              <span className="text-zinc-600 dark:text-zinc-400 font-medium">Accepted Answer Range:</span>
+                              <span className="font-mono font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200/50 dark:border-emerald-800/40">
+                                {correctIndices[0] !== undefined
+                                  ? correctIndices[0] === correctIndices[1] || correctIndices[1] === undefined
+                                  ? `${correctIndices[0]}`
+                                  : `[${correctIndices[0]}, ${correctIndices[1]}]`
+                                  : 'Not specified'}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="p-2.5 rounded-md bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-400 italic">
+                              Numerical Answer (Candidate preview — answer key hidden)
+                            </div>
+                          )
                         )}
 
                         {/* Pedagogical Explanation Preview */}
-                        {q.explanation && (
+                        {showAnswerKey && q.explanation && (
                           <div className="p-2.5 rounded-md bg-zinc-100/70 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/60 text-xs space-y-1">
                             <span className="font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
                               <HelpCircle className="w-3.5 h-3.5 text-zinc-500" />

@@ -330,16 +330,21 @@ export default function DashboardPage() {
                         <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
                           {exam.category || 'Standard'}
                         </span>
-                        {/* Status: ONLY show if draft or exhausted. Published/Live is default so do not label. */}
-                        {isDraft ? (
-                          <span className="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40 text-[11px] px-2 py-0.5 rounded-md font-medium">
-                            Draft
-                          </span>
-                        ) : isExhausted ? (
-                          <span className="bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40 text-[11px] px-2 py-0.5 rounded-md font-medium">
-                            Exhausted
-                          </span>
-                        ) : null}
+                        <div className="flex items-center gap-1.5">
+                          {exam.isGenerated && !exam.isPublic && (
+                            <span className="text-[11px] text-zinc-400 font-medium">Private</span>
+                          )}
+                          {/* Status: ONLY show if draft or exhausted. Published/Live is default so do not label. */}
+                          {isDraft ? (
+                            <span className="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40 text-[11px] px-2 py-0.5 rounded-md font-medium">
+                              Draft
+                            </span>
+                          ) : isExhausted ? (
+                            <span className="bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40 text-[11px] px-2 py-0.5 rounded-md font-medium">
+                              Exhausted
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
 
                       {/* Body: Card title */}

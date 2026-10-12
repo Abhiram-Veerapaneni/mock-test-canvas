@@ -65,6 +65,19 @@ const examSchema = new mongoose.Schema(
       type: Boolean,
       default: true
     },
+    isGenerated: {
+      type: Boolean,
+      default: false
+    },
+    isPublic: {
+      type: Boolean,
+      default: true
+    },
+    examType: {
+      type: String,
+      enum: ['official', 'practice'],
+      default: 'official'
+    },
     schedule: {
       isScheduled: {
         type: Boolean,

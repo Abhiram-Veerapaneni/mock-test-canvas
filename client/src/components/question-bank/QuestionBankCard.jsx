@@ -1,0 +1,291 @@
+import React, { useState } from 'react';
+import MathRenderer from '../common/MathRenderer';
+import {
+  Edit3,
+  Trash2,
+  Tag,
+  BookOpen,
+  Calendar,
+  User,
+  ChevronDown,
+  ChevronUp,
+  Image as ImageIcon,
+  CheckCircle,
+  HelpCircle,
+  AlertTriangle
+} from 'lucide-react';
+
+export default function QuestionBankCard({
+  question,
+  showAnswerKey = false,
+  onEdit,
+  onDelete
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isCardAnswerRevealed, setIsCardAnswerRevealed] = useState(false);
+
+  const hasAnswerData = Boolean(
+    (question.correctAnswers && question.correctAnswers.length > 0) ||
+    question.explanation
+  );
+
+  const isAnswerVisible = showAnswerKey || isCardAnswerRevealed;
+
+  const contributorName = question.bankAddedBy?.name || 'Community Contributor';
+  const formattedDate = question.createdAt
+    ? new Date(question.createdAt).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      })
+    : '';
+
+  const isNat = question.questionType === 'NAT';
+  const hasOptions = Array.isArray(question.options) && question.options.length > 0;
+
+  return (
+    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 sm:p-5 shadow-sm hover:border-zinc-300 dark:hover:border-zinc-700 transition-all flex flex-col justify-between space-y-4">
+      {/* Top Header Row */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Stream Badge */}
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200/60 dark:border-zinc-700/60">
+            <BookOpen className="w-3 h-3 text-zinc-500" />
+            <span>{question.stream || question.subject || 'General'}</span>
+          </span>
+
+          {/* Type Badge */}
+          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium uppercase tracking-wider ${
+            question.questionType === 'NAT'
+              ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900'
+              : question.questionType === 'MSQ'
+              ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-900'
+              : 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900'
+          }`}>
+            {question.questionType || 'MCQ'}
+          </span>
+
+          {question.isEdited && (
+            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+              (Edited)
+            </span>
+          )}
+        </div>
+
+        {/* Contributor Action Controls (only if isContributor) */}
+        {question.isContributor && (
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => onEdit(question)}
+              className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              title="Edit question"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
+              title="Delete question from bank"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Question Statement */}
+      <div className="space-y-2">
+        <div className={`text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 leading-relaxed font-sans ${
+          !isExpanded ? 'line-clamp-3' : ''
+        }`}>
+          {question.questionText ? (
+            <MathRenderer text={question.questionText} />
+          ) : (
+            <span className="italic text-zinc-400">Diagram-only question</span>
+          )}
+        </div>
+
+        {/* Question Image Attachment */}
+        {question.imageAttachment && (
+          <div className="pt-1">
+            <img
+              src={question.imageAttachment}
+              alt="Question Diagram"
+              className="max-h-36 max-w-full rounded-lg border border-zinc-200 dark:border-zinc-800 object-contain bg-white dark:bg-zinc-950 p-1"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Expanded Details: Options, Answers & Explanation */}
+      {isExpanded && (
+        <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 space-y-3">
+          {/* Card Answer Key Toolbar (when global showAnswerKey is false) */}
+          {hasAnswerData && !showAnswerKey && (
+            <div className="flex items-center justify-between pb-1 text-xs">
+              <span className="text-[11px] text-zinc-400">
+                {isAnswerVisible ? 'Answer Key Revealed' : 'Answer Key Hidden'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsCardAnswerRevealed((prev) => !prev)}
+                className="text-[11px] text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 underline cursor-pointer"
+              >
+                {isAnswerVisible ? 'Hide Answer' : 'Reveal Answer'}
+              </button>
+            </div>
+          )}
+
+          {/* Options for MCQ / MSQ */}
+          {!isNat && hasOptions && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              {question.options.map((opt, oIdx) => {
+                const optText = typeof opt === 'object' ? (opt.text || '') : opt;
+                const optImg = typeof opt === 'object' ? (opt.image || '') : '';
+                const isCorrect = isAnswerVisible && question.correctAnswers?.includes(oIdx);
+
+                return (
+                  <div
+                    key={oIdx}
+                    className={`p-2 rounded-lg border flex items-start gap-2 ${
+                      isCorrect
+                        ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800/50 text-emerald-900 dark:text-emerald-200'
+                        : 'bg-zinc-50 dark:bg-zinc-850 border-zinc-200/80 dark:border-zinc-750 text-zinc-700 dark:text-zinc-300'
+                    }`}
+                  >
+                    <span className={`w-5 h-5 rounded flex items-center justify-center font-mono text-[11px] font-semibold shrink-0 ${
+                      isCorrect
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                    }`}>
+                      {String.fromCharCode(65 + oIdx)}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      {optText && <MathRenderer text={optText} />}
+                      {optImg && (
+                        <img
+                          src={optImg}
+                          alt="Option diagram"
+                          className="max-h-20 max-w-full rounded mt-1 border object-contain bg-white"
+                        />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Correct Answer Display for NAT */}
+          {isNat && (
+            isAnswerVisible && question.correctAnswers ? (
+              <div className="p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs flex items-center gap-2">
+                <span className="text-zinc-500 font-medium">Accepted Value:</span>
+                <span className="font-mono font-semibold text-emerald-700 dark:text-emerald-400">
+                  {question.correctAnswers[0] === question.correctAnswers[1] || question.correctAnswers[1] === undefined
+                    ? question.correctAnswers[0]
+                    : `[${question.correctAnswers[0]}, ${question.correctAnswers[1]}]`}
+                </span>
+              </div>
+            ) : hasAnswerData && !isAnswerVisible ? (
+              <div className="p-2 rounded-lg bg-zinc-50 dark:bg-zinc-850 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-400 italic flex items-center justify-between">
+                <span>Numerical Answer (Hidden)</span>
+                <button
+                  type="button"
+                  onClick={() => setIsCardAnswerRevealed(true)}
+                  className="text-[11px] text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 underline cursor-pointer"
+                >
+                  Reveal
+                </button>
+              </div>
+            ) : null
+          )}
+
+          {/* Explanation if visible */}
+          {isAnswerVisible && question.explanation && (
+            <div className="p-2.5 rounded-lg bg-blue-50/40 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-200 space-y-1">
+              <span className="font-semibold flex items-center gap-1 text-[11px] uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                <HelpCircle className="w-3.5 h-3.5" /> Explanation
+              </span>
+              <MathRenderer text={question.explanation} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Bottom Metadata & Expand Toggle */}
+      <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+        {/* Tags */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {Array.isArray(question.tags) && question.tags.length > 0 ? (
+            question.tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+              >
+                <Tag className="w-2.5 h-2.5" />
+                <span>{tag}</span>
+              </span>
+            ))
+          ) : (
+            <span className="text-zinc-400 text-[10px]">No tags</span>
+          )}
+        </div>
+
+        {/* Contributor and Expand Button */}
+        <div className="flex items-center gap-3 ml-auto">
+          <span className="flex items-center gap-1 text-[11px]">
+            <User className="w-3 h-3 text-zinc-400" />
+            <span className="truncate max-w-[120px]">{contributorName}</span>
+            {formattedDate && <span>· {formattedDate}</span>}
+          </span>
+
+          <button
+            type="button"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center gap-1 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white font-medium text-[11px] cursor-pointer"
+          >
+            <span>{isExpanded ? 'Less' : 'Details'}</span>
+            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Inline Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs space-y-2">
+          <div className="flex items-center gap-2 text-rose-800 dark:text-rose-300 font-medium">
+            <AlertTriangle className="w-4 h-4 text-rose-600" />
+            <span>Are you sure you want to remove this question from the Question Bank?</span>
+          </div>
+          <p className="text-[11px] text-rose-700 dark:text-rose-400">
+            This action cannot be undone. Active tests using this question may retain references.
+          </p>
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(false)}
+              className="px-2.5 py-1 rounded bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowDeleteConfirm(false);
+                onDelete(question._id);
+              }}
+              className="px-2.5 py-1 rounded bg-rose-600 text-white font-medium hover:bg-rose-700 cursor-pointer"
+            >
+              Confirm Delete
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

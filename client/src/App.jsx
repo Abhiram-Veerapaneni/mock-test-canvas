@@ -11,6 +11,7 @@ import ExamAuditReportPage from './pages/ExamAuditReportPage';
 import ExamLiveMonitorPage from './pages/ExamLiveMonitorPage';
 import ExamResponsesPage from './pages/ExamResponsesPage';
 import NotificationsPage from './pages/NotificationsPage';
+import QuestionBankPage from './pages/QuestionBankPage';
 import UnderDevelopmentPage from './pages/UnderDevelopmentPage';
 import LiveViolationToast from './components/proctoring/LiveViolationToast';
 import SnapshotPreviewModal from './components/proctoring/SnapshotPreviewModal';
@@ -76,8 +77,10 @@ export default function App() {
         {/* Exam Authoring Studio — Publicly accessible for building/previewing */}
         <Route path="/create-test" element={<TestCreationPage />} />
 
+        {/* Question Bank — Global Shared Pool */}
+        <Route path="/question-bank" element={<QuestionBankPage />} />
+
         {/* Modules in active development */}
-        <Route path="/question-bank" element={<UnderDevelopmentPage featureKey="/question-bank" />} />
         <Route path="/analytics" element={<UnderDevelopmentPage featureKey="/analytics" />} />
         <Route path="/assessments-overview" element={<UnderDevelopmentPage featureKey="/assessments-overview" />} />
         <Route path="/telemetry" element={<UnderDevelopmentPage featureKey="/telemetry" />} />

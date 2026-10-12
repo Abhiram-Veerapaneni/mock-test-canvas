@@ -33,13 +33,34 @@ const questionSchema = new mongoose.Schema(
     },
     subject: {
       type: String,
-      required: [true, 'Subject is required'],
+      default: function () {
+        return this.stream || 'General';
+      },
       trim: true
     },
     topic: {
       type: String,
       default: 'General',
       trim: true
+    },
+    stream: {
+      type: String,
+      trim: true,
+      default: 'General'
+    },
+    tags: [
+      {
+        type: String,
+        trim: true
+      }
+    ],
+    isInBank: {
+      type: Boolean,
+      default: false
+    },
+    bankAddedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
     },
     isEdited: {
       type: Boolean,

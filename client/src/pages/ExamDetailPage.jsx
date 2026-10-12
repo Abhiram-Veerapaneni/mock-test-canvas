@@ -33,6 +33,7 @@ import {
   Maximize2,
   Smartphone,
   Eye,
+  EyeOff,
   Check,
   X,
   ExternalLink,
@@ -57,13 +58,62 @@ export default function ExamDetailPage() {
   const [activeTab, setActiveTab] = useState('questions'); // 'questions' | 'proctoring' | 'attempts'
   const [lightboxImage, setLightboxImage] = useState(null);
 
+  // Client-Side View Adjustment for Answer Key
+  const [showAnswerKey, setShowAnswerKey] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('exam_show_answer_key');
+      return saved !== null ? saved === 'true' : true;
+    }
+    return true;
+  });
+  const [revealedQuestions, setRevealedQuestions] = useState(() => new Set());
+
+  const handleToggleAnswerKey = () => {
+    setShowAnswerKey((prev) => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('exam_show_answer_key', String(next));
+      }
+      return next;
+    });
+  };
+
+  const handleToggleQuestionReveal = (qId) => {
+    setRevealedQuestions((prev) => {
+      const next = new Set(prev);
+      if (next.has(qId)) next.delete(qId);
+      else next.add(qId);
+      return next;
+    });
+  };
+
   const { user, isAuthenticated, openAuthModal } = useAuthStore();
 
-  const fetchExam = useCallback(async () => {
+  // Test creator reveal status for generated tests
+  const [isGeneratedRevealed, setIsGeneratedRevealed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem(`exam_revealed_${examId}`) === 'true';
+    }
+    return false;
+  });
+  const [showRevealConfirmationModal, setShowRevealConfirmationModal] = useState(false);
+  const [isRevealingQuestions, setIsRevealingQuestions] = useState(false);
+
+  const fetchExam = useCallback(async (explicitReveal = false) => {
     try {
-      const res = await api.get(`/exams/${examId}`);
-      if (res.data?.success) setExam(res.data.exam);
-      else throw new Error('Failed to load exam');
+      const shouldReveal =
+        explicitReveal ||
+        (typeof window !== 'undefined' && sessionStorage.getItem(`exam_revealed_${examId}`) === 'true');
+      const url = shouldReveal ? `/exams/${examId}?reveal=true` : `/exams/${examId}`;
+      const res = await api.get(url);
+      if (res.data?.success) {
+        setExam(res.data.exam);
+        if (res.data.isCreator) {
+          setIsGeneratedRevealed(true);
+        }
+      } else {
+        throw new Error('Failed to load exam');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Could not load exam details.');
     } finally {
@@ -114,14 +164,54 @@ export default function ExamDetailPage() {
     navigate('/test', { state: { examId, isPractice } });
   };
 
-  const isCreator = Boolean(
+  const isOwner = Boolean(
     user && exam && (
       (exam.creatorId?._id && String(exam.creatorId._id) === String(user._id || user.id)) ||
-      (exam.creatorId && String(exam.creatorId) === String(user._id || user.id)) ||
-      user.role === 'examiner' ||
-      user.role === 'admin'
+      (exam.creatorId && String(exam.creatorId) === String(user._id || user.id))
     )
   );
+
+  const isCreator = Boolean(
+    user && exam && (
+      (!exam.isGenerated && (
+        (exam.creatorId?._id && String(exam.creatorId._id) === String(user._id || user.id)) ||
+        (exam.creatorId && String(exam.creatorId) === String(user._id || user.id)) ||
+        user.role === 'examiner' ||
+        user.role === 'admin'
+      )) ||
+      (exam.isGenerated && isOwner && isGeneratedRevealed)
+    )
+  );
+
+  const handleConfirmReveal = async () => {
+    setIsRevealingQuestions(true);
+    try {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(`exam_revealed_${examId}`, 'true');
+      }
+      setIsGeneratedRevealed(true);
+      await fetchExam(true);
+      setShowRevealConfirmationModal(false);
+      setActiveTab('questions');
+    } catch (err) {
+      console.error('Failed to reveal questions:', err);
+    } finally {
+      setIsRevealingQuestions(false);
+    }
+  };
+
+
+  const handleTogglePublic = async () => {
+    try {
+      const nextPublic = !exam.isPublic;
+      const res = await api.put(`/exams/${examId}`, { isPublic: nextPublic });
+      if (res.data?.success) {
+        setExam((prev) => ({ ...prev, isPublic: nextPublic }));
+      }
+    } catch (err) {
+      console.error('Failed to toggle public state:', err);
+    }
+  };
 
   // Official attempts count toward limit; practice attempts do not
   const officialAttempts = attempts.filter((a) => !a.isPractice);
@@ -207,11 +297,9 @@ export default function ExamDetailPage() {
     );
   }
 
-  const subjects = exam.questions
-    ? [...new Set(exam.questions.map((q) => q.subject || 'General'))]
-    : [];
-
-  const questions = exam.questions || [];
+  const validQuestions = (exam.questions || []).filter(Boolean);
+  const subjects = [...new Set(validQuestions.map((q) => q.subject || 'General'))];
+  const questions = validQuestions;
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col">
@@ -252,6 +340,22 @@ export default function ExamDetailPage() {
                   <div className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
                     <ShieldCheck className="w-3.5 h-3.5" />
                     <span>AI Proctored</span>
+                  </div>
+                )}
+
+                {exam.isGenerated && (
+                  <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                    <span>{exam.isPublic ? 'Public' : 'Private'}</span>
+                    {isOwner && (
+                      <button
+                        type="button"
+                        onClick={handleTogglePublic}
+                        className="text-[11px] text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 underline cursor-pointer"
+                        title="Toggle visibility"
+                      >
+                        {exam.isPublic ? '(make private)' : '(make public)'}
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -418,8 +522,32 @@ export default function ExamDetailPage() {
                   )}
                 </div>
               )}
+
             </div>
           </div>
+
+          {/* Test Creator Notice Banner for Generated Practice Tests */}
+          {exam.isGenerated && isOwner && !isGeneratedRevealed && (
+            <div className="p-3.5 rounded-lg bg-zinc-50 dark:bg-zinc-850 border border-zinc-200 dark:border-zinc-750 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 text-zinc-700 dark:text-zinc-300">
+                <Sliders className="w-4 h-4 text-zinc-500 shrink-0" />
+                <div>
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">Test Creator Notice: </span>
+                  <span className="text-zinc-600 dark:text-zinc-400">
+                    Questions and solutions are kept hidden to protect your own practice attempt. Need to preview questions before conducting or modify in Studio?
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowRevealConfirmationModal(true)}
+                className="btn-secondary text-xs py-1.5 px-3 shrink-0 self-start sm:self-auto cursor-pointer flex items-center gap-1.5 font-medium"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>Inspect Questions & Modify</span>
+              </button>
+            </div>
+          )}
 
           {/* Scheduled Examination Status Banner */}
           {isScheduled && (
@@ -544,14 +672,49 @@ export default function ExamDetailPage() {
                 </button>
               </div>
 
-              <button
-                type="button"
-                onClick={() => navigate(`/create-test?examId=${examId}`)}
-                className="shrink-0 flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Modify in Studio</span>
-              </button>
+              <div className="flex items-center gap-3 shrink-0">
+                {/* Client-Side View Adjustment for Answer Key */}
+                <button
+                  type="button"
+                  onClick={handleToggleAnswerKey}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-colors cursor-pointer border ${
+                    showAnswerKey
+                      ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border-zinc-300 dark:border-zinc-700 font-medium'
+                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100'
+                  }`}
+                  title={showAnswerKey ? 'Hide answers for unassisted self-testing' : 'Display answer key and solutions'}
+                >
+                  {showAnswerKey ? <EyeOff className="w-3.5 h-3.5 text-zinc-500" /> : <Eye className="w-3.5 h-3.5 text-zinc-500" />}
+                  <span>{showAnswerKey ? 'Hide Answer Key' : 'Show Answer Key'}</span>
+                </button>
+
+                {exam.isGenerated && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        sessionStorage.removeItem(`exam_revealed_${examId}`);
+                      }
+                      setIsGeneratedRevealed(false);
+                      fetchExam(false);
+                    }}
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                    title="Re-lock questions to take practice test without answer spoilers"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Lock for Practice</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => navigate(`/create-test?examId=${examId}`)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Modify in Studio</span>
+                </button>
+              </div>
             </div>
 
             {/* TAB 1: Questions & Answer Key */}
@@ -573,12 +736,14 @@ export default function ExamDetailPage() {
                   </div>
                 ) : (
                   questions.map((q, idx) => {
+                    const qId = q._id ? q._id.toString() : String(idx);
                     const isNAT = q.type === 'NAT';
                     const correctAnswers = q.correctAnswers || q.correctAnswer || [];
+                    const isRevealed = showAnswerKey || revealedQuestions.has(qId);
 
                     return (
                       <div
-                        key={q._id || idx}
+                        key={qId}
                         className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 space-y-4"
                       >
                         {/* Question Card Header */}
@@ -603,9 +768,20 @@ export default function ExamDetailPage() {
                             )}
                           </div>
 
-                          <div className="text-xs text-zinc-400">
-                            {q.subject && <span>{q.subject}</span>}
-                            {q.topic && <span> • {q.topic}</span>}
+                          <div className="flex items-center gap-3 text-xs">
+                            <div className="text-zinc-400">
+                              {q.subject && <span>{q.subject}</span>}
+                              {q.topic && <span> • {q.topic}</span>}
+                            </div>
+                            {!showAnswerKey && (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleQuestionReveal(qId)}
+                                className="text-[11px] text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 underline cursor-pointer"
+                              >
+                                {isRevealed ? 'Hide Answer' : 'Reveal Answer'}
+                              </button>
+                            )}
                           </div>
                         </div>
 
@@ -638,10 +814,11 @@ export default function ExamDetailPage() {
                             {q.options.map((opt, optIdx) => {
                               const optText = typeof opt === 'object' ? opt.text : opt;
                               const optImg = typeof opt === 'object' ? opt.image : null;
-                              const isCorrect =
+                              const isCorrect = isRevealed && (
                                 (Array.isArray(correctAnswers) && (correctAnswers.includes(optIdx) || correctAnswers.includes(optText))) ||
                                 correctAnswers === optIdx ||
-                                correctAnswers === optText;
+                                correctAnswers === optText
+                              );
 
                               return (
                                 <div
@@ -691,18 +868,31 @@ export default function ExamDetailPage() {
 
                         {/* NAT correct range */}
                         {isNAT && (
-                          <div className="p-3 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-900/40 text-xs">
-                            <span className="font-medium text-emerald-800 dark:text-emerald-300 mr-2">
-                              Numerical Correct Range:
-                            </span>
-                            <span className="font-mono text-zinc-800 dark:text-zinc-200">
-                              {Array.isArray(correctAnswers) ? correctAnswers.join(' to ') : String(correctAnswers)}
-                            </span>
-                          </div>
+                          isRevealed ? (
+                            <div className="p-3 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-900/40 text-xs">
+                              <span className="font-medium text-emerald-800 dark:text-emerald-300 mr-2">
+                                Numerical Correct Range:
+                              </span>
+                              <span className="font-mono text-zinc-800 dark:text-zinc-200">
+                                {Array.isArray(correctAnswers) ? correctAnswers.join(' to ') : String(correctAnswers)}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-400 italic flex items-center justify-between">
+                              <span>Numerical Answer (Answer key hidden)</span>
+                              <button
+                                type="button"
+                                onClick={() => handleToggleQuestionReveal(qId)}
+                                className="text-[11px] text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 underline cursor-pointer"
+                              >
+                                Reveal
+                              </button>
+                            </div>
+                          )
                         )}
 
                         {/* Pedagogical Explanation */}
-                        {q.explanation && (
+                        {isRevealed && q.explanation && (
                           <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs space-y-1">
                             <div className="flex items-center gap-1.5 font-medium text-zinc-700 dark:text-zinc-300">
                               <HelpCircle className="w-3.5 h-3.5" />
@@ -1069,6 +1259,66 @@ export default function ExamDetailPage() {
             examTitle={exam.title}
             onClose={() => setIsLiveMonitorOpen(false)}
           />
+        )}
+
+        {/* Confirmation Modal for Generated Practice Test Creators */}
+        {showRevealConfirmationModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl w-full max-w-md shadow-2xl p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                  <AlertCircle className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                    Reveal Questions & Solutions?
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    This practice exam was generated from the question bank. Revealing the questions will expose the statements, answer keys, and explanations.
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/60 text-xs text-zinc-600 dark:text-zinc-300 space-y-1.5">
+                <div className="font-medium text-zinc-800 dark:text-zinc-200">Before you continue:</div>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  • If you plan to <strong>take this test yourself</strong>, viewing the questions beforehand will spoil your test practice.
+                </p>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  • If you are <strong>conducting this test for others</strong> or want to <strong>modify it in Studio</strong>, proceed to unlock authoring mode.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowRevealConfirmationModal(false)}
+                  disabled={isRevealingQuestions}
+                  className="btn-secondary text-xs py-2 px-3.5 cursor-pointer"
+                >
+                  Keep Hidden (Take Test First)
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmReveal}
+                  disabled={isRevealingQuestions}
+                  className="btn-primary text-xs py-2 px-3.5 flex items-center gap-1.5 cursor-pointer"
+                >
+                  {isRevealingQuestions ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Revealing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Reveal Questions & Studio Access</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </div>

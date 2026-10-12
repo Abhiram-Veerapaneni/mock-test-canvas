@@ -21,6 +21,7 @@ export function gradeAttempt(answers = {}, questions = [], markingScheme = {}) {
   let unanswered = 0;
 
   for (const question of questions) {
+    if (!question || !question._id) continue;
     const qId = question._id.toString();
     const selected = answers[qId]; // number[] | undefined
     const correctAnswers = question.correctAnswers ?? [];

@@ -4,6 +4,8 @@ import { User } from '../models/User.model.js';
 import { Attempt } from '../models/Attempt.model.js';
 import cloudinary, { isCloudinaryConfigured } from '../config/cloudinary.js';
 
+const escapeRegex = (str) => (str ? str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '');
+
 /**
  * @desc   Upload a question or option image to Cloudinary
  * @route  POST /api/exams/upload-media
@@ -114,24 +116,36 @@ export const createExam = async (req, res) => {
     let questionIds = [];
     if (questionsArray.length > 0) {
       // Validate and format questions for insertion
-      const questionDocs = questionsArray.map((q) => ({
-        questionText: q.questionText || '',
-        questionType: q.questionType || 'MCQ',
-        imageAttachment: q.imageAttachment || '',
-        options: Array.isArray(q.options)
-          ? q.options.map((opt) => {
-              if (typeof opt === 'object' && opt !== null) {
-                return { text: opt.text || '', image: opt.image || '' };
-              }
-              return opt;
-            })
-          : [],
-        correctAnswers: Array.isArray(q.correctAnswers) ? q.correctAnswers : [],
-        explanation: q.explanation || '',
-        subject: q.subject || 'General',
-        topic: q.topic || 'General',
-        isEdited: false
-      }));
+      const questionDocs = questionsArray.map((q) => {
+        const contribute = Boolean(q.contributeToBank || q.isInBank);
+        const streamVal = q.stream || q.subject || 'General';
+        const tagsVal = Array.isArray(q.tags)
+          ? q.tags
+          : (q.topic && q.topic !== 'General' ? [q.topic] : []);
+
+        return {
+          questionText: q.questionText || '',
+          questionType: q.questionType || 'MCQ',
+          imageAttachment: q.imageAttachment || '',
+          options: Array.isArray(q.options)
+            ? q.options.map((opt) => {
+                if (typeof opt === 'object' && opt !== null) {
+                  return { text: opt.text || '', image: opt.image || '' };
+                }
+                return opt;
+              })
+            : [],
+          correctAnswers: Array.isArray(q.correctAnswers) ? q.correctAnswers : [],
+          explanation: q.explanation || '',
+          subject: streamVal,
+          topic: (tagsVal.length > 0 ? tagsVal[0] : q.topic) || 'General',
+          stream: streamVal,
+          tags: tagsVal,
+          isInBank: contribute,
+          bankAddedBy: contribute ? req.user?._id : undefined,
+          isEdited: false
+        };
+      });
 
       // Bulk insert questions to obtain IDs
       const insertedQuestions = await Question.insertMany(questionDocs);
@@ -222,35 +236,41 @@ export const getAllExams = async (req, res) => {
       query.category = category.toUpperCase();
     }
 
-    if (search) {
-      query.title = { $regex: search, $options: 'i' };
+    if (search && search.trim()) {
+      query.title = { $regex: escapeRegex(search.trim()), $options: 'i' };
     }
 
-    // Status filter:
-    // If status parameter is explicitly passed, use it.
-    // Otherwise, show published exams + any drafts created by the current authenticated user.
+    // Status and visibility filter:
+    // Public catalog only includes published, public exams (not private generated tests).
+    // Authenticated users also see their own exams (drafts and private generated practice tests).
+    const publicCondition = {
+      status: 'published',
+      $or: [
+        { isPublic: true },
+        { isPublic: { $exists: false }, isGenerated: { $ne: true } }
+      ]
+    };
+
     if (status) {
       query.status = status;
     } else if (req.user?._id) {
       query.$or = [
-        { status: 'published' },
-        { status: { $exists: false } },
+        publicCondition,
         { creatorId: req.user._id }
       ];
     } else {
       query.$or = [
-        { status: 'published' },
-        { status: { $exists: false } }
+        publicCondition
       ];
     }
 
-    const pageNumber = parseInt(page, 10);
-    const limitNumber = parseInt(limit, 10);
+    const pageNumber = Math.max(1, parseInt(page, 10) || 1);
+    const limitNumber = Math.max(1, Math.min(100, parseInt(limit, 10) || 12));
     const skip = (pageNumber - 1) * limitNumber;
 
     const total = await Exam.countDocuments(query);
     const exams = await Exam.find(query)
-      .select('title description category status durationMinutes totalMarks maxAttempts markingScheme proctorSettings allowPracticeMode allowReviewResponses schedule questions createdAt creatorId')
+      .select('title description category status durationMinutes totalMarks maxAttempts markingScheme proctorSettings allowPracticeMode allowReviewResponses schedule questions createdAt creatorId isGenerated isPublic examType')
       .populate('creatorId', 'name')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -287,6 +307,9 @@ export const getAllExams = async (req, res) => {
       schedule: exam.schedule || { isScheduled: false },
       questionCount: exam.questions?.length || 0,
       userAttemptCount: userAttemptMap[exam._id.toString()] || 0,
+      isGenerated: Boolean(exam.isGenerated),
+      isPublic: exam.isPublic !== false,
+      examType: exam.examType || (exam.isGenerated ? 'practice' : 'official'),
       createdAt: exam.createdAt
     }));
 
@@ -308,7 +331,7 @@ export const getAllExams = async (req, res) => {
 
 /**
  * @desc    Get exam by ID and populated questions
- *          (Includes correctAnswers and explanation for the creator; excludes them for candidates)
+ *          (Includes correctAnswers and explanation ONLY for authoring creators; excludes them for candidates and all generated practice tests)
  * @route   GET /api/exams/:id
  * @access  Public / Protected
  */
@@ -317,8 +340,8 @@ export const getExamById = async (req, res) => {
     const { id } = req.params;
     const userId = req.user?._id;
 
-    // First fetch creatorId to check authorization
-    const metaExam = await Exam.findById(id).select('creatorId');
+    // First fetch metadata to check authorization
+    const metaExam = await Exam.findById(id).select('creatorId isGenerated isPublic examType');
     if (!metaExam) {
       return res.status(404).json({
         success: false,
@@ -326,26 +349,46 @@ export const getExamById = async (req, res) => {
       });
     }
 
-    const isCreator = Boolean(
+    const isOwner = Boolean(
       userId && metaExam.creatorId && metaExam.creatorId.toString() === userId.toString()
     );
 
-    let exam;
-    if (isCreator) {
-      // Creator gets all question details (including correct answers, explanation, isEdited)
-      exam = await Exam.findById(id).populate('questions');
-    } else {
-      // Candidates do not receive correctAnswers or explanation
-      exam = await Exam.findById(id).populate({
-        path: 'questions',
-        select: '-correctAnswers -explanation'
+    // Private assessment access control: if test is private, only owner can view
+    if (metaExam.isPublic === false && !isOwner) {
+      return res.status(403).json({
+        success: false,
+        message: 'This practice test is private to its creator and has not been made public.'
       });
     }
 
+    // Authoring mode vs Player mode:
+    // For standard exams, creator/owner gets authoring mode.
+    // For generated practice tests (isGenerated === true), default to candidate mode so the user doesn't accidentally spoil answers if self-testing.
+    // However, if the owner explicitly requests reveal=true (confirmed via modal to view/modify questions before conducting),
+    // provide full authoring access with populated answers and explanations!
+    const wantReveal = req.query.reveal === 'true' || req.query.authoring === 'true';
+    const isAuthoringCreator = isOwner && (!metaExam.isGenerated || wantReveal);
+
+    let exam;
+    if (isAuthoringCreator) {
+      // Authoring creator in studio gets all question details (including correct answers, explanation, isEdited)
+      exam = await Exam.findById(id).populate('questions');
+    } else {
+      // Candidates and ALL generated test takers NEVER receive correctAnswers, explanation, tags, stream, or bankAddedBy
+      exam = await Exam.findById(id).populate({
+        path: 'questions',
+        select: '-correctAnswers -explanation -tags -stream -bankAddedBy'
+      });
+    }
+
+    const examObj = exam.toObject();
+    examObj.questions = (examObj.questions || []).filter(Boolean);
+
     return res.status(200).json({
       success: true,
-      isCreator,
-      exam
+      isCreator: isAuthoringCreator,
+      isOwner,
+      exam: examObj
     });
   } catch (error) {
     console.error('Get exam by ID error:', error);
@@ -424,6 +467,9 @@ export const updateExam = async (req, res) => {
     if (allowReviewResponses !== undefined) {
       existingExam.allowReviewResponses = Boolean(allowReviewResponses);
     }
+    if (req.body.isPublic !== undefined) {
+      existingExam.isPublic = Boolean(req.body.isPublic);
+    }
     if (schedule !== undefined) {
       existingExam.schedule = {
         isScheduled: Boolean(schedule?.isScheduled),
@@ -477,7 +523,12 @@ export const updateExam = async (req, res) => {
           existingQ.correctAnswers = Array.isArray(q.correctAnswers) ? q.correctAnswers : [];
           existingQ.explanation = q.explanation || '';
           existingQ.subject = q.subject || 'General';
-          existingQ.topic = q.topic || 'General';
+          if (q.stream) existingQ.stream = q.stream;
+          if (Array.isArray(q.tags)) existingQ.tags = q.tags;
+          if (q.contributeToBank || q.isInBank) {
+            existingQ.isInBank = true;
+            if (!existingQ.bankAddedBy) existingQ.bankAddedBy = userId;
+          }
 
           if (shouldTagEdited) {
             existingQ.isEdited = true;
@@ -489,6 +540,12 @@ export const updateExam = async (req, res) => {
         } else {
           // Brand new question added during edit
           const isNewEdited = wasPublished || q.isEdited;
+          const contribute = Boolean(q.contributeToBank || q.isInBank);
+          const streamVal = q.stream || q.subject || 'General';
+          const tagsVal = Array.isArray(q.tags)
+            ? q.tags
+            : (q.topic && q.topic !== 'General' ? [q.topic] : []);
+
           const newQ = await Question.create({
             questionText: q.questionText || '',
             questionType: q.questionType || 'MCQ',
@@ -496,8 +553,12 @@ export const updateExam = async (req, res) => {
             options: formattedOptions,
             correctAnswers: Array.isArray(q.correctAnswers) ? q.correctAnswers : [],
             explanation: q.explanation || '',
-            subject: q.subject || 'General',
-            topic: q.topic || 'General',
+            subject: streamVal,
+            topic: (tagsVal.length > 0 ? tagsVal[0] : q.topic) || 'General',
+            stream: streamVal,
+            tags: tagsVal,
+            isInBank: contribute,
+            bankAddedBy: contribute ? userId : undefined,
             isEdited: isNewEdited,
             editedAt: isNewEdited ? new Date() : undefined
           });

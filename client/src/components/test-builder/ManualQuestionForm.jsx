@@ -23,6 +23,10 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
   const [imageAttachment, setImageAttachment] = useState('');
   const [subject, setSubject] = useState('Mathematics');
   const [topic, setTopic] = useState('');
+  const [stream, setStream] = useState('Mathematics');
+  const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState('');
+  const [streamSuggestions, setStreamSuggestions] = useState([]);
   const [options, setOptions] = useState([
     { text: 'Option A with $\\frac{a}{b}$ formula', image: '' },
     { text: 'Option B with $\\sqrt{x}$', image: '' },
@@ -43,6 +47,30 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
 
   const questionFileRef = useRef(null);
   const optionFileRefs = useRef({});
+
+  // Fetch streams for datalist
+  React.useEffect(() => {
+    api.get('/questions/meta/streams')
+      .then((res) => {
+        if (res.data?.success) setStreamSuggestions(res.data.streams || []);
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  const handleAddTag = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = tagInput.trim().replace(/^,+|,+$/g, '');
+      if (val && !tags.includes(val)) {
+        setTags([...tags, val]);
+      }
+      setTagInput('');
+    }
+  };
+
+  const handleRemoveTag = (t) => {
+    setTags(tags.filter((item) => item !== t));
+  };
 
   // Question Image Upload
   const handleQuestionImageUpload = async (file) => {
@@ -207,12 +235,17 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
       finalCorrectAnswers = [minVal, maxVal];
     }
 
+    const cleanStream = stream.trim() || subject.trim() || 'General';
+    const cleanTags = tags.length > 0 ? tags : (topic.trim() ? [topic.trim()] : []);
+
     const newQuestion = {
       questionText: questionText.trim(),
       questionType,
       imageAttachment: imageAttachment.trim(),
-      subject: subject.trim(),
-      topic: topic.trim() || 'General',
+      subject: cleanStream,
+      topic: cleanTags.length > 0 ? cleanTags[0] : (topic.trim() || 'General'),
+      stream: cleanStream,
+      tags: cleanTags,
       options: questionType === 'NAT' ? [] : options.map((o) => ({
         text: o.text.trim(),
         image: o.image || ''
@@ -227,6 +260,8 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
     setQuestionText('');
     setImageAttachment('');
     setTopic('');
+    setTags([]);
+    setTagInput('');
     setExplanation('');
     setOptions([
       { text: '', image: '' },
@@ -355,6 +390,59 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
               placeholder="e.g. Definite Integrals"
               className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
             />
+          </div>
+        </div>
+
+        {/* Phase 8.4: Question Bank Stream & Tags Fields */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg bg-zinc-50/70 dark:bg-zinc-850/50 border border-zinc-200/60 dark:border-zinc-750">
+          <div>
+            <label className="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              Stream (Bank Category)
+            </label>
+            <input
+              list="manual-form-streams"
+              type="text"
+              value={stream}
+              onChange={(e) => setStream(e.target.value)}
+              placeholder="e.g. Physics, Mathematics"
+              className="w-full px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400"
+            />
+            <datalist id="manual-form-streams">
+              {streamSuggestions.map((st) => (
+                <option key={st} value={st} />
+              ))}
+            </datalist>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+              Tags (Press Enter or comma)
+            </label>
+            <div className="flex flex-wrap items-center gap-1 p-1 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md min-h-[30px]">
+              {tags.map((tg) => (
+                <span
+                  key={tg}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[10px]"
+                >
+                  <span>{tg}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTag(tg)}
+                    className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleAddTag}
+                placeholder={tags.length === 0 ? "Add tags..." : ""}
+                className="flex-1 min-w-[70px] bg-transparent text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none px-1"
+              />
+            </div>
           </div>
         </div>
 

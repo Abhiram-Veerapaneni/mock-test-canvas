@@ -87,11 +87,6 @@ export default function Navbar() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-3">
-          {/* Status Indicator (Subtle 6px dot, not a giant glowing badge) */}
-          <div className="hidden lg:flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span>Proctoring Active</span>
-          </div>
 
           {isAuthenticated && <NotificationBell />}
           <ThemeToggle />

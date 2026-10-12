@@ -24,7 +24,9 @@ export const useExamStore = create((set, get) => ({
 
   // Initialize exam session with localStorage persistence
   initExam: (examData) => {
-    if (!examData || !examData.questions || examData.questions.length === 0) return;
+    if (!examData) return;
+    const validQuestions = (examData.questions || []).filter(Boolean);
+    if (validQuestions.length === 0) return;
 
     const storageKey = getStorageKey(examData._id);
     const savedSessionRaw = localStorage.getItem(storageKey);
@@ -35,7 +37,7 @@ export const useExamStore = create((set, get) => ({
     let initialIndex = 0;
 
     // Default status for all questions is NOT_VISITED except the first one which becomes NOT_ANSWERED
-    examData.questions.forEach((q, idx) => {
+    validQuestions.forEach((q, idx) => {
       initialStatus[q._id] = idx === 0 ? 'NOT_ANSWERED' : 'NOT_VISITED';
     });
 
@@ -70,7 +72,7 @@ export const useExamStore = create((set, get) => ({
 
     set({
       exam: examData,
-      questions: examData.questions,
+      questions: validQuestions,
       currentIndex: initialIndex,
       answers: initialAnswers,
       questionStatus: initialStatus,
