@@ -34,6 +34,7 @@ export default function ExamResponsesPage() {
   const [error, setError] = useState(null);
   const [errorDetails, setErrorDetails] = useState(null);
   const [filterType, setFilterType] = useState('ALL'); // 'ALL' | 'CORRECT' | 'INCORRECT' | 'UNANSWERED'
+  const [activeQuestionIndex, setActiveQuestionIndex] = useState(1);
   const [lightboxImage, setLightboxImage] = useState(null);
 
   const fetchReview = useCallback(async () => {
@@ -96,6 +97,7 @@ export default function ExamResponsesPage() {
   };
 
   const scrollToQuestion = (idx) => {
+    setActiveQuestionIndex(idx);
     const el = document.getElementById(`review-question-${idx}`);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -104,11 +106,11 @@ export default function ExamResponsesPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#edf2f9] dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 flex flex-col">
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col">
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600 dark:text-blue-400 mb-3" />
-          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Retrieving verified response sheet & solutions...</p>
+          <Loader2 className="w-6 h-6 animate-spin text-zinc-600 dark:text-zinc-400 mb-3" />
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">Retrieving verified response sheet & solutions...</p>
         </div>
       </div>
     );
@@ -116,19 +118,19 @@ export default function ExamResponsesPage() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-[#edf2f9] dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 flex flex-col">
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col">
         <Navbar />
         <main className="flex-1 max-w-2xl w-full mx-auto px-4 py-16 flex flex-col items-center justify-center text-center">
-          <div className="card-base p-8 space-y-4 shadow-xl border border-slate-200/80 dark:border-[#334155] w-full">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto">
-              <AlertCircle className="w-6 h-6" />
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-8 space-y-4 shadow-none w-full">
+            <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/50 flex items-center justify-center mx-auto">
+              <AlertCircle className="w-5 h-5" />
             </div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Response Sheet Unavailable</h2>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-md mx-auto">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Response Sheet Unavailable</h2>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-md mx-auto">
               {error}
             </p>
             {errorDetails?.scheduledEndTime && (
-              <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 text-xs text-blue-700 dark:text-blue-300 font-mono">
+              <div className="p-3 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-700 dark:text-zinc-300 font-mono">
                 Scheduled Release Time: {new Date(errorDetails.scheduledEndTime).toLocaleString()}
               </div>
             )}
@@ -150,7 +152,7 @@ export default function ExamResponsesPage() {
   const answeredCount = (attempt.correct || 0) + (attempt.incorrect || 0);
 
   return (
-    <div className="min-h-screen bg-[#edf2f9] dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col transition-colors duration-200">
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -167,58 +169,57 @@ export default function ExamResponsesPage() {
         </div>
 
         {/* Hero Performance Header Banner */}
-        <div className="rounded-2xl p-6 sm:p-7 text-white shadow-lg relative overflow-hidden bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 border border-blue-500/30">
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 space-y-6 shadow-none">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-white text-[11px] font-semibold uppercase tracking-wider backdrop-blur-xs">
-                  <Award className="w-3.5 h-3.5 text-yellow-300" />
-                  <span>Response Sheet & Key</span>
+                <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">
+                  Response Sheet & Solutions
                 </span>
                 {attempt.isPractice ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-400/20 text-amber-200 border border-amber-300/30 text-[11px] font-semibold">
-                    <FlaskConical className="w-3.5 h-3.5" />
-                    <span>Practice Attempt</span>
+                  <span className="inline-flex items-center gap-1 text-xs text-zinc-500">
+                    <FlaskConical className="w-3 h-3 text-zinc-400" />
+                    <span>Practice Session</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-300/30 text-[11px] font-semibold">
-                    <ShieldCheck className="w-3.5 h-3.5" />
+                  <span className="inline-flex items-center gap-1 text-xs text-zinc-700 dark:text-zinc-300 font-medium">
+                    <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                     <span>Official Proctored</span>
                   </span>
                 )}
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold font-display tracking-tight text-white">
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
                 {exam.title}
               </h1>
-              <p className="text-xs text-blue-100 flex items-center gap-3 flex-wrap">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-3 flex-wrap">
                 <span>Submitted: {formatDate(attempt.submittedAt)}</span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
-                  Time Taken: <strong>{formatSeconds(attempt.timeTakenSeconds)}</strong>
+                  <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                  Time Taken: <strong className="text-zinc-700 dark:text-zinc-300 font-medium">{formatSeconds(attempt.timeTakenSeconds)}</strong>
                 </span>
               </p>
             </div>
 
             {/* Score Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-black/20 p-4 rounded-xl border border-white/10 backdrop-blur-xs text-center min-w-[320px]">
-              <div>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-200">Score</span>
-                <span className="text-2xl font-extrabold text-white block mt-0.5">
-                  {attempt.score} <span className="text-xs font-normal text-blue-200">/ {exam.totalMarks}</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-zinc-200 dark:divide-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 text-center min-w-[320px]">
+              <div className="p-3.5">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">Score</span>
+                <span className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 tabular-nums block mt-0.5">
+                  {attempt.score} <span className="text-xs font-normal text-zinc-400">/ {exam.totalMarks}</span>
                 </span>
               </div>
-              <div className="border-l border-white/15">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-200">Accuracy</span>
-                <span className="text-2xl font-extrabold text-white block mt-0.5">{attempt.accuracy}%</span>
+              <div className="p-3.5">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">Accuracy</span>
+                <span className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 tabular-nums block mt-0.5">{attempt.accuracy}%</span>
               </div>
-              <div className="border-l border-white/15">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300">Correct</span>
-                <span className="text-2xl font-extrabold text-white block mt-0.5">{attempt.correct}</span>
+              <div className="p-3.5">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">Correct</span>
+                <span className="text-2xl font-semibold tracking-tight text-emerald-600 dark:text-emerald-400 tabular-nums block mt-0.5">{attempt.correct}</span>
               </div>
-              <div className="border-l border-white/15">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-rose-300">Incorrect</span>
-                <span className="text-2xl font-extrabold text-white block mt-0.5">{attempt.incorrect}</span>
+              <div className="p-3.5">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-400">Incorrect</span>
+                <span className="text-2xl font-semibold tracking-tight text-rose-600 dark:text-rose-400 tabular-nums block mt-0.5">{attempt.incorrect}</span>
               </div>
             </div>
           </div>
@@ -227,11 +228,11 @@ export default function ExamResponsesPage() {
         {/* Main Content Layout: Navigator Sidebar + Question Review Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
           {/* Left Column: Interactive Question Palette & Filters */}
-          <div className="lg:col-span-1 space-y-5 sticky top-20">
+          <div className="lg:col-span-1 space-y-4 sticky top-20">
             {/* Filter Card */}
-            <div className="card-base p-4 space-y-3 shadow-xs">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Filter className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 space-y-3 shadow-none">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-zinc-400" />
                 <span>Filter Questions</span>
               </span>
 
@@ -239,10 +240,10 @@ export default function ExamResponsesPage() {
                 <button
                   type="button"
                   onClick={() => setFilterType('ALL')}
-                  className={`p-2 rounded-lg font-semibold text-center border transition-all ${
+                  className={`p-2 rounded-md font-medium text-center border transition-colors cursor-pointer ${
                     filterType === 'ALL'
-                      ? 'bg-blue-600 text-white border-blue-600'
-                      : 'bg-slate-50 dark:bg-[#151f32] text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-[#334155]'
+                      ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 dark:border-zinc-100'
+                      : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-850'
                   }`}
                 >
                   All ({questions.length})
@@ -250,10 +251,10 @@ export default function ExamResponsesPage() {
                 <button
                   type="button"
                   onClick={() => setFilterType('CORRECT')}
-                  className={`p-2 rounded-lg font-semibold text-center border transition-all ${
+                  className={`p-2 rounded-md font-medium text-center border transition-colors cursor-pointer ${
                     filterType === 'CORRECT'
                       ? 'bg-emerald-600 text-white border-emerald-600'
-                      : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20'
+                      : 'bg-emerald-50/60 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200/50 dark:border-emerald-900/50 hover:bg-emerald-100/50'
                   }`}
                 >
                   Correct ({attempt.correct})
@@ -261,10 +262,10 @@ export default function ExamResponsesPage() {
                 <button
                   type="button"
                   onClick={() => setFilterType('INCORRECT')}
-                  className={`p-2 rounded-lg font-semibold text-center border transition-all ${
+                  className={`p-2 rounded-md font-medium text-center border transition-colors cursor-pointer ${
                     filterType === 'INCORRECT'
                       ? 'bg-rose-600 text-white border-rose-600'
-                      : 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20'
+                      : 'bg-rose-50/60 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200/50 dark:border-rose-900/50 hover:bg-rose-100/50'
                   }`}
                 >
                   Incorrect ({attempt.incorrect})
@@ -272,10 +273,10 @@ export default function ExamResponsesPage() {
                 <button
                   type="button"
                   onClick={() => setFilterType('UNANSWERED')}
-                  className={`p-2 rounded-lg font-semibold text-center border transition-all ${
+                  className={`p-2 rounded-md font-medium text-center border transition-colors cursor-pointer ${
                     filterType === 'UNANSWERED'
-                      ? 'bg-slate-700 text-white border-slate-700'
-                      : 'bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20'
+                      ? 'bg-zinc-800 text-white border-zinc-800'
+                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-200/60'
                   }`}
                 >
                   Skipped ({attempt.unanswered})
@@ -284,51 +285,83 @@ export default function ExamResponsesPage() {
             </div>
 
             {/* Question Quick Jump Grid */}
-            <div className="card-base p-4 space-y-3 shadow-xs">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
-                Question Navigator
-              </span>
-              <div className="grid grid-cols-5 sm:grid-cols-6 lg:grid-cols-5 gap-1.5">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-lg p-4 space-y-4 shadow-none">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center justify-between">
+                <span>Question Navigator</span>
+                <span className="font-mono text-zinc-400 dark:text-zinc-500 font-normal">
+                  {questions.length} Questions
+                </span>
+              </div>
+
+              <div className="grid grid-cols-5 gap-2.5 place-items-center">
                 {questions.map((q, idx) => {
-                  let bgStyle = 'bg-slate-100 text-slate-600 dark:bg-[#151f32] dark:text-slate-400 border-slate-200/80 dark:border-[#334155]';
+                  const qNum = idx + 1;
+                  const isCurrent = activeQuestionIndex === qNum;
+                  const isMarked = q.isMarkedForReview || q.markedForReview;
+
+                  let colorClass = 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700';
                   if (q.isCorrect) {
-                    bgStyle = 'bg-emerald-500 text-white border-emerald-600';
+                    colorClass = 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm';
                   } else if (q.isAnswered && !q.isCorrect) {
-                    bgStyle = 'bg-rose-500 text-white border-rose-600';
+                    colorClass = 'bg-rose-500 text-white hover:bg-rose-600 shadow-sm';
+                  } else if (isMarked) {
+                    colorClass = 'bg-amber-500 text-white hover:bg-amber-600 shadow-sm';
                   }
 
                   return (
                     <button
                       key={q.questionId || idx}
                       type="button"
-                      onClick={() => scrollToQuestion(idx + 1)}
-                      className={`h-8 rounded-lg font-bold text-xs border flex items-center justify-center cursor-pointer transition-transform hover:scale-105 ${bgStyle}`}
+                      onClick={() => scrollToQuestion(qNum)}
+                      className={`h-9 w-9 rounded-md font-mono text-xs font-semibold relative flex items-center justify-center cursor-pointer select-none focus:outline-none hover:-translate-y-0.5 hover:shadow-sm active:translate-y-0 active:scale-95 transition-all duration-150 ease-out ${colorClass}`}
+                      title={`Question ${qNum}: ${q.isCorrect ? 'Correct' : q.isAnswered ? 'Incorrect' : 'Unattempted'}`}
                     >
-                      {idx + 1}
+                      <span>{qNum}</span>
+                      {isCurrent && (
+                        <span
+                          className={`absolute top-1 left-1/2 -translate-x-1/2 h-0.5 w-3.5 rounded-full ${
+                            q.isCorrect || (q.isAnswered && !q.isCorrect) || isMarked
+                              ? 'bg-white/90'
+                              : 'bg-zinc-500 dark:bg-zinc-400'
+                          }`}
+                        />
+                      )}
                     </button>
                   );
                 })}
               </div>
 
-              {/* Legend */}
-              <div className="pt-2 border-t border-slate-100 dark:border-[#334155] grid grid-cols-3 gap-1 text-[10px] text-slate-500 dark:text-slate-400 text-center">
-                <span className="flex items-center justify-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Correct
-                </span>
-                <span className="flex items-center justify-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Incorrect
-                </span>
-                <span className="flex items-center justify-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-full bg-slate-400"></span> Skipped
-                </span>
+              {/* Legend: small 8px dots */}
+              <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex flex-col gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0" />
+                    <span>Correct</span>
+                  </div>
+                  <span className="font-mono tabular-nums text-zinc-400">{attempt.correct ?? 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                    <span>Incorrect</span>
+                  </div>
+                  <span className="font-mono tabular-nums text-zinc-400">{attempt.incorrect ?? 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full border border-zinc-400 bg-zinc-100 dark:bg-zinc-800 shrink-0" />
+                    <span>Unattempted</span>
+                  </div>
+                  <span className="font-mono tabular-nums text-zinc-400">{attempt.unanswered ?? 0}</span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Right Column: Detailed Question Solution Cards */}
-          <div className="lg:col-span-3 space-y-5">
+          <div className="lg:col-span-3 space-y-4">
             {filteredQuestions.length === 0 ? (
-              <div className="card-base p-12 text-center text-slate-400 text-xs">
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-12 text-center text-zinc-400 text-xs shadow-none">
                 No questions match the current filter selection.
               </div>
             ) : (
@@ -340,28 +373,22 @@ export default function ExamResponsesPage() {
                   <div
                     key={q.questionId}
                     id={`review-question-${q.questionIndex}`}
-                    className={`card-base p-5 sm:p-6 space-y-4 shadow-sm border transition-all ${
-                      isCorrect
-                        ? 'border-emerald-500/30 dark:border-emerald-500/20'
-                        : isSkipped
-                        ? 'border-slate-200/80 dark:border-[#334155]'
-                        : 'border-rose-500/30 dark:border-rose-500/20'
-                    }`}
+                    className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 sm:p-6 space-y-4 shadow-none transition-colors"
                   >
                     {/* Question Header */}
-                    <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-[#334155] pb-3">
+                    <div className="flex items-center justify-between gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-3">
                       <div className="flex items-center gap-2.5">
-                        <span className="w-7 h-7 rounded-lg bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+                        <span className="w-6 h-6 rounded-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-semibold flex items-center justify-center">
                           {q.questionIndex}
                         </span>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                          <span className="text-xs font-medium text-zinc-900 dark:text-zinc-100">
                             {q.subject || 'General'}
                           </span>
                           {q.topic && q.topic !== 'General' && (
-                            <span className="text-[10px] text-slate-400">({q.topic})</span>
+                            <span className="text-[10px] text-zinc-400">({q.topic})</span>
                           )}
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-[#151f32] text-slate-600 dark:text-slate-400 border border-slate-200/80 dark:border-[#334155]">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
                             {q.questionType || 'MCQ'}
                           </span>
                         </div>
@@ -370,17 +397,18 @@ export default function ExamResponsesPage() {
                       {/* Marks / Status Badge */}
                       <div>
                         {isCorrect ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             <span>+{q.marksAwarded} Marks</span>
                           </span>
                         ) : isSkipped ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500">
+                            <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
                             <span>0 Marks (Skipped)</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                            <XCircle className="w-3.5 h-3.5" />
+                          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-700 dark:text-rose-400">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                             <span>{q.marksAwarded} Marks</span>
                           </span>
                         )}
@@ -388,13 +416,13 @@ export default function ExamResponsesPage() {
                     </div>
 
                     {/* Question Statement */}
-                    <div className="text-sm font-medium text-slate-900 dark:text-slate-100 leading-relaxed pl-1">
+                    <div className="text-sm text-zinc-800 dark:text-zinc-200 leading-relaxed pl-0.5 font-normal">
                       <MathRenderer text={q.questionText} />
                     </div>
 
                     {/* Image Attachment (if any) */}
                     {q.imageAttachment && (
-                      <div className="rounded-xl overflow-hidden bg-slate-100 dark:bg-[#0f172a] p-2 border border-slate-200/80 dark:border-[#334155] max-w-md">
+                      <div className="rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-950 p-2 border border-zinc-200 dark:border-zinc-800 max-w-md">
                         <img
                           src={q.imageAttachment}
                           alt="Question diagram"
@@ -415,27 +443,27 @@ export default function ExamResponsesPage() {
                           const isUserSelected = (q.selectedAnswers || []).includes(oIdx);
                           const isCorrectAnswer = (q.correctAnswers || []).includes(oIdx);
 
-                          let borderStyle = 'border-slate-200/80 dark:border-[#334155] bg-white dark:bg-[#1e293b]';
+                          let borderStyle = 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200';
                           let badgeEl = null;
 
                           if (isUserSelected && isCorrectAnswer) {
-                            borderStyle = 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-200 shadow-xs';
+                            borderStyle = 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 text-zinc-900 dark:text-zinc-100';
                             badgeEl = (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-700 shrink-0">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-900/50 px-2 py-0.5 rounded-md shrink-0">
                                 <Check className="w-3 h-3" /> Your Answer (Correct)
                               </span>
                             );
                           } else if (isUserSelected && !isCorrectAnswer) {
-                            borderStyle = 'border-rose-500 bg-rose-50/70 dark:bg-rose-950/30 text-rose-900 dark:text-rose-200 shadow-xs';
+                            borderStyle = 'border-rose-300 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/20 text-zinc-900 dark:text-zinc-100';
                             badgeEl = (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-900/60 px-2 py-0.5 rounded border border-rose-300 dark:border-rose-700 shrink-0">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 dark:text-rose-300 bg-rose-100/70 dark:bg-rose-900/50 px-2 py-0.5 rounded-md shrink-0">
                                 <X className="w-3 h-3" /> Your Answer (Incorrect)
                               </span>
                             );
                           } else if (isCorrectAnswer) {
-                            borderStyle = 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300';
+                            borderStyle = 'border-emerald-300/70 dark:border-emerald-800/70 bg-emerald-50/25 dark:bg-emerald-950/10 text-zinc-900 dark:text-zinc-100';
                             badgeEl = (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100/60 dark:bg-emerald-900/40 px-2 py-0.5 rounded border border-emerald-300/60 dark:border-emerald-800 shrink-0">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-100/50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-md shrink-0">
                                 <Check className="w-3 h-3" /> Correct Solution
                               </span>
                             );
@@ -444,10 +472,10 @@ export default function ExamResponsesPage() {
                           return (
                             <div
                               key={oIdx}
-                              className={`p-3 rounded-xl border flex items-start justify-between gap-3 text-xs transition-colors ${borderStyle}`}
+                              className={`p-3 rounded-md border flex items-start justify-between gap-3 text-xs transition-colors ${borderStyle}`}
                             >
                               <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                                <span className="font-bold text-slate-500 dark:text-slate-400 shrink-0 mt-0.5">
+                                <span className="font-medium text-zinc-400 shrink-0 mt-0.5">
                                   ({letter})
                                 </span>
                                 <div className="space-y-1">
@@ -456,7 +484,7 @@ export default function ExamResponsesPage() {
                                     <img
                                       src={optImg}
                                       alt={`Option ${letter}`}
-                                      className="max-h-28 rounded border border-slate-200/80 dark:border-[#334155] cursor-zoom-in"
+                                      className="max-h-28 rounded border border-zinc-200 dark:border-zinc-800 cursor-zoom-in"
                                       onClick={() => setLightboxImage(optImg)}
                                     />
                                   )}
@@ -471,12 +499,12 @@ export default function ExamResponsesPage() {
 
                     {/* Step-by-Step Pedagogical Explanation */}
                     {q.explanation && (
-                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] text-xs space-y-1.5 mt-3">
-                        <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                          <HelpCircle className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                      <div className="p-4 rounded-md bg-zinc-50 dark:bg-zinc-850/60 border border-zinc-200 dark:border-zinc-800 text-xs space-y-1.5 mt-3">
+                        <span className="font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                          <HelpCircle className="w-3.5 h-3.5 text-zinc-400" />
                           <span>Detailed Solution & Explanation:</span>
                         </span>
-                        <div className="text-slate-700 dark:text-slate-300 leading-relaxed pl-5">
+                        <div className="text-zinc-700 dark:text-zinc-300 leading-relaxed pl-5">
                           <MathRenderer text={q.explanation} />
                         </div>
                       </div>
@@ -492,24 +520,24 @@ export default function ExamResponsesPage() {
       {/* Image Lightbox Modal */}
       {lightboxImage && (
         <div
-          className="fixed inset-0 z-[10000] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-[10000] bg-zinc-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
           onClick={() => setLightboxImage(null)}
         >
           <div
-            className="max-w-3xl w-full card-base p-5 space-y-3 shadow-2xl"
+            className="max-w-3xl w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 space-y-3 shadow-sm"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">Image Preview</h3>
+              <h3 className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">Image Preview</h3>
               <button
                 type="button"
                 onClick={() => setLightboxImage(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#151f32]"
+                className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="max-h-[70vh] flex items-center justify-center bg-slate-100 dark:bg-[#0f172a] rounded-xl overflow-hidden p-2 border border-slate-200/80 dark:border-[#334155]">
+            <div className="max-h-[70vh] flex items-center justify-center bg-zinc-100 dark:bg-zinc-950 rounded-md overflow-hidden p-2 border border-zinc-200 dark:border-zinc-800">
               <img src={lightboxImage} alt="Diagram preview" className="max-h-[65vh] w-auto object-contain" />
             </div>
             <div className="flex justify-end">
@@ -517,7 +545,7 @@ export default function ExamResponsesPage() {
                 href={lightboxImage}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-medium"
+                className="text-xs text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center gap-1 font-medium"
               >
                 <span>Open original in new tab</span>
                 <ExternalLink className="w-3.5 h-3.5" />

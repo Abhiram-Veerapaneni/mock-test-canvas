@@ -2,68 +2,35 @@
    OFFICIAL JEE (ADVANCED / MAINS) CBT EXAM PLAYER STYLES - PURE VANILLA CSS
    ========================================================================== */
 
-/* Light Mode & Dark Mode Color Palettes */
-:root {
-  /* LIGHT MODE (Official NTA Blue & White Theme) */
-  --jee-bg-portal: #f8fafc;
-  --jee-bg-header: #0f172a;
-  --jee-text-header: #ffffff;
+/* JEE Variables Mapped to Global Design System */
+.jee-exam-portal {
+  --jee-bg-portal: var(--color-bg-base);
+  --jee-bg-header: var(--color-bg-surface);
+  --jee-text-header: var(--color-text-primary);
   
-  --jee-bg-card: #ffffff;
-  --jee-border-card: #cbd5e1;
-  --jee-border-accent: #2563eb;
+  --jee-bg-card: var(--color-bg-surface);
+  --jee-border-card: var(--color-border);
+  --jee-border-accent: var(--color-brand);
   
-  --jee-bg-tab-active: #2563eb;
+  --jee-bg-tab-active: var(--color-brand);
   --jee-text-tab-active: #ffffff;
-  --jee-bg-tab-inactive: #e2e8f0;
-  --jee-text-tab-inactive: #1e293b;
+  --jee-bg-tab-inactive: var(--color-bg-subtle);
+  --jee-text-tab-inactive: var(--color-text-secondary);
   
-  --jee-text-primary: #0f172a;
-  --jee-text-secondary: #475569;
-  --jee-text-muted: #64748b;
+  --jee-text-primary: var(--color-text-primary);
+  --jee-text-secondary: var(--color-text-secondary);
+  --jee-text-muted: var(--color-text-muted);
   
-  --jee-bg-option-hover: #eff6ff;
-  --jee-bg-option-selected: #dbeafe;
-  --jee-border-option-selected: #2563eb;
+  --jee-bg-option-hover: var(--color-bg-subtle);
+  --jee-bg-option-selected: var(--color-brand-subtle);
+  --jee-border-option-selected: var(--color-brand);
   
-  --jee-sidebar-bg: #f1f5f9;
-  --jee-sidebar-border: #cbd5e1;
+  --jee-sidebar-bg: var(--color-bg-surface);
+  --jee-sidebar-border: var(--color-border);
   
-  --jee-timer-bg: #fef3c7;
-  --jee-timer-border: #f59e0b;
-  --jee-timer-text: #92400e;
-}
-
-[data-theme="dark"],
-.dark {
-  /* DARK MODE (Official Blue & Pitch Black Theme) */
-  --jee-bg-portal: #030712;
-  --jee-bg-header: #090d16;
-  --jee-text-header: #ffffff;
-  
-  --jee-bg-card: #0b1120;
-  --jee-border-card: #1e293b;
-  --jee-border-accent: #3b82f6;
-  
-  --jee-bg-tab-active: #2563eb;
-  --jee-text-tab-active: #ffffff;
-  --jee-bg-tab-inactive: #1e293b;
-  --jee-text-tab-inactive: #cbd5e1;
-  
-  --jee-text-primary: #ffffff;
-  --jee-text-secondary: #cbd5e1;
-  --jee-text-muted: #94a3b8;
-  
-  --jee-bg-option-hover: #1e293b;
-  --jee-bg-option-selected: #172554;
-  --jee-border-option-selected: #3b82f6;
-  
-  --jee-sidebar-bg: #090d16;
-  --jee-sidebar-border: #1e293b;
-  
-  --jee-timer-bg: #451a03;
-  --jee-timer-border: #b45309;
-  --jee-timer-text: #fef3c7;
+  --jee-timer-bg: var(--color-warning-bg);
+  --jee-timer-border: var(--color-warning);
+  --jee-timer-text: var(--color-warning);
 }
 
 /* 1. PORTAL ROOT WRAPPER */

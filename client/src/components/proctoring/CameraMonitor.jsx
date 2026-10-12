@@ -327,81 +327,42 @@ export default function CameraMonitor({
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        bottom: '16px',
-        right: '16px',
-        zIndex: 9990,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-end',
-        gap: '6px',
-        pointerEvents: 'none',
-      }}
-    >
+    <div className="fixed bottom-4 right-4 z-[9990] flex flex-col items-end gap-1.5 pointer-events-none">
       {/* Video preview */}
       {faceCheckEnabled && (
         <div
-          style={{
-            width: '140px',
-            height: '105px',
-            borderRadius: '10px',
-            overflow: 'hidden',
-            border: `1.5px solid ${getAlertColor()}`,
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
-            background: '#0a0a0a',
-            transition: 'border-color 0.2s',
-            pointerEvents: 'auto',
-          }}
+          className={`w-36 h-28 rounded-md overflow-hidden border shadow-sm bg-zinc-950 pointer-events-auto transition-colors ${
+            alertState === 'MULTI_FACE' || objectAlert
+              ? 'border-rose-500'
+              : alertState === 'NO_FACE' || isNoiseAlert
+              ? 'border-amber-500'
+              : 'border-zinc-800'
+          }`}
         >
           <video
             ref={videoRef}
             autoPlay
             playsInline
             muted
+            className="w-full h-full object-cover -scale-x-100"
             style={{
               display: permissionStatus === 'granted' ? 'block' : 'none',
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              transform: 'scaleX(-1)', // mirror
             }}
           />
 
           {permissionStatus === 'pending' && (
-            <div style={{
-              width: '100%', height: '100%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: '#6b7280',
-            }}>
-              <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />
+            <div className="w-full h-full flex items-center justify-center text-zinc-400">
+              <Loader2 className="w-5 h-5 animate-spin" />
             </div>
           )}
 
           {permissionStatus !== 'granted' && permissionStatus !== 'pending' && (
-            <div style={{
-              width: '100%', height: '100%',
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              color: '#ef4444', gap: '2px', padding: '6px',
-              textAlign: 'center', fontSize: '10px',
-            }}>
-              <CameraOff size={16} />
+            <div className="w-full h-full flex flex-col items-center justify-center text-rose-500 gap-1 p-2 text-center text-[10px]">
+              <CameraOff className="w-4 h-4" />
               <span>{permissionStatus === 'denied' ? 'Permission denied' : permissionStatus === 'lost' ? 'Feed lost' : 'Camera error'}</span>
               <button
                 onClick={requestMedia}
-                style={{
-                  marginTop: '2px',
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  background: '#ef4444',
-                  color: '#ffffff',
-                  fontSize: '9px',
-                  fontWeight: 600,
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
+                className="mt-0.5 px-2 py-0.5 rounded bg-rose-600 text-white text-[9px] font-medium cursor-pointer"
               >
                 Reconnect
               </button>
@@ -410,69 +371,36 @@ export default function CameraMonitor({
         </div>
       )}
 
-      {/* Status pill */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          padding: '4px 10px',
-          borderRadius: '20px',
-          background: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          color: getAlertColor(),
-          fontSize: '11px',
-          fontWeight: 600,
-          fontFamily: "'Inter', system-ui, sans-serif",
-          letterSpacing: '0.02em',
-          transition: 'color 0.2s',
-          pointerEvents: 'auto',
-        }}
-      >
+      {/* Status indicator */}
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900/95 backdrop-blur-xs border border-zinc-800 text-zinc-200 text-xs font-medium pointer-events-auto shadow-sm">
         {/* Status dot */}
         <span
-          style={{
-            width: '6px',
-            height: '6px',
-            borderRadius: '50%',
-            background: getAlertColor(),
-            flexShrink: 0,
-          }}
+          className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+            alertState === 'MULTI_FACE' || objectAlert
+              ? 'bg-rose-500'
+              : alertState === 'NO_FACE' || isNoiseAlert
+              ? 'bg-amber-500'
+              : 'bg-emerald-500'
+          }`}
         />
         {getAlertIcon()}
-        <span>{getAlertText()}</span>
+        <span className="text-[11px]">{getAlertText()}</span>
 
         {/* Audio level indicator */}
         {audioCheckEnabled && permissionStatus === 'granted' && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '3px', marginLeft: '4px',
-            borderLeft: '1px solid rgba(255,255,255,0.15)', paddingLeft: '6px',
-          }}>
-            {isNoiseAlert ? <Volume2 size={10} /> : <Mic size={10} style={{ opacity: 0.7 }} />}
-            <div style={{
-              width: '26px', height: '4px', borderRadius: '2px',
-              background: 'rgba(255,255,255,0.15)', overflow: 'hidden',
-            }}>
-              <div style={{
-                height: '100%',
-                width: `${Math.min(100, Math.max(6, currentRMS))}%`,
-                background: isNoiseAlert ? '#ef4444' : currentRMS > 40 ? '#f59e0b' : '#3b82f6',
-                borderRadius: '2px',
-                transition: 'width 0.15s ease-out',
-              }} />
+          <div className="flex items-center gap-1.5 ml-1 border-l border-zinc-700/80 pl-1.5">
+            {isNoiseAlert ? <Volume2 className="w-3 h-3 text-rose-400" /> : <Mic className="w-3 h-3 text-zinc-400" />}
+            <div className="w-6 h-1 rounded-sm bg-zinc-800 overflow-hidden">
+              <div
+                className={`h-full transition-all duration-150 rounded-sm ${
+                  isNoiseAlert ? 'bg-rose-500' : currentRMS > 40 ? 'bg-amber-500' : 'bg-emerald-500'
+                }`}
+                style={{ width: `${Math.min(100, Math.max(6, currentRMS))}%` }}
+              />
             </div>
           </div>
         )}
       </div>
-
-      {/* CSS animation */}
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }

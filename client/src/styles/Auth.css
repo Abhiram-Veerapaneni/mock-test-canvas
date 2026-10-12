@@ -2,74 +2,32 @@
    AI-Proctored Mock Tests Auth Styling - Clean Vanilla CSS
    ========================================================================== */
 
-/* Theme Color Variables */
-:root {
-  /* Light Mode (White-Blue) */
-  --bg-page: #f8fafc;
-  --bg-card: #ffffff;
-  --bg-input: #f1f5f9;
-  --bg-tab-container: #e2e8f0;
+/* Auth Variables Mapped to Global Design System */
+.auth-page {
+  --bg-page: var(--color-bg-base);
+  --bg-card: var(--color-bg-surface);
+  --bg-input: var(--color-bg-surface);
+  --bg-tab-container: var(--color-bg-subtle);
   
-  --border-card: #e2e8f0;
-  --border-input: #cbd5e1;
+  --border-card: var(--color-border);
+  --border-input: var(--color-border);
   
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-muted);
   
-  --accent-primary: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-light: #eff6ff;
+  --accent-primary: var(--color-brand);
+  --accent-hover: var(--color-brand-hover);
+  --accent-light: var(--color-brand-subtle);
   --accent-text: #ffffff;
-  --accent-glow: rgba(37, 99, 235, 0.25);
+  --accent-glow: transparent;
 
-  --shadow-card: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-  --shadow-button: 0 4px 14px 0 rgba(37, 99, 235, 0.35);
+  --shadow-card: var(--shadow-sm);
+  --shadow-button: none;
 
-  --radius-lg: 16px;
-  --radius-md: 10px;
-  --radius-sm: 8px;
-}
-
-[data-theme="dark"] {
-  /* Dark Mode (Black-Blue) */
-  --bg-page: #030712;
-  --bg-card: #0b1120;
-  --bg-input: #151d30;
-  --bg-tab-container: #1e293b;
-  
-  --border-card: #1e293b;
-  --border-input: #334155;
-  
-  /* Ultra-bright text contrast for Dark Mode */
-  --text-primary: #ffffff;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  
-  --accent-primary: #3b82f6;
-  --accent-hover: #2563eb;
-  --accent-light: rgba(59, 130, 246, 0.2);
-  --accent-text: #ffffff;
-  --accent-glow: rgba(59, 130, 246, 0.4);
-
-  --shadow-card: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
-  --shadow-button: 0 4px 14px 0 rgba(59, 130, 246, 0.45);
-}
-
-/* Global Reset & Box Sizing */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background-color: var(--bg-page);
-  color: var(--text-primary);
-  min-height: 100vh;
-  transition: background-color 0.3s ease, color 0.3s ease;
-  -webkit-font-smoothing: antialiased;
+  --radius-lg: 0.5rem;
+  --radius-md: 0.375rem;
+  --radius-sm: 0.25rem;
 }
 
 /* Main Container Layout */

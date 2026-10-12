@@ -543,7 +543,7 @@ export default function TestCreationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#edf2f9] dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col transition-colors duration-200">
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -559,23 +559,21 @@ export default function TestCreationPage() {
           />
         </div>
 
-        {/* Top Header Action Bar */}
         {/* Top Header Action Bar with Inline Title Edit */}
-        <div className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-none">
           <div className="flex-1 min-w-0 space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">
                 Examination Title
               </span>
               {existingExamId && (
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide border ${
-                    examStatus === 'draft'
-                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                      : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                  }`}
-                >
-                  {examStatus === 'draft' ? 'Draft' : 'Published'}
+                <span className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      examStatus === 'draft' ? 'bg-amber-500' : 'bg-emerald-500'
+                    }`}
+                  />
+                  <span>{examStatus === 'draft' ? 'Draft' : 'Published'}</span>
                 </span>
               )}
             </div>
@@ -584,13 +582,13 @@ export default function TestCreationPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. JEE Advanced Full Mock 01 (Click to edit title)"
-              className="w-full text-base sm:text-xl font-bold font-display text-slate-900 dark:text-white bg-transparent border border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-blue-500 focus:bg-slate-50 dark:focus:bg-slate-900 rounded-xl px-2.5 py-1 -ml-2.5 transition-all outline-none"
+              className="w-full text-base sm:text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 bg-transparent border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 focus:border-zinc-400 dark:focus:border-zinc-600 focus:bg-zinc-50 dark:focus:bg-zinc-950 rounded-md px-2.5 py-1 -ml-2.5 transition-all outline-none"
             />
           </div>
 
           <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap shrink-0">
-            <div className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800">
-              Questions: <strong className="text-slate-900 dark:text-white tabular-nums font-semibold">{questions.length}</strong>
+            <div className="text-xs text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800/60 px-3 py-1.5 rounded-md border border-zinc-200 dark:border-zinc-800">
+              Questions: <strong className="text-zinc-900 dark:text-zinc-100 tabular-nums font-semibold">{questions.length}</strong>
             </div>
 
             {/* Preview Question Paper Modal Button */}
@@ -605,9 +603,9 @@ export default function TestCreationPage() {
               }}
               disabled={questions.length === 0}
               title={questions.length === 0 ? "Add questions to preview paper" : "Preview question paper in dark/light mode and PDF export"}
-              className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5"
+              className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
             >
-              <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <Eye className="w-3.5 h-3.5 text-zinc-500" />
               <span>Preview Paper</span>
             </button>
 
@@ -616,7 +614,7 @@ export default function TestCreationPage() {
               type="button"
               onClick={(e) => handleSaveExam(e, 'draft')}
               disabled={isSavingDraft || isSaving}
-              className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5"
+              className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
             >
               {isSavingDraft ? (
                 <>
@@ -625,7 +623,7 @@ export default function TestCreationPage() {
                 </>
               ) : (
                 <>
-                  <Bookmark className="w-3.5 h-3.5 text-slate-400" />
+                  <Bookmark className="w-3.5 h-3.5 text-zinc-400" />
                   <span>Save Draft</span>
                 </>
               )}
@@ -636,16 +634,16 @@ export default function TestCreationPage() {
               type="button"
               onClick={(e) => handleSaveExam(e, 'published')}
               disabled={isSaving || isSavingDraft || questions.length === 0}
-              className="btn-primary text-xs py-2 px-4 flex items-center gap-2"
+              className="btn-primary text-xs py-1.5 px-3.5 flex items-center gap-1.5"
             >
               {isSaving ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   <span>Publishing...</span>
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>{examStatus === 'published' ? 'Save Changes' : 'Publish Examination'}</span>
                 </>
               )}
@@ -653,33 +651,31 @@ export default function TestCreationPage() {
           </div>
         </div>
 
-        {/* Intentional Segmented Tab Switcher */}
-        <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+        {/* Intentional Horizontal Tabs */}
+        <div className="flex items-center gap-6 border-b border-zinc-200 dark:border-zinc-800">
           <button
             type="button"
             onClick={() => setActiveStudioTab('questions')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 py-3 text-sm font-medium transition-colors border-b-2 -mb-[1px] cursor-pointer ${
               activeStudioTab === 'questions'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-white dark:bg-[#111827] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
+                ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100'
+                : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
             }`}
           >
             <BookOpen className="w-4 h-4" />
             <span>Questions & Content</span>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-              activeStudioTab === 'questions' ? 'bg-blue-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-            }`}>
-              {questions.length}
+            <span className="text-xs text-zinc-400 tabular-nums">
+              ({questions.length})
             </span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveStudioTab('settings')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 py-3 text-sm font-medium transition-colors border-b-2 -mb-[1px] cursor-pointer ${
               activeStudioTab === 'settings'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-white dark:bg-[#111827] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-800'
+                ? 'border-zinc-900 text-zinc-900 dark:border-zinc-100 dark:text-zinc-100'
+                : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
             }`}
           >
             <Sliders className="w-4 h-4" />
@@ -693,16 +689,16 @@ export default function TestCreationPage() {
             {/* COLUMN 1: Assessment Details, Marking & Scheduling */}
             <div className="space-y-6">
               {/* Card 1: Core Parameters */}
-              <div className="card-base p-5 sm:p-6 space-y-4">
-                <div className="border-b border-slate-100 dark:border-[#334155] pb-3">
-                  <h2 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                    <Sliders className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 sm:p-6 space-y-4">
+                <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                  <h2 className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-zinc-500" />
                     <span>Assessment Core Details</span>
                   </h2>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
                     Examination Title
                   </label>
                   <input
@@ -715,7 +711,7 @@ export default function TestCreationPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
                     Description & Guidelines
                   </label>
                   <textarea
@@ -729,7 +725,7 @@ export default function TestCreationPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
                       Curriculum Category
                     </label>
                     <select
@@ -746,7 +742,7 @@ export default function TestCreationPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
                       Duration (Minutes)
                     </label>
                     <input
@@ -762,19 +758,19 @@ export default function TestCreationPage() {
               </div>
 
               {/* Card 2: Scoring & Marking Scheme */}
-              <div className="card-base p-5 sm:p-6 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#334155] pb-3">
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 sm:p-6 space-y-3">
+                <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                  <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-zinc-500" />
                     <span>Scoring & Negative Marking</span>
                   </span>
-                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
+                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 tabular-nums font-mono">
                     +{correctMark} / {incorrectMark} pts
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <div>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1 font-medium">Correct Mark (+)</span>
+                    <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block mb-1 font-medium">Correct Mark (+)</span>
                     <input
                       type="number"
                       value={correctMark}
@@ -783,7 +779,7 @@ export default function TestCreationPage() {
                     />
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mb-1 font-medium">Negative Mark (-)</span>
+                    <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block mb-1 font-medium">Negative Mark (-)</span>
                     <input
                       type="number"
                       value={incorrectMark}
@@ -792,19 +788,19 @@ export default function TestCreationPage() {
                     />
                   </div>
                 </div>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-normal">
+                <p className="text-xs text-zinc-400 leading-normal">
                   Applied by default to newly added questions. Individual questions can override custom marks.
                 </p>
               </div>
 
               {/* Card 3: Candidate Attempt Limits */}
-              <div className="card-base p-5 sm:p-6 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#334155] pb-3">
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <RotateCcw className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 sm:p-6 space-y-3">
+                <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                  <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                    <RotateCcw className="w-4 h-4 text-zinc-500" />
                     <span>Candidate Attempt Limits</span>
                   </span>
-                  <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400">
+                  <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
                     {isUnlimitedAttempts ? 'Unlimited (∞)' : `${maxAttemptsValue} ${maxAttemptsValue === 1 ? 'Attempt' : 'Attempts'}`}
                   </span>
                 </div>
@@ -817,14 +813,14 @@ export default function TestCreationPage() {
                       setIsUnlimitedAttempts(false);
                       setMaxAttemptsValue(1);
                     }}
-                    className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                    className={`p-2.5 rounded-md border text-center transition-all cursor-pointer ${
                       !isUnlimitedAttempts && Number(maxAttemptsValue) === 1
-                        ? 'bg-blue-500/10 border-blue-500 text-blue-700 dark:text-blue-300 font-bold shadow-xs'
-                        : 'bg-white dark:bg-[#1e293b] border-slate-200/80 dark:border-[#334155] text-slate-700 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-500 font-medium'
+                        ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 font-medium'
+                        : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/50'
                     }`}
                   >
-                    <span className="block text-xs font-bold">1 Attempt</span>
-                    <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Strict Test</span>
+                    <span className="block text-xs font-medium">1 Attempt</span>
+                    <span className="block text-[11px] text-zinc-400 mt-0.5">Strict Test</span>
                   </button>
 
                   <button
@@ -833,40 +829,40 @@ export default function TestCreationPage() {
                       setIsUnlimitedAttempts(false);
                       if (Number(maxAttemptsValue) === 1) setMaxAttemptsValue(3);
                     }}
-                    className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                    className={`p-2.5 rounded-md border text-center transition-all cursor-pointer ${
                       !isUnlimitedAttempts && Number(maxAttemptsValue) > 1
-                        ? 'bg-blue-500/10 border-blue-500 text-blue-700 dark:text-blue-300 font-bold shadow-xs'
-                        : 'bg-white dark:bg-[#1e293b] border-slate-200/80 dark:border-[#334155] text-slate-700 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-500 font-medium'
+                        ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 font-medium'
+                        : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/50'
                     }`}
                   >
-                    <span className="block text-xs font-bold">Multiple</span>
-                    <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Custom limit</span>
+                    <span className="block text-xs font-medium">Multiple</span>
+                    <span className="block text-[11px] text-zinc-400 mt-0.5">Custom limit</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setIsUnlimitedAttempts(true)}
-                    className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer ${
+                    className={`p-2.5 rounded-md border text-center transition-all cursor-pointer ${
                       isUnlimitedAttempts
-                        ? 'bg-blue-500/10 border-blue-500 text-blue-700 dark:text-blue-300 font-bold shadow-xs'
-                        : 'bg-white dark:bg-[#1e293b] border-slate-200/80 dark:border-[#334155] text-slate-700 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-500 font-medium'
+                        ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 font-medium'
+                        : 'bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700/50'
                     }`}
                   >
-                    <span className="block text-xs font-bold">Unlimited</span>
-                    <span className="block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Practice (∞)</span>
+                    <span className="block text-xs font-medium">Unlimited</span>
+                    <span className="block text-[11px] text-zinc-400 mt-0.5">Practice (∞)</span>
                   </button>
                 </div>
 
                 {/* Number Stepper when Multiple is selected */}
                 {!isUnlimitedAttempts && Number(maxAttemptsValue) > 1 && (
-                  <div className="pt-2 border-t border-slate-200/80 dark:border-[#334155] space-y-2">
-                    <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
+                  <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 space-y-2">
+                    <div className="flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
                       <span>Allowed Attempts:</span>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => setMaxAttemptsValue(Math.max(2, Number(maxAttemptsValue) - 1))}
-                          className="w-7 h-7 rounded-lg bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-[#334155] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#243147] flex items-center justify-center cursor-pointer"
+                          className="w-7 h-7 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer"
                         >
                           -
                         </button>
@@ -876,30 +872,30 @@ export default function TestCreationPage() {
                           max={50}
                           value={maxAttemptsValue}
                           onChange={(e) => setMaxAttemptsValue(Math.max(2, parseInt(e.target.value) || 2))}
-                          className="w-14 text-center py-1 input-base text-xs font-bold font-mono"
+                          className="w-14 text-center py-1 input-base text-xs font-semibold font-mono"
                         />
                         <button
                           type="button"
                           onClick={() => setMaxAttemptsValue(Math.min(50, Number(maxAttemptsValue) + 1))}
-                          className="w-7 h-7 rounded-lg bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-[#334155] font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#243147] flex items-center justify-center cursor-pointer"
+                          className="w-7 h-7 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer"
                         >
                           +
                         </button>
                       </div>
                     </div>
 
-                    {/* Quick Preset Pills */}
+                    {/* Quick Preset Buttons */}
                     <div className="flex items-center gap-1.5 pt-1">
-                      <span className="text-[10px] text-slate-400 uppercase font-semibold mr-1">Presets:</span>
+                      <span className="text-[11px] text-zinc-400 uppercase font-medium mr-1">Presets:</span>
                       {[2, 3, 5, 10].map((preset) => (
                         <button
                           key={preset}
                           type="button"
                           onClick={() => setMaxAttemptsValue(preset)}
-                          className={`px-2.5 py-0.5 rounded-md text-[11px] font-semibold border transition-colors cursor-pointer ${
+                          className={`px-2.5 py-0.5 rounded-md text-xs font-medium border transition-colors cursor-pointer ${
                             Number(maxAttemptsValue) === preset
-                              ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                              : 'bg-white dark:bg-[#1e293b] text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-[#334155] hover:bg-slate-100 dark:hover:bg-[#243147]'
+                              ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100'
+                              : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700'
                           }`}
                         >
                           {preset}
@@ -911,10 +907,10 @@ export default function TestCreationPage() {
               </div>
 
               {/* Card 4: Assessment Scheduling Window */}
-              <div className="card-base p-5 sm:p-6 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#334155] pb-3">
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 sm:p-6 space-y-3">
+                <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                  <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-zinc-500" />
                     <span>Scheduled Test Window</span>
                   </span>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -924,21 +920,21 @@ export default function TestCreationPage() {
                       onChange={(e) => setIsScheduled(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-hidden rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-slate-600 peer-checked:bg-blue-600"></div>
+                    <div className="w-8 h-4.5 bg-zinc-200 peer-focus:outline-hidden rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all dark:border-zinc-600 peer-checked:bg-zinc-900 dark:peer-checked:bg-zinc-100"></div>
                   </label>
                 </div>
 
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-normal">
                   {isScheduled
                     ? 'Restricts candidate access strictly between opening and closing timestamp.'
                     : 'Unscheduled — candidates can begin this evaluation at any convenient time.'}
                 </p>
 
                 {isScheduled && (
-                  <div className="pt-2 border-t border-slate-200/80 dark:border-[#334155] space-y-3">
+                  <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 space-y-3">
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-blue-500" />
+                      <label className="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1 flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-zinc-500" />
                         <span>Window Start Date & Time</span>
                       </label>
                       <input
@@ -950,8 +946,8 @@ export default function TestCreationPage() {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-rose-500" />
+                      <label className="block text-[11px] font-medium text-zinc-700 dark:text-zinc-300 mb-1 flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-zinc-500" />
                         <span>Window End Date & Time</span>
                       </label>
                       <input
@@ -963,16 +959,16 @@ export default function TestCreationPage() {
                     </div>
 
                     {startTime && endTime && new Date(endTime) <= new Date(startTime) && (
-                      <p className="text-[11px] font-medium text-rose-600 dark:text-rose-400 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3 shrink-0" />
+                      <p className="text-xs font-medium text-rose-600 dark:text-rose-400 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>End time must be later than start time!</span>
                       </p>
                     )}
 
                     {startTime && endTime && new Date(endTime) > new Date(startTime) && (
-                      <div className="p-2 rounded-lg bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/40 text-[10px] text-blue-700 dark:text-blue-300 flex items-center justify-between">
+                      <div className="p-2.5 rounded-md bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60 text-xs text-zinc-700 dark:text-zinc-300 flex items-center justify-between">
                         <span>Window Span:</span>
-                        <strong>
+                        <strong className="font-mono tabular-nums">
                           {Math.round((new Date(endTime) - new Date(startTime)) / (1000 * 60 * 60))} hours ({Math.round((new Date(endTime) - new Date(startTime)) / (1000 * 60))} mins)
                         </strong>
                       </div>
@@ -985,123 +981,125 @@ export default function TestCreationPage() {
             {/* COLUMN 2: Proctoring Security, Access Rules & Overview */}
             <div className="space-y-6">
               {/* Card 1: Proctoring Security Rules */}
-              <div className="card-base p-5 sm:p-6 space-y-4">
-                <div className="border-b border-slate-100 dark:border-[#334155] pb-3 flex items-center justify-between">
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 sm:p-6 space-y-4">
+                <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3 flex items-center justify-between">
                   <div>
-                    <h2 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <h2 className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-zinc-500" />
                       <span>Proctoring Security Rules</span>
                     </h2>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                       Configure automated browser lockdown and AI vision monitoring safeguards.
                     </p>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0">
-                    AI Safeguards
-                  </span>
                 </div>
 
-                <div className="space-y-3 text-xs text-slate-600 dark:text-slate-400">
+                <div className="space-y-2.5 text-xs text-zinc-600 dark:text-zinc-400">
                   {/* Facial Verification */}
-                  <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer">
+                  <label className="flex items-start gap-3 p-3 rounded-md bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={faceCheck}
                       onChange={(e) => setFaceCheck(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                      className="mt-0.5 w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-zinc-500"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-900 dark:text-white">Facial Presence Verification Hook</span>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${faceCheck ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-400'}`}>
+                        <span className="font-medium text-zinc-900 dark:text-zinc-100">Facial Presence Verification</span>
+                        <span className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                          <span className={`w-1.5 h-1.5 rounded-full ${faceCheck ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
                           {faceCheck ? 'Active' : 'Off'}
                         </span>
                       </div>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal block mt-0.5">
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 leading-normal block mt-0.5">
                         MediaPipe vision tracking for candidate absence, head turns, and multiple face intrusions.
                       </span>
                     </div>
                   </label>
 
                   {/* Acoustic Audio */}
-                  <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer">
+                  <label className="flex items-start gap-3 p-3 rounded-md bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={audioCheck}
                       onChange={(e) => setAudioCheck(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                      className="mt-0.5 w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-zinc-500"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-900 dark:text-white">Acoustic & Noise Level Detection</span>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${audioCheck ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-400'}`}>
+                        <span className="font-medium text-zinc-900 dark:text-zinc-100">Acoustic & Noise Level Detection</span>
+                        <span className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                          <span className={`w-1.5 h-1.5 rounded-full ${audioCheck ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
                           {audioCheck ? 'Active' : 'Off'}
                         </span>
                       </div>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal block mt-0.5">
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 leading-normal block mt-0.5">
                         Detects vocal murmur, background discussions, and ambient audio spikes in decibels.
                       </span>
                     </div>
                   </label>
 
                   {/* Fullscreen Lock */}
-                  <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer">
+                  <label className="flex items-start gap-3 p-3 rounded-md bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={fullScreenLock}
                       onChange={(e) => setFullScreenLock(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                      className="mt-0.5 w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-zinc-500"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-900 dark:text-white">Strict Fullscreen & Focus Lockdown</span>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${fullScreenLock ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-400'}`}>
+                        <span className="font-medium text-zinc-900 dark:text-zinc-100">Strict Fullscreen & Focus Lockdown</span>
+                        <span className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                          <span className={`w-1.5 h-1.5 rounded-full ${fullScreenLock ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
                           {fullScreenLock ? 'Enforced' : 'Off'}
                         </span>
                       </div>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal block mt-0.5">
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 leading-normal block mt-0.5">
                         Immediately penalizes tab switching, window blurring, browser navigation, or devtool inspection.
                       </span>
                     </div>
                   </label>
 
                   {/* Device / Object Check */}
-                  <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] hover:border-slate-300 dark:hover:border-slate-600 transition-colors cursor-pointer">
+                  <label className="flex items-start gap-3 p-3 rounded-md bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={objectCheck}
                       onChange={(e) => setObjectCheck(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                      className="mt-0.5 w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-zinc-500"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-900 dark:text-white">Prohibited Device Detection (Mobile/Books)</span>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${objectCheck ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40' : 'text-slate-400'}`}>
+                        <span className="font-medium text-zinc-900 dark:text-zinc-100">Prohibited Device Detection</span>
+                        <span className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                          <span className={`w-1.5 h-1.5 rounded-full ${objectCheck ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
                           {objectCheck ? 'Active' : 'Off'}
                         </span>
                       </div>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal block mt-0.5">
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 leading-normal block mt-0.5">
                         COCO-SSD model scans video feed for mobile smartphones, notes, books, and external hardware.
                       </span>
                     </div>
                   </label>
 
                   {/* WebSocket Live Alerts */}
-                  <label className="flex items-start gap-3 p-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/80 dark:border-blue-900/40 hover:border-blue-300 dark:hover:border-blue-800 transition-colors cursor-pointer">
+                  <label className="flex items-start gap-3 p-3 rounded-md bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors cursor-pointer">
                     <input
                       type="checkbox"
                       checked={liveNotifications}
                       onChange={(e) => setLiveNotifications(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                      className="mt-0.5 w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-zinc-500"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-blue-950 dark:text-blue-200">Live Creator WebSocket Alerts</span>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${liveNotifications ? 'text-blue-600 bg-blue-100 dark:bg-blue-900/60' : 'text-slate-400'}`}>
-                          {liveNotifications ? 'Push Active' : 'Off'}
+                        <span className="font-medium text-zinc-900 dark:text-zinc-100">Live Examiner Real-Time Alerts</span>
+                        <span className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                          <span className={`w-1.5 h-1.5 rounded-full ${liveNotifications ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
+                          {liveNotifications ? 'Active' : 'Off'}
                         </span>
                       </div>
-                      <span className="text-[11px] text-blue-800/80 dark:text-blue-300/80 leading-normal block mt-0.5">
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 leading-normal block mt-0.5">
                         Instantly triggers live toasts with snapshot evidence directly on your examiner screen when candidates violate rules.
                       </span>
                     </div>
@@ -1110,42 +1108,42 @@ export default function TestCreationPage() {
               </div>
 
               {/* Card 2: Candidate Access & Review Rules */}
-              <div className="card-base p-5 sm:p-6 space-y-4">
-                <div className="border-b border-slate-100 dark:border-[#334155] pb-3">
-                  <h2 className="text-sm font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 sm:p-6 space-y-4">
+                <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                  <h2 className="text-sm font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-zinc-500" />
                     <span>Candidate Access & Solutions Policy</span>
                   </h2>
                 </div>
 
-                <div className="space-y-3 text-xs text-slate-600 dark:text-slate-400">
+                <div className="space-y-2.5 text-xs text-zinc-600 dark:text-zinc-400">
                   {/* Practice Mode Toggle */}
-                  <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] cursor-pointer">
+                  <label className="flex items-start gap-3 p-3 rounded-md bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={allowPracticeMode}
                       onChange={(e) => setAllowPracticeMode(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                      className="mt-0.5 w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-zinc-500"
                     />
                     <div className="flex-1 min-w-0">
-                      <span className="font-semibold text-slate-900 dark:text-white block">Allow Practice Mode (Unproctored)</span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal mt-0.5 block">
+                      <span className="font-medium text-zinc-900 dark:text-zinc-100 block">Allow Practice Mode (Unproctored)</span>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 leading-normal mt-0.5 block">
                         Candidates can practice questions without webcam or audio lockdown. {isScheduled ? 'For scheduled exams, practice mode unlocks strictly after the scheduled window ends.' : 'Practice attempts remain private.'}
                       </span>
                     </div>
                   </label>
 
                   {/* View Responses / Answer Key Toggle */}
-                  <label className="flex items-start gap-3 p-3 rounded-xl bg-slate-50/80 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] cursor-pointer">
+                  <label className="flex items-start gap-3 p-3 rounded-md bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={allowReviewResponses}
                       onChange={(e) => setAllowReviewResponses(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-600 focus:ring-blue-500"
+                      className="mt-0.5 w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-zinc-500"
                     />
                     <div className="flex-1 min-w-0">
-                      <span className="font-semibold text-slate-900 dark:text-white block">Allow View Responses & Solutions</span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal mt-0.5 block">
+                      <span className="font-medium text-zinc-900 dark:text-zinc-100 block">Allow View Responses & Solutions</span>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 leading-normal mt-0.5 block">
                         Candidates can view their submission responses and comprehensive solutions after completing their test. {isScheduled ? 'For scheduled exams, solutions are released strictly after the scheduled window closes to prevent leaks.' : ''}
                       </span>
                     </div>
@@ -1154,75 +1152,73 @@ export default function TestCreationPage() {
               </div>
 
               {/* Card 3: Security & Proctoring Status Overview */}
-              <div className="rounded-2xl p-5 border bg-linear-to-br from-blue-50/70 to-indigo-50/40 dark:from-[#111827] dark:to-blue-950/20 border-blue-200/70 dark:border-blue-900/50 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs">
-                      <ShieldCheck className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-slate-900 dark:text-white">Security & Integrity Overview</h3>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400">Real-time candidate monitoring profile</p>
-                    </div>
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Security & Integrity Overview</h3>
+                    <p className="text-xs text-zinc-500 mt-0.5">Real-time candidate monitoring profile</p>
                   </div>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    faceCheck && audioCheck && fullScreenLock && objectCheck
-                      ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
-                      : (faceCheck || audioCheck || fullScreenLock)
-                      ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/20'
-                      : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20'
-                  }`}>
-                    {faceCheck && audioCheck && fullScreenLock && objectCheck
-                      ? 'Maximum Lockdown'
-                      : (faceCheck || audioCheck || fullScreenLock)
-                      ? 'Standard Monitoring'
-                      : 'Minimal Security'}
-                  </span>
+                  <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                    <span className={`w-1.5 h-1.5 rounded-full ${
+                      faceCheck && audioCheck && fullScreenLock && objectCheck
+                        ? 'bg-emerald-500'
+                        : (faceCheck || audioCheck || fullScreenLock)
+                        ? 'bg-indigo-500'
+                        : 'bg-amber-500'
+                    }`} />
+                    <span>
+                      {faceCheck && audioCheck && fullScreenLock && objectCheck
+                        ? 'Maximum Lockdown'
+                        : (faceCheck || audioCheck || fullScreenLock)
+                        ? 'Standard Monitoring'
+                        : 'Minimal Security'}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-[11px]">
-                  <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#111827]/80 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
-                    <span className="text-slate-600 dark:text-slate-400">Facial Vision:</span>
-                    <span className={`font-bold ${faceCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-2.5 rounded-md bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between">
+                    <span className="text-zinc-500">Facial Vision:</span>
+                    <span className={`font-medium ${faceCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400'}`}>
                       {faceCheck ? 'Active' : 'Disabled'}
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#111827]/80 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
-                    <span className="text-slate-600 dark:text-slate-400">Audio Proctor:</span>
-                    <span className={`font-bold ${audioCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                  <div className="p-2.5 rounded-md bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between">
+                    <span className="text-zinc-500">Audio Proctor:</span>
+                    <span className={`font-medium ${audioCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400'}`}>
                       {audioCheck ? 'Active' : 'Disabled'}
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#111827]/80 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
-                    <span className="text-slate-600 dark:text-slate-400">Fullscreen Lock:</span>
-                    <span className={`font-bold ${fullScreenLock ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                  <div className="p-2.5 rounded-md bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between">
+                    <span className="text-zinc-500">Fullscreen Lock:</span>
+                    <span className={`font-medium ${fullScreenLock ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400'}`}>
                       {fullScreenLock ? 'Enforced' : 'Optional'}
                     </span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white/80 dark:bg-[#111827]/80 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
-                    <span className="text-slate-600 dark:text-slate-400">Device Scan:</span>
-                    <span className={`font-bold ${objectCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
+                  <div className="p-2.5 rounded-md bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-800 flex items-center justify-between">
+                    <span className="text-zinc-500">Device Scan:</span>
+                    <span className={`font-medium ${objectCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400'}`}>
                       {objectCheck ? 'Active' : 'Disabled'}
                     </span>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-white/70 dark:bg-[#151f32]/60 border border-slate-200/60 dark:border-slate-800 text-[11px] space-y-1.5 text-slate-600 dark:text-slate-300">
+                <div className="p-3 rounded-md bg-zinc-50/70 dark:bg-zinc-800/40 border border-zinc-200/60 dark:border-zinc-800 text-xs space-y-1.5 text-zinc-600 dark:text-zinc-400">
                   <div className="flex items-center justify-between">
                     <span>Schedule Window:</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">
+                    <span className="font-medium text-zinc-900 dark:text-zinc-100">
                       {isScheduled ? 'Restricted Date/Time' : 'Flexible (Anytime)'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Candidate Attempts:</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">
+                    <span className="font-medium text-zinc-900 dark:text-zinc-100 font-mono">
                       {isUnlimitedAttempts ? 'Unlimited Retakes' : `${maxAttemptsValue} Attempts maximum`}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Live Examiner Alerts:</span>
-                    <span className={`font-semibold ${liveNotifications ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`}>
+                    <span className={`font-medium ${liveNotifications ? 'text-zinc-900 dark:text-zinc-100' : 'text-zinc-400'}`}>
                       {liveNotifications ? 'Real-Time Toasts On' : 'Silent Logging'}
                     </span>
                   </div>
@@ -1236,21 +1232,21 @@ export default function TestCreationPage() {
         {activeStudioTab === 'questions' && (
           <div className="space-y-6">
             {/* AI Document & Scanned Paper Ingestion Card - Compact & Expandable */}
-            <div className="card-base p-4 sm:p-5 space-y-4">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 space-y-4">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs shrink-0">
-                    <Sparkles className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 shrink-0">
+                    <Sparkles className="w-4 h-4 text-zinc-500" />
                   </div>
                   <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                       <span>Automated AI Question Paper Ingestion</span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                        Gemini 2.5
+                      <span className="text-[11px] font-mono text-zinc-400 font-normal">
+                        Gemini
                       </span>
                     </h3>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Instantly parses questions, multi-line equations, and figures from PDF, Word (.docx), or photos.
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      Parses questions, equations, and figures from PDF, Word (.docx), or photos.
                     </p>
                   </div>
                 </div>
@@ -1279,17 +1275,17 @@ export default function TestCreationPage() {
                       setSuccessMsg('Sample competitive exam question loaded into paper!');
                       setTimeout(() => setSuccessMsg(''), 3000);
                     }}
-                    className="btn-secondary text-[11px] py-1.5 px-3 flex items-center gap-1.5 cursor-pointer"
+                    className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 cursor-pointer"
                     title="Insert a sample JEE/NEET KaTeX question"
                   >
-                    <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+                    <BookOpen className="w-3.5 h-3.5 text-zinc-500" />
                     <span>Load Sample Question</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setIsDropzoneExpanded(!isDropzoneExpanded)}
-                    className="btn-secondary text-[11px] py-1.5 px-3 flex items-center gap-1.5 cursor-pointer"
+                    className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 cursor-pointer"
                   >
                     <span>{isDropzoneExpanded ? 'Collapse' : 'Upload File'}</span>
                     {isDropzoneExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -1312,12 +1308,12 @@ export default function TestCreationPage() {
                   }}
                   onDrop={handleFileDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  className={`relative border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer ${
+                  className={`relative border border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
                     dragActive
-                      ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20 scale-[1.01]'
+                      ? 'border-zinc-900 dark:border-zinc-100 bg-zinc-100 dark:bg-zinc-800'
                       : isIngesting
-                      ? 'border-indigo-300 dark:border-indigo-800 bg-indigo-50/20 dark:bg-indigo-950/10 cursor-wait'
-                      : 'border-slate-200/80 dark:border-[#334155] hover:border-blue-400 dark:hover:border-blue-500 bg-slate-50/50 dark:bg-[#151f32]/50'
+                      ? 'border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900 cursor-wait'
+                      : 'border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500 bg-zinc-50/50 dark:bg-zinc-950/40'
                   }`}
                 >
                   <input
@@ -1334,26 +1330,26 @@ export default function TestCreationPage() {
 
                   {isIngesting ? (
                     <div className="py-3 space-y-3">
-                      <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin mx-auto" />
+                      <Loader2 className="w-6 h-6 text-zinc-600 dark:text-zinc-300 animate-spin mx-auto" />
                       <div className="space-y-1">
-                        <p className="text-xs font-semibold text-slate-900 dark:text-white">
+                        <p className="text-xs font-medium text-zinc-900 dark:text-zinc-100">
                           {ingestionStep || 'Processing document with Gemini AI...'}
                         </p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        <p className="text-xs text-zinc-500">
                           Extracting questions, options, and formatting LaTeX formulas...
                         </p>
                       </div>
                     </div>
                   ) : (
                     <div className="py-2 space-y-2">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 mx-auto">
-                        <UploadCloud className="w-5 h-5" />
+                      <div className="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-500 mx-auto">
+                        <UploadCloud className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                          <span className="text-blue-600 dark:text-blue-400 underline underline-offset-2">Click to browse</span> or drag and drop document here
+                        <p className="text-xs font-medium text-zinc-800 dark:text-zinc-200">
+                          <span className="text-zinc-900 dark:text-zinc-100 underline underline-offset-2">Click to browse</span> or drag and drop document here
                         </p>
-                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                        <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5">
                           Supports PDF (.pdf), Word (.docx) & Images (.png, .jpg, .webp) up to 15 MB
                         </p>
                       </div>
@@ -1363,11 +1359,11 @@ export default function TestCreationPage() {
               )}
 
               {ingestionError && (
-                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2">
+                <div className="p-3 rounded-md bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/50 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold">Document Ingestion Failed</p>
-                    <p className="text-[11px] mt-0.5">{ingestionError}</p>
+                    <p className="font-medium">Document Ingestion Failed</p>
+                    <p className="text-xs mt-0.5">{ingestionError}</p>
                   </div>
                 </div>
               )}
@@ -1380,31 +1376,31 @@ export default function TestCreationPage() {
             />
 
             {/* Questions Draft Card */}
-            <div className="card-base p-5 sm:p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#334155] pb-3">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 sm:p-6 space-y-4">
+              <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
                     Question Items ({questions.length})
                   </h3>
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
-                    • Re-order or edit questions at any time
+                  <span className="text-xs text-zinc-400">
+                    • Re-order or edit questions
                   </span>
                 </div>
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium tabular-nums">
-                  Projected Marks: <strong className="text-slate-900 dark:text-white">{questions.length * correctMark} pts</strong>
+                <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium tabular-nums">
+                  Projected Marks: <strong className="text-zinc-900 dark:text-zinc-100">{questions.length * correctMark} pts</strong>
                 </span>
               </div>
 
               {questions.length === 0 ? (
-                <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-xs">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] flex items-center justify-center text-slate-400 mx-auto mb-2">
-                    <Plus className="w-5 h-5" />
+                <div className="text-center py-12 text-zinc-400 text-xs">
+                  <div className="w-9 h-9 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 mx-auto mb-2">
+                    <Plus className="w-4 h-4" />
                   </div>
-                  <p className="font-medium text-slate-600 dark:text-slate-400">No questions composed yet.</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Use the Question Authoring form or AI Ingestion above to add items to this examination.</p>
+                  <p className="font-medium text-zinc-600 dark:text-zinc-400">No questions composed yet.</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">Use the Question Authoring form or AI Ingestion above to add items to this examination.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {questions.map((q, idx) => {
                     const isNat = q.questionType === 'NAT';
                     const opts = Array.isArray(q.options) ? q.options.map(formatOption) : [];
@@ -1413,23 +1409,23 @@ export default function TestCreationPage() {
                     return (
                       <div
                         key={q._id || idx}
-                        className="p-5 rounded-xl bg-slate-50/70 dark:bg-[#151f32]/40 border border-slate-200/80 dark:border-[#334155] space-y-4 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-xs"
+                        className="p-4 sm:p-5 rounded-lg bg-zinc-50/40 dark:bg-zinc-800/30 border border-zinc-200/80 dark:border-zinc-800 space-y-3 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
                       >
                         {/* Question Item Header with Re-ordering & Edit Actions */}
-                        <div className="flex items-center justify-between gap-3 border-b border-slate-200/60 dark:border-[#334155] pb-3 flex-wrap">
+                        <div className="flex items-center justify-between gap-3 border-b border-zinc-200/60 dark:border-zinc-800 pb-3 flex-wrap">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center tabular-nums shadow-xs">
+                            <span className="w-6 h-6 rounded-md bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-semibold text-xs flex items-center justify-center tabular-nums">
                               {idx + 1}
                             </span>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                            <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-500">
                               {q.questionType || 'MCQ'}
                             </span>
-                            <span className="text-slate-600 dark:text-slate-400 text-xs font-medium">
-                              {q.subject || 'General'} {q.topic && `• ${q.topic}`}
+                            <span className="text-zinc-500 text-xs">
+                              · {q.subject || 'General'} {q.topic && `· ${q.topic}`}
                             </span>
                             {q.isEdited && (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                                Edited
+                              <span className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">
+                                (Edited)
                               </span>
                             )}
                           </div>
@@ -1441,7 +1437,7 @@ export default function TestCreationPage() {
                               type="button"
                               onClick={() => handleMoveQuestionUp(idx)}
                               disabled={idx === 0}
-                              className="p-1.5 rounded-lg bg-white dark:bg-[#1e293b] text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200/80 dark:border-[#334155] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                              className="p-1.5 rounded-md bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                               title="Move question up"
                             >
                               <ArrowUp className="w-3.5 h-3.5" />
@@ -1452,7 +1448,7 @@ export default function TestCreationPage() {
                               type="button"
                               onClick={() => handleMoveQuestionDown(idx)}
                               disabled={idx === questions.length - 1}
-                              className="p-1.5 rounded-lg bg-white dark:bg-[#1e293b] text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200/80 dark:border-[#334155] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                              className="p-1.5 rounded-md bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
                               title="Move question down"
                             >
                               <ArrowDown className="w-3.5 h-3.5" />
@@ -1462,7 +1458,7 @@ export default function TestCreationPage() {
                             <button
                               type="button"
                               onClick={() => setEditingQuestionIndex(idx)}
-                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#1e293b] text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200/80 dark:border-[#334155] text-xs font-semibold transition-colors cursor-pointer"
+                              className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-zinc-700 text-xs font-medium transition-colors cursor-pointer"
                               title="Edit question and options"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
@@ -1473,7 +1469,7 @@ export default function TestCreationPage() {
                             <button
                               type="button"
                               onClick={() => handleRemoveQuestion(idx)}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
+                              className="p-1.5 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-md transition-colors cursor-pointer"
                               title="Remove question"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1483,7 +1479,7 @@ export default function TestCreationPage() {
 
                         {/* Question Statement Preview */}
                         {q.questionText && (
-                          <div className="text-xs sm:text-sm text-slate-900 dark:text-slate-100 leading-relaxed font-sans">
+                          <div className="text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 leading-relaxed font-sans">
                             <MathRenderer text={q.questionText} />
                           </div>
                         )}
@@ -1493,15 +1489,15 @@ export default function TestCreationPage() {
                           <div className="pt-1">
                             <div
                               onClick={() => setLightboxImage(q.imageAttachment)}
-                              className="inline-block p-1.5 rounded-xl bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-[#334155] cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-all group"
+                              className="inline-block p-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 cursor-pointer hover:border-zinc-400 transition-all group"
                               title="Click to view high-resolution image"
                             >
                               <img
                                 src={q.imageAttachment}
                                 alt={`Question ${idx + 1} Diagram`}
-                                className="max-h-40 max-w-xs sm:max-w-md rounded-lg object-contain"
+                                className="max-h-40 max-w-xs sm:max-w-md rounded object-contain"
                               />
-                              <span className="text-[10px] text-blue-600 dark:text-blue-400 group-hover:underline flex items-center gap-1 mt-1 font-medium">
+                              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 group-hover:underline flex items-center gap-1 mt-1 font-medium">
                                 <ExternalLink className="w-3 h-3" /> View full image
                               </span>
                             </div>
@@ -1510,30 +1506,30 @@ export default function TestCreationPage() {
 
                         {/* MCQ / MSQ Options Preview Grid */}
                         {!isNat && opts.length > 0 && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                             {opts.map((opt, optIdx) => {
                               const isCorrect = correctIndices.includes(optIdx);
 
                               return (
                                 <div
                                   key={optIdx}
-                                  className={`p-3 rounded-xl border flex items-start gap-2.5 transition-all text-xs ${
+                                  className={`p-2.5 rounded-md border flex items-start gap-2.5 transition-colors text-xs ${
                                     isCorrect
-                                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-300 ring-1 ring-emerald-500/20'
-                                      : 'bg-white dark:bg-[#1e293b] border-slate-200/80 dark:border-[#334155] text-slate-700 dark:text-slate-300'
+                                      ? 'bg-emerald-50/50 border-emerald-200/80 dark:bg-emerald-950/20 dark:border-emerald-800/50 text-emerald-900 dark:text-emerald-200'
+                                      : 'bg-white dark:bg-zinc-850 border-zinc-200/80 dark:border-zinc-700/60 text-zinc-700 dark:text-zinc-300'
                                   }`}
                                 >
                                   <div
-                                    className={`w-6 h-6 rounded-md flex items-center justify-center font-bold text-xs shrink-0 ${
+                                    className={`w-5 h-5 rounded flex items-center justify-center font-medium text-xs shrink-0 ${
                                       isCorrect
-                                        ? 'bg-emerald-600 text-white shadow-xs'
-                                        : 'bg-slate-100 dark:bg-[#151f32] text-slate-600 dark:text-slate-400'
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
                                     }`}
                                   >
                                     {isCorrect ? '✓' : getOptionLabel(optIdx)}
                                   </div>
 
-                                  <div className="flex-1 min-w-0 space-y-1.5 pt-0.5">
+                                  <div className="flex-1 min-w-0 space-y-1 pt-0.5">
                                     {opt.text && (
                                       <div className="leading-relaxed">
                                         <MathRenderer text={opt.text} />
@@ -1549,14 +1545,14 @@ export default function TestCreationPage() {
                                         <img
                                           src={opt.image}
                                           alt={`Option ${getOptionLabel(optIdx)} diagram`}
-                                          className="max-h-24 max-w-full rounded border border-slate-200 dark:border-slate-700 object-contain bg-white hover:opacity-90 transition-opacity"
+                                          className="max-h-24 max-w-full rounded border border-zinc-200 dark:border-zinc-700 object-contain bg-white hover:opacity-90 transition-opacity"
                                         />
                                       </div>
                                     )}
 
                                     {isCorrect && (
-                                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block pt-0.5">
-                                        Correct Answer
+                                      <span className="text-[10px] font-medium uppercase tracking-wider text-emerald-700 dark:text-emerald-400 block pt-0.5">
+                                        Correct Key
                                       </span>
                                     )}
                                   </div>
@@ -1568,9 +1564,9 @@ export default function TestCreationPage() {
 
                         {/* NAT Numerical Range Display */}
                         {isNat && (
-                          <div className="p-3 rounded-xl bg-white dark:bg-[#1e293b] border border-slate-200/80 dark:border-[#334155] text-xs flex items-center gap-2">
-                            <span className="font-semibold text-slate-700 dark:text-slate-300">Accepted Answer Range:</span>
-                            <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20">
+                          <div className="p-2.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs flex items-center gap-2">
+                            <span className="text-zinc-600 dark:text-zinc-400 font-medium">Accepted Answer Range:</span>
+                            <span className="font-mono font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200/50 dark:border-emerald-800/40">
                               {correctIndices[0] !== undefined
                                 ? correctIndices[0] === correctIndices[1] || correctIndices[1] === undefined
                                 ? `${correctIndices[0]}`
@@ -1582,12 +1578,12 @@ export default function TestCreationPage() {
 
                         {/* Pedagogical Explanation Preview */}
                         {q.explanation && (
-                          <div className="p-3 rounded-xl bg-slate-100/70 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] text-xs space-y-1">
-                            <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                              <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
+                          <div className="p-2.5 rounded-md bg-zinc-100/70 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/60 text-xs space-y-1">
+                            <span className="font-medium text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
+                              <HelpCircle className="w-3.5 h-3.5 text-zinc-500" />
                               <span>Pedagogical Explanation:</span>
                             </span>
-                            <div className="text-slate-600 dark:text-slate-400 leading-relaxed pl-5">
+                            <div className="text-zinc-600 dark:text-zinc-400 leading-relaxed pl-5">
                               <MathRenderer text={q.explanation} />
                             </div>
                           </div>
@@ -1619,24 +1615,24 @@ export default function TestCreationPage() {
       {/* Image Lightbox Modal */}
       {lightboxImage && (
         <div
-          className="fixed inset-0 z-[10000] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-[10000] bg-zinc-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
           onClick={() => setLightboxImage(null)}
         >
           <div
-            className="max-w-3xl w-full card-base p-5 space-y-3 shadow-2xl"
+            className="max-w-3xl w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 space-y-3 shadow-sm"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">High Resolution Image Preview</h3>
+              <h3 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">High Resolution Image Preview</h3>
               <button
                 type="button"
                 onClick={() => setLightboxImage(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#151f32] transition-colors"
+                className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="max-h-[70vh] flex items-center justify-center bg-slate-100 dark:bg-[#0f172a] rounded-xl overflow-hidden p-2 border border-slate-200/80 dark:border-[#334155]">
+            <div className="max-h-[70vh] flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 rounded-md overflow-hidden p-2 border border-zinc-200 dark:border-zinc-800">
               <img src={lightboxImage} alt="Diagram preview" className="max-h-[65vh] w-auto object-contain" />
             </div>
             <div className="flex justify-end">
@@ -1644,7 +1640,7 @@ export default function TestCreationPage() {
                 href={lightboxImage}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-medium"
+                className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:underline flex items-center gap-1 font-medium"
               >
                 <span>Open original in new tab</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -1671,21 +1667,21 @@ export default function TestCreationPage() {
       {/* Confirm Examination Settings Before Publishing Modal */}
       {showConfirmModal && (
         <div
-          className="fixed inset-0 z-[10000] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-[10000] bg-zinc-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
           onClick={() => setShowConfirmModal(false)}
         >
           <div
-            className="max-w-2xl w-full bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-[#334155] rounded-2xl p-6 space-y-5 shadow-2xl"
+            className="max-w-2xl w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-6 space-y-5 shadow-sm"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#334155] pb-3">
+            <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <CheckCheck className="w-5 h-5" />
+                <div className="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center">
+                  <CheckCheck className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Confirm Examination Parameters</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">Confirm Examination Parameters</h3>
+                  <p className="text-xs text-zinc-500">
                     Review your test rules, scheduling window, and proctoring parameters before publishing.
                   </p>
                 </div>
@@ -1693,7 +1689,7 @@ export default function TestCreationPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirmModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#151f32]"
+                className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1701,38 +1697,40 @@ export default function TestCreationPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               {/* Test Meta Card */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Assessment Details</span>
-                <div className="font-semibold text-slate-900 dark:text-white text-sm">{title}</div>
-                <div className="text-slate-500 dark:text-slate-400">
-                  {category} • {durationMinutes} mins • {questions.length} Questions
+              <div className="p-3.5 rounded-md bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60 space-y-1.5">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">Assessment Details</span>
+                <div className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">{title}</div>
+                <div className="text-zinc-500">
+                  {category} · {durationMinutes} mins · {questions.length} Questions
                 </div>
-                <div className="text-blue-600 dark:text-blue-400 font-medium">
+                <div className="text-zinc-700 dark:text-zinc-300 font-medium">
                   Total Marks: {questions.length * correctMark} (+{correctMark} / {incorrectMark})
                 </div>
               </div>
 
               {/* Schedule Card */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Schedule Window</span>
+              <div className="p-3.5 rounded-md bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60 space-y-1.5">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">Schedule Window</span>
                 {isScheduled ? (
                   <>
-                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                      Scheduled Window
+                    <span className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      <span>Scheduled Window</span>
                     </span>
-                    <div className="text-[11px] text-slate-700 dark:text-slate-300 font-mono">
+                    <div className="text-[11px] text-zinc-700 dark:text-zinc-300 font-mono">
                       <strong>Opens:</strong> {new Date(startTime).toLocaleString()}
                     </div>
-                    <div className="text-[11px] text-slate-700 dark:text-slate-300 font-mono">
+                    <div className="text-[11px] text-zinc-700 dark:text-zinc-300 font-mono">
                       <strong>Closes:</strong> {new Date(endTime).toLocaleString()}
                     </div>
                   </>
                 ) : (
                   <>
-                    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                      Open / Unscheduled
+                    <span className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>Open / Flexible Window</span>
                     </span>
-                    <p className="text-slate-500 dark:text-slate-400 text-[11px]">
+                    <p className="text-zinc-500 text-[11px]">
                       Candidates can start this assessment at any time.
                     </p>
                   </>
@@ -1740,19 +1738,19 @@ export default function TestCreationPage() {
               </div>
 
               {/* Candidate Access & Solutions Card */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Candidate Access Rules</span>
-                <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
+              <div className="p-3.5 rounded-md bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60 space-y-1.5">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">Candidate Access Rules</span>
+                <div className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
                   <span>Attempt Limit:</span>
                   <strong>{isUnlimitedAttempts ? 'Unlimited (∞)' : `${maxAttemptsValue} Attempts`}</strong>
                 </div>
-                <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
+                <div className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
                   <span>Practice Mode:</span>
-                  <strong className={allowPracticeMode ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}>
+                  <strong className={allowPracticeMode ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400'}>
                     {allowPracticeMode ? (isScheduled ? 'After schedule ends' : 'Allowed anytime') : 'Disabled'}
                   </strong>
                 </div>
-                <div className="flex items-center justify-between text-slate-700 dark:text-slate-300">
+                <div className="flex items-center justify-between text-zinc-700 dark:text-zinc-300">
                   <span>View Responses:</span>
                   <strong className={allowReviewResponses ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'}>
                     {allowReviewResponses ? (isScheduled ? 'Released after schedule' : 'Available immediately') : 'Hidden / Disabled'}
@@ -1761,29 +1759,29 @@ export default function TestCreationPage() {
               </div>
 
               {/* Proctoring Rules Card */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Proctoring Enforcement</span>
-                <div className="grid grid-cols-2 gap-1 text-[11px] text-slate-600 dark:text-slate-400">
-                  <span className={faceCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}>
-                    {faceCheck ? '✓' : '✕'} Face Detection
+              <div className="p-3.5 rounded-md bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/60 space-y-1.5">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">Proctoring Enforcement</span>
+                <div className="grid grid-cols-2 gap-1 text-[11px] text-zinc-600 dark:text-zinc-400">
+                  <span className={faceCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400'}>
+                    {faceCheck ? '●' : '○'} Face Detection
                   </span>
-                  <span className={audioCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}>
-                    {audioCheck ? '✓' : '✕'} Audio Monitor
+                  <span className={audioCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400'}>
+                    {audioCheck ? '●' : '○'} Audio Monitor
                   </span>
-                  <span className={fullScreenLock ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}>
-                    {fullScreenLock ? '✓' : '✕'} Fullscreen Lock
+                  <span className={fullScreenLock ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400'}>
+                    {fullScreenLock ? '●' : '○'} Fullscreen Lock
                   </span>
-                  <span className={objectCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}>
-                    {objectCheck ? '✓' : '✕'} Device Detection
+                  <span className={objectCheck ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400'}>
+                    {objectCheck ? '●' : '○'} Device Detection
                   </span>
                 </div>
-                <div className="text-[11px] pt-1 border-t border-slate-200 dark:border-[#334155] text-slate-500">
+                <div className="text-[11px] pt-1 border-t border-zinc-200 dark:border-zinc-700 text-zinc-500">
                   Live alerts: <strong>{liveNotifications ? 'Enabled' : 'Disabled'}</strong>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100 dark:border-[#334155]">
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
               <button
                 type="button"
                 onClick={() => setShowConfirmModal(false)}

@@ -184,18 +184,18 @@ export default function ExamDetailPage() {
 
   if (isLoadingExam) {
     return (
-      <div className="min-h-screen bg-[#edf2f9] dark:bg-[#0f172a] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-zinc-600 dark:text-zinc-400" />
       </div>
     );
   }
 
   if (error || !exam) {
     return (
-      <div className="min-h-screen bg-[#edf2f9] dark:bg-[#0f172a] flex items-center justify-center p-4">
-        <div className="max-w-sm w-full card-base p-6 text-center elevation-card">
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-4">
+        <div className="max-w-sm w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-6 text-center shadow-none">
           <AlertCircle className="w-8 h-8 text-rose-500 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-5">{error || 'Exam not found.'}</p>
+          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-5">{error || 'Exam not found.'}</p>
           <button
             onClick={() => navigate('/dashboard')}
             className="w-full btn-primary"
@@ -214,7 +214,7 @@ export default function ExamDetailPage() {
   const questions = exam.questions || [];
 
   return (
-    <div className="min-h-screen bg-[#edf2f9] dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 flex flex-col">
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -229,48 +229,34 @@ export default function ExamDetailPage() {
           />
         </div>
 
-        {/* ── Main Hero Card (Streamlined & Proportional) ────────────────────────── */}
-        <section className="card-base p-5 sm:p-6 elevation-card space-y-4">
+        {/* ── Main Hero Card ────────────────────────── */}
+        <section className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 sm:p-6 shadow-sm space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
             <div className="space-y-2 flex-1 min-w-0">
-              {/* Badges strip */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {isCreator ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 shadow-2xs">
-                    <Sliders className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
-                    <span>Examiner Studio</span>
-                  </span>
-                ) : (
-                  <span className="badge-blue text-[11px] py-0.5 px-2.5">
-                    {exam.category || 'General'}
-                  </span>
-                )}
-
-                {/* Draft / Published status */}
-                <span
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider border shadow-2xs ${
-                    exam.status === 'draft'
-                      ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border-amber-200 dark:border-amber-800'
-                      : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                  }`}
-                >
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      exam.status === 'draft' ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'
-                    }`}
-                  />
-                  <span>{exam.status === 'draft' ? 'Draft Paper' : 'Published Assessment'}</span>
+              {/* Header Status & Eyebrows */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                  {exam.category || 'General'}
                 </span>
 
+                <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      exam.status === 'draft' ? 'bg-amber-500' : 'bg-emerald-500'
+                    }`}
+                  />
+                  <span>{exam.status === 'draft' ? 'Draft' : 'Published'}</span>
+                </div>
+
                 {exam.proctorSettings?.faceCheck !== false && (
-                  <span className="badge-blue text-[11px] py-0.5 px-2.5">
-                    <ShieldCheck className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                  <div className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    <ShieldCheck className="w-3.5 h-3.5" />
                     <span>AI Proctored</span>
-                  </span>
+                  </div>
                 )}
 
                 {hasAttempted && !isCreator && (
-                  <span className="badge-emerald text-[11px] py-0.5 px-2.5">
+                  <span className="text-xs text-zinc-500">
                     Attempted
                   </span>
                 )}
@@ -278,22 +264,22 @@ export default function ExamDetailPage() {
 
               {/* Title & Description */}
               <div>
-                <h1 className="font-display text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
                   {exam.title}
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-3xl mt-1 line-clamp-2 sm:line-clamp-3">
-                  {exam.description || 'Comprehensive proctored examination covering competitive syllabus standards with real-time biometric and environment verification.'}
+                <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-3xl mt-1 line-clamp-2 sm:line-clamp-3">
+                  {exam.description || 'Comprehensive evaluation covering standard curriculum syllabus.'}
                 </p>
               </div>
 
               {/* Modules / Subject pills */}
               {subjects.length > 0 && (
                 <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
-                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Modules:</span>
+                  <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">Modules:</span>
                   {subjects.map((s) => (
                     <span
                       key={s}
-                      className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#151f32] text-[10px] text-slate-700 dark:text-slate-300 font-medium border border-slate-200/60 dark:border-[#334155]"
+                      className="px-2 py-0.5 rounded text-xs text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800"
                     >
                       {s}
                     </span>
@@ -316,17 +302,17 @@ export default function ExamDetailPage() {
                   </button>
 
                   {/* Creator Action: Live Proctoring Console (Combined Modal + Pop-out) */}
-                  <div className="flex items-stretch rounded-xl border border-slate-200/90 dark:border-[#334155] bg-white dark:bg-[#1e293b] shadow-2xs overflow-hidden transition-all hover:border-slate-300 dark:hover:border-slate-600">
+                  <div className="flex items-stretch rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-none overflow-hidden transition-colors hover:border-zinc-300 dark:hover:border-zinc-700">
                     <button
                       type="button"
                       onClick={() => setIsLiveMonitorOpen(true)}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#243147] transition-colors cursor-pointer"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-850 transition-colors cursor-pointer"
                       title="Open Live Proctoring Console"
                     >
                       <Radio className="w-3.5 h-3.5 text-emerald-500 animate-pulse shrink-0" />
                       <span>Live Console</span>
                     </button>
-                    <div className="w-[1px] bg-slate-200/90 dark:border-r dark:border-[#334155] self-stretch" />
+                    <div className="w-[1px] bg-zinc-200 dark:bg-zinc-800 self-stretch" />
                     <button
                       type="button"
                       onClick={() => {
@@ -340,7 +326,7 @@ export default function ExamDetailPage() {
                           `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,status=no,toolbar=no,menubar=no,location=no`
                         );
                       }}
-                      className="px-2.5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-[#243147] transition-colors cursor-pointer"
+                      className="px-2.5 flex items-center justify-center text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-zinc-850 transition-colors cursor-pointer"
                       title="Open Live Console in separate window"
                     >
                       <ExternalLink className="w-3 h-3" />
@@ -352,7 +338,7 @@ export default function ExamDetailPage() {
                     onClick={() => navigate(`/test/${examId}/audit`)}
                     className="btn-secondary text-xs py-2 px-3"
                   >
-                    <FileText className="w-3.5 h-3.5 text-blue-500" />
+                    <FileText className="w-3.5 h-3.5 text-zinc-500" />
                     <span>Violation Logs & Reports</span>
                   </button>
 
@@ -373,7 +359,7 @@ export default function ExamDetailPage() {
                   {isScheduleUpcoming ? (
                     <button
                       disabled
-                      className="px-4 py-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-semibold text-xs flex items-center justify-center gap-1.5 cursor-not-allowed"
+                      className="px-4 py-2 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-medium text-xs flex items-center justify-center gap-1.5 cursor-not-allowed"
                     >
                       <Clock className="w-3.5 h-3.5" />
                       <span>Starts {new Date(startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -381,21 +367,21 @@ export default function ExamDetailPage() {
                   ) : isScheduleConcluded ? (
                     <button
                       disabled
-                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#151f32] text-slate-400 font-semibold text-xs cursor-not-allowed"
+                      className="px-4 py-2 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-400 font-medium text-xs cursor-not-allowed"
                     >
                       Testing Window Ended
                     </button>
                   ) : isExhausted ? (
                     <button
                       disabled
-                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#151f32] text-slate-400 font-semibold text-xs cursor-not-allowed"
+                      className="px-4 py-2 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-400 font-medium text-xs cursor-not-allowed"
                     >
                       Attempts Exhausted
                     </button>
                   ) : hasAttempted ? (
                     <button
                       onClick={() => handleStartExam(false)}
-                      className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs hover:shadow-md transition-all cursor-pointer"
+                      className="btn-primary text-xs py-2.5 px-5 flex items-center justify-center gap-2"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
                       <span>Retake Exam</span>
@@ -415,15 +401,15 @@ export default function ExamDetailPage() {
                     canStartPractice ? (
                       <button
                         onClick={() => handleStartExam(true)}
-                        className="btn-secondary text-xs py-1.5 px-3 flex items-center justify-center gap-1.5 border-dashed hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400"
+                        className="btn-secondary text-xs py-1.5 px-3 flex items-center justify-center gap-1.5 border-dashed"
                         title="Practice this test with proctoring turned off. Attempts are private and will not notify the examiner."
                       >
-                        <FlaskConical className="w-3 h-3 text-blue-500" />
+                        <FlaskConical className="w-3 h-3 text-zinc-500" />
                         <span>Practice Mode</span>
                       </button>
                     ) : (
                       <div
-                        className="text-center text-[10px] text-slate-400 py-1 px-2 rounded-lg bg-slate-100 dark:bg-[#151f32] border border-slate-200/60 dark:border-[#334155]"
+                        className="text-center text-[10px] text-zinc-400 py-1 px-2 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700"
                         title="Practice mode will unlock after the official scheduled exam has ended"
                       >
                         Practice unlocks after schedule ends
@@ -437,19 +423,19 @@ export default function ExamDetailPage() {
 
           {/* Scheduled Examination Status Banner */}
           {isScheduled && (
-            <div className={`p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs ${
+            <div className={`p-3 rounded-md border flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs ${
               isScheduleUpcoming
-                ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-200'
+                ? 'bg-amber-50/70 dark:bg-amber-950/30 border-amber-200/60 dark:border-amber-900/50 text-amber-800 dark:text-amber-200'
                 : isScheduleConcluded
-                ? 'bg-slate-100 dark:bg-[#151f32] border-slate-200 dark:border-[#334155] text-slate-600 dark:text-slate-400'
-                : 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-200'
+                ? 'bg-zinc-100 dark:bg-zinc-800/80 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400'
+                : 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-200'
             }`}>
               <div className="flex items-center gap-2.5">
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${
                   isScheduleUpcoming
                     ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
                     : isScheduleConcluded
-                    ? 'bg-slate-200 dark:bg-[#334155] text-slate-500'
+                    ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500'
                     : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 animate-pulse'
                 }`}>
                   <Calendar className="w-4 h-4" />
@@ -485,99 +471,76 @@ export default function ExamDetailPage() {
             </div>
           )}
 
-          {/* ── Stats Metric Strip (Refined & Proportional) ─────────────── */}
-          <div className="pt-3.5 border-t border-slate-100 dark:border-[#334155] grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-            <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl bg-slate-50/70 dark:bg-[#151f32]/80 border border-slate-200/60 dark:border-[#334155]">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 flex items-center justify-center shrink-0 border border-blue-200/50 dark:border-blue-900/40">
-                <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Duration</div>
-                <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tabular-nums">{exam.durationMinutes} mins</div>
+          {/* ── Stats Metric Strip (Clean divided grid) ─────────────── */}
+          <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-zinc-200 dark:divide-zinc-800 text-xs">
+            <div className="py-2 pr-4">
+              <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Duration</span>
+              <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">{exam.durationMinutes} mins</span>
+            </div>
+
+            <div className="py-2 px-0 sm:px-4">
+              <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Questions</span>
+              <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">{questions.length} Items</span>
+            </div>
+
+            <div className="py-2 px-0 sm:px-4">
+              <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Marking Scheme</span>
+              <div className="text-sm font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
+                <span>+{exam.markingScheme?.correct ?? 4}</span>
+                <span className="text-zinc-400 mx-1">/</span>
+                <span>{exam.markingScheme?.incorrect ?? -1}</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl bg-slate-50/70 dark:bg-[#151f32]/80 border border-slate-200/60 dark:border-[#334155]">
-              <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 flex items-center justify-center shrink-0 border border-indigo-200/50 dark:border-indigo-900/40">
-                <BookOpen className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Questions</div>
-                <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tabular-nums">{questions.length} Items</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl bg-slate-50/70 dark:bg-[#151f32]/80 border border-slate-200/60 dark:border-[#334155]">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center shrink-0 border border-emerald-200/50 dark:border-emerald-900/40">
-                <Award className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Marking Scheme</div>
-                <div className="text-xs sm:text-sm font-bold tabular-nums">
-                  <span className="text-emerald-600 dark:text-emerald-400">+{exam.markingScheme?.correct ?? 4}</span>
-                  <span className="text-slate-400 mx-1">/</span>
-                  <span className="text-rose-600 dark:text-rose-400">{exam.markingScheme?.incorrect ?? -1}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5 p-2.5 sm:p-3 rounded-xl bg-slate-50/70 dark:bg-[#151f32]/80 border border-slate-200/60 dark:border-[#334155]">
-              <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/60 flex items-center justify-center shrink-0 border border-purple-200/50 dark:border-purple-900/40">
-                <Target className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Marks</div>
-                <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tabular-nums">
-                  {exam.totalMarks || questions.length * (exam.markingScheme?.correct ?? 4)} pts
-                </div>
-              </div>
+            <div className="py-2 pl-0 sm:pl-4">
+              <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Total Marks</span>
+              <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">
+                {exam.totalMarks || questions.length * (exam.markingScheme?.correct ?? 4)} pts
+              </span>
             </div>
           </div>
         </section>
 
         {/* ── Examiner Tabbed View ─────────────────────────────────────────── */}
         {isCreator ? (
-          <section className="space-y-5">
-            {/* Tabs Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#334155] pb-1 gap-4 overflow-x-auto">
-              <div className="flex items-center gap-2">
+          <section className="space-y-4">
+            {/* Tabs Header: Horizontal text tabs with active bottom border indicator */}
+            <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 gap-6 overflow-x-auto">
+              <div className="flex items-center gap-6 h-10">
                 <button
                   type="button"
                   onClick={() => setActiveTab('questions')}
-                  className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  className={`h-full flex items-center text-xs tracking-tight transition-colors border-b-2 -mb-[1px] cursor-pointer ${
                     activeTab === 'questions'
-                      ? 'bg-blue-600 text-white shadow-2xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#243147]'
+                      ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-zinc-50 font-medium'
+                      : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 font-normal'
                   }`}
                 >
-                  <BookOpen className="w-4 h-4" />
-                  <span>Question Paper & Answer Key ({questions.length})</span>
+                  <span>Questions & Answer Key ({questions.length})</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setActiveTab('proctoring')}
-                  className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  className={`h-full flex items-center text-xs tracking-tight transition-colors border-b-2 -mb-[1px] cursor-pointer ${
                     activeTab === 'proctoring'
-                      ? 'bg-blue-600 text-white shadow-2xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#243147]'
+                      ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-zinc-50 font-medium'
+                      : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 font-normal'
                   }`}
                 >
-                  <ShieldCheck className="w-4 h-4" />
                   <span>Proctoring Security Rules</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setActiveTab('attempts')}
-                  className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  className={`h-full flex items-center text-xs tracking-tight transition-colors border-b-2 -mb-[1px] cursor-pointer ${
                     activeTab === 'attempts'
-                      ? 'bg-blue-600 text-white shadow-2xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#243147]'
+                      ? 'border-zinc-900 dark:border-zinc-100 text-zinc-950 dark:text-zinc-50 font-medium'
+                      : 'border-transparent text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 font-normal'
                   }`}
                 >
-                  <CalendarDays className="w-4 h-4" />
-                  <span>Test Runs & Attempts ({attempts.length})</span>
+                  <span>Attempt History ({attempts.length})</span>
                 </button>
               </div>
 
@@ -616,31 +579,31 @@ export default function ExamDetailPage() {
                     return (
                       <div
                         key={q._id || idx}
-                        className="card-base p-5 elevation-card space-y-4"
+                        className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-5 space-y-4"
                       >
                         {/* Question Card Header */}
-                        <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#334155] pb-3">
+                        <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-900/60 text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center justify-center">
+                            <span className="w-5 h-5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium flex items-center justify-center">
                               {idx + 1}
                             </span>
-                            <span className="text-xs font-bold text-slate-900 dark:text-white">
+                            <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
                               Question {idx + 1}
                             </span>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-[#151f32] text-slate-600 dark:text-slate-300">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                               {q.type || 'MCQ'}
                             </span>
-                            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                            <span className="text-xs text-zinc-500 tabular-nums">
                               +{q.marks || exam.markingScheme?.correct || 4} / {-(q.negativeMarks || Math.abs(exam.markingScheme?.incorrect || 1))} pts
                             </span>
                             {q.isEdited && (
-                              <span className="badge-amber">
+                              <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
                                 [Edited]
                               </span>
                             )}
                           </div>
 
-                          <div className="text-[11px] text-slate-400">
+                          <div className="text-xs text-zinc-400">
                             {q.subject && <span>{q.subject}</span>}
                             {q.topic && <span> • {q.topic}</span>}
                           </div>
@@ -648,21 +611,21 @@ export default function ExamDetailPage() {
 
                         {/* Statement */}
                         {q.questionText && (
-                          <div className="text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-normal">
+                          <div className="text-sm text-zinc-800 dark:text-zinc-200 leading-relaxed font-normal">
                             <MathRenderer text={q.questionText} />
                           </div>
                         )}
 
                         {/* Question Diagram / Image Attachment */}
                         {q.imageAttachment && (
-                          <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#151f32] border border-slate-200/80 dark:border-[#334155] inline-block">
+                          <div className="p-2 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 inline-block">
                             <img
                               src={q.imageAttachment}
                               alt={`Question ${idx + 1} diagram`}
                               onClick={() => setLightboxImage(q.imageAttachment)}
-                              className="max-h-56 max-w-full rounded-lg object-contain cursor-zoom-in hover:opacity-95 transition-opacity"
+                              className="max-h-56 max-w-full rounded object-contain cursor-zoom-in hover:opacity-95 transition-opacity"
                             />
-                            <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                            <div className="text-[10px] text-zinc-400 mt-1 flex items-center gap-1">
                               <ImageIcon className="w-3 h-3" />
                               <span>Click image to zoom</span>
                             </div>
@@ -683,17 +646,17 @@ export default function ExamDetailPage() {
                               return (
                                 <div
                                   key={optIdx}
-                                  className={`p-3 rounded-xl border flex items-start gap-2.5 transition-colors ${
+                                  className={`p-3 rounded-lg border flex items-start gap-2.5 transition-colors ${
                                     isCorrect
-                                      ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/80'
-                                      : 'bg-white/70 dark:bg-[#151f32] border-slate-200/80 dark:border-[#334155]'
+                                      ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/60'
+                                      : 'bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'
                                   }`}
                                 >
                                   <span
-                                    className={`w-6 h-6 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 ${
+                                    className={`w-5 h-5 rounded text-xs font-medium flex items-center justify-center shrink-0 ${
                                       isCorrect
-                                        ? 'bg-emerald-600 text-white shadow-xs'
-                                        : 'bg-white dark:bg-[#243147] text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-[#334155]'
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
                                     }`}
                                   >
                                     {String.fromCharCode(65 + optIdx)}
@@ -701,7 +664,7 @@ export default function ExamDetailPage() {
 
                                   <div className="flex-1 min-w-0 space-y-1.5">
                                     {optText && (
-                                      <div className="text-xs text-slate-800 dark:text-slate-200 leading-snug">
+                                      <div className="text-xs text-zinc-800 dark:text-zinc-200 leading-snug">
                                         <MathRenderer text={optText} />
                                       </div>
                                     )}
@@ -710,13 +673,13 @@ export default function ExamDetailPage() {
                                         src={optImg}
                                         alt={`Option ${String.fromCharCode(65 + optIdx)}`}
                                         onClick={() => setLightboxImage(optImg)}
-                                        className="max-h-24 max-w-full rounded object-contain cursor-zoom-in border border-slate-200 dark:border-slate-700 bg-white"
+                                        className="max-h-24 max-w-full rounded object-contain cursor-zoom-in border border-zinc-200 dark:border-zinc-700 bg-white"
                                       />
                                     )}
                                   </div>
 
                                   {isCorrect && (
-                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 shrink-0">
+                                    <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 shrink-0">
                                       ✓ Correct
                                     </span>
                                   )}
@@ -728,11 +691,11 @@ export default function ExamDetailPage() {
 
                         {/* NAT correct range */}
                         {isNAT && (
-                          <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/60 text-xs">
-                            <span className="font-bold text-emerald-800 dark:text-emerald-300 mr-2">
+                          <div className="p-3 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/50 dark:border-emerald-900/40 text-xs">
+                            <span className="font-medium text-emerald-800 dark:text-emerald-300 mr-2">
                               Numerical Correct Range:
                             </span>
-                            <span className="font-mono text-slate-800 dark:text-slate-200">
+                            <span className="font-mono text-zinc-800 dark:text-zinc-200">
                               {Array.isArray(correctAnswers) ? correctAnswers.join(' to ') : String(correctAnswers)}
                             </span>
                           </div>
@@ -740,12 +703,12 @@ export default function ExamDetailPage() {
 
                         {/* Pedagogical Explanation */}
                         {q.explanation && (
-                          <div className="p-3.5 rounded-xl bg-blue-50/40 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 text-xs space-y-1">
-                            <div className="flex items-center gap-1.5 font-bold text-blue-700 dark:text-blue-300">
+                          <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-xs space-y-1">
+                            <div className="flex items-center gap-1.5 font-medium text-zinc-700 dark:text-zinc-300">
                               <HelpCircle className="w-3.5 h-3.5" />
-                              <span>Pedagogical Explanation:</span>
+                              <span>Explanation:</span>
                             </div>
-                            <div className="text-slate-600 dark:text-slate-300 leading-relaxed pl-5">
+                            <div className="text-zinc-600 dark:text-zinc-400 leading-relaxed pl-5">
                               <MathRenderer text={q.explanation} />
                             </div>
                           </div>
@@ -760,82 +723,86 @@ export default function ExamDetailPage() {
             {/* TAB 2: Proctoring Security Rules */}
             {activeTab === 'proctoring' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-5 card-base space-y-3">
+                <div className="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200/60 dark:border-blue-900/60">
-                        <Camera className="w-5 h-5" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center">
+                        <Camera className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">AI Biometric Face & Eye Gaze</h4>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">MediaPipe Vision Face Mesh</p>
+                        <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">AI Biometric Face & Eye Gaze</h4>
+                        <p className="text-[11px] text-zinc-400">MediaPipe Vision Face Mesh</p>
                       </div>
                     </div>
-                    <span className="badge-emerald">
-                      {exam.proctorSettings?.faceCheck !== false ? 'Active' : 'Disabled'}
-                    </span>
+                    <div className="flex items-center gap-1 text-xs text-zinc-500">
+                      <span className={`w-1.5 h-1.5 rounded-full ${exam.proctorSettings?.faceCheck !== false ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
+                      <span>{exam.proctorSettings?.faceCheck !== false ? 'Active' : 'Disabled'}</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  <p className="text-xs text-zinc-500 leading-relaxed">
                     Tracks candidate gaze orientation, detects multi-person presence, and flags candidate absence during assessment.
                   </p>
                 </div>
 
-                <div className="p-5 card-base space-y-3">
+                <div className="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200/60 dark:border-indigo-900/60">
-                        <Mic className="w-5 h-5" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center">
+                        <Mic className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">Acoustic & Voice Activity</h4>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Web Audio API Spectrum</p>
+                        <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Acoustic & Voice Activity</h4>
+                        <p className="text-[11px] text-zinc-400">Web Audio API Spectrum</p>
                       </div>
                     </div>
-                    <span className="badge-emerald">
-                      {exam.proctorSettings?.audioCheck !== false ? 'Active' : 'Disabled'}
-                    </span>
+                    <div className="flex items-center gap-1 text-xs text-zinc-500">
+                      <span className={`w-1.5 h-1.5 rounded-full ${exam.proctorSettings?.audioCheck !== false ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
+                      <span>{exam.proctorSettings?.audioCheck !== false ? 'Active' : 'Disabled'}</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  <p className="text-xs text-zinc-500 leading-relaxed">
                     Detects speech, whispering, background voices, and sudden volume spikes during test administration.
                   </p>
                 </div>
 
-                <div className="p-5 card-base space-y-3">
+                <div className="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-200/60 dark:border-purple-900/60">
-                        <Maximize2 className="w-5 h-5" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center">
+                        <Maximize2 className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">Full-Screen Lockdown</h4>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Fullscreen API & Window Blur</p>
+                        <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Full-Screen Lockdown</h4>
+                        <p className="text-[11px] text-zinc-400">Fullscreen API & Window Blur</p>
                       </div>
                     </div>
-                    <span className="badge-emerald">
-                      {exam.proctorSettings?.fullScreenLock !== false ? 'Active' : 'Disabled'}
-                    </span>
+                    <div className="flex items-center gap-1 text-xs text-zinc-500">
+                      <span className={`w-1.5 h-1.5 rounded-full ${exam.proctorSettings?.fullScreenLock !== false ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
+                      <span>{exam.proctorSettings?.fullScreenLock !== false ? 'Active' : 'Disabled'}</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  <p className="text-xs text-zinc-500 leading-relaxed">
                     Forces continuous full-screen view. Flags window tab switching, minimizing, or cursor loss.
                   </p>
                 </div>
 
-                <div className="p-5 card-base space-y-3">
+                <div className="p-4 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-200/60 dark:border-amber-900/60">
-                        <Smartphone className="w-5 h-5" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center">
+                        <Smartphone className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">Prohibited Device Detection</h4>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">COCO-SSD Object Classifier</p>
+                        <h4 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Prohibited Device Detection</h4>
+                        <p className="text-[11px] text-zinc-400">COCO-SSD Object Classifier</p>
                       </div>
                     </div>
-                    <span className="badge-emerald">
-                      {exam.proctorSettings?.objectCheck !== false ? 'Active' : 'Disabled'}
-                    </span>
+                    <div className="flex items-center gap-1 text-xs text-zinc-500">
+                      <span className={`w-1.5 h-1.5 rounded-full ${exam.proctorSettings?.objectCheck !== false ? 'bg-emerald-500' : 'bg-zinc-400'}`} />
+                      <span>{exam.proctorSettings?.objectCheck !== false ? 'Active' : 'Disabled'}</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  <p className="text-xs text-zinc-500 leading-relaxed">
                     Real-time object detection detecting cell phones, notes, or books brought in front of the camera.
                   </p>
                 </div>
@@ -846,105 +813,93 @@ export default function ExamDetailPage() {
             {activeTab === 'attempts' && (
               <div className="space-y-6">
                 {bestAttempt && (
-                  <div
-                    style={{
-                      background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%)',
-                    }}
-                    className="rounded-xl p-4 sm:p-5 text-white shadow-xs relative overflow-hidden border border-blue-400/30"
-                  >
-                    <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="space-y-1">
-                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/15 text-white text-[10px] font-semibold uppercase tracking-wider backdrop-blur-xs">
-                          <Trophy className="w-3 h-3 text-yellow-300" />
-                          <span>Personal Best Score</span>
-                        </div>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-2xl sm:text-3xl font-extrabold tabular-nums tracking-tight">{bestAttempt.score}</span>
-                          <span className="text-blue-100 text-xs font-medium">/ {exam.totalMarks || questions.length * 4} points</span>
-                        </div>
+                  <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+                        <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                        <span className="font-medium text-[11px] uppercase tracking-wider">Personal Best</span>
                       </div>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-2xl sm:text-3xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">{bestAttempt.score}</span>
+                        <span className="text-xs text-zinc-400">/ {exam.totalMarks || questions.length * 4} pts</span>
+                      </div>
+                    </div>
 
-                      <div className="grid grid-cols-3 gap-2 sm:gap-4 bg-black/15 py-2.5 px-3.5 rounded-lg border border-white/10 backdrop-blur-xs text-center min-w-[240px]">
-                        <div>
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-200">Accuracy</span>
-                          <span className="text-base sm:text-lg font-bold tabular-nums text-white block mt-0.5">{bestAttempt.accuracy}%</span>
-                        </div>
-                        <div className="border-x border-white/15 px-2">
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300">Correct</span>
-                          <span className="text-base sm:text-lg font-bold tabular-nums text-white block mt-0.5">{bestAttempt.correct ?? '—'}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-rose-300">Incorrect</span>
-                          <span className="text-base sm:text-lg font-bold tabular-nums text-white block mt-0.5">{bestAttempt.incorrect ?? '—'}</span>
-                        </div>
+                    <div className="grid grid-cols-3 divide-x divide-zinc-200 dark:divide-zinc-800 text-center min-w-[240px]">
+                      <div className="px-3">
+                        <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Accuracy</span>
+                        <span className="text-sm font-semibold tabular-nums text-zinc-900 dark:text-zinc-100 mt-0.5 block">{bestAttempt.accuracy}%</span>
+                      </div>
+                      <div className="px-3">
+                        <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Correct</span>
+                        <span className="text-sm font-semibold tabular-nums text-emerald-600 dark:text-emerald-400 mt-0.5 block">{bestAttempt.correct ?? '—'}</span>
+                      </div>
+                      <div className="px-3">
+                        <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Incorrect</span>
+                        <span className="text-sm font-semibold tabular-nums text-rose-600 dark:text-rose-400 mt-0.5 block">{bestAttempt.incorrect ?? '—'}</span>
                       </div>
                     </div>
                   </div>
                 )}
 
                 {/* Submissions Table */}
-                <div className="card-base overflow-hidden elevation-card">
-                  <div className="px-6 py-4 border-b border-slate-100 dark:border-[#334155] flex items-center justify-between">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
+                  <div className="px-5 py-3.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
                       Attempt History ({attempts.length})
                     </h3>
                   </div>
 
                   {attempts.length === 0 ? (
-                    <div className="p-10 text-center text-slate-400 text-xs">
+                    <div className="p-8 text-center text-zinc-400 text-xs">
                       No attempts recorded for this exam yet.
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="border-b border-slate-200 dark:border-[#334155] bg-slate-100/75 dark:bg-[#151f32] text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                            <th className="py-3 px-4">Attempt</th>
-                            <th className="py-3 px-4">Mode</th>
-                            <th className="py-3 px-4">Date</th>
-                            <th className="py-3 px-4 text-center">Time Taken</th>
-                            <th className="py-3 px-4 text-center">Answered</th>
-                            <th className="py-3 px-4 text-right">Score</th>
-                            <th className="py-3 px-4 text-right">Accuracy</th>
-                            <th className="py-3 px-4 text-right">Solutions</th>
+                          <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/75 dark:bg-zinc-900/75 text-[11px] font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                            <th className="py-2.5 px-4">Attempt</th>
+                            <th className="py-2.5 px-4">Mode</th>
+                            <th className="py-2.5 px-4">Date</th>
+                            <th className="py-2.5 px-4 text-center">Time Taken</th>
+                            <th className="py-2.5 px-4 text-center">Answered</th>
+                            <th className="py-2.5 px-4 text-right">Score</th>
+                            <th className="py-2.5 px-4 text-right">Accuracy</th>
+                            <th className="py-2.5 px-4 text-right">Action</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-[#334155] text-xs">
+                        <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60 text-xs">
                           {attempts.map((attempt, idx) => (
-                            <tr key={attempt._id || idx} className="hover:bg-slate-50/80 dark:hover:bg-[#151f32]/60 transition-colors">
-                              <td className="py-3 px-4 font-bold tabular-nums text-slate-900 dark:text-white">#{attempts.length - idx}</td>
-                              <td className="py-3 px-4">
+                            <tr key={attempt._id || idx} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 transition-colors">
+                              <td className="py-2.5 px-4 font-mono tabular-nums text-zinc-900 dark:text-zinc-100">#{attempts.length - idx}</td>
+                              <td className="py-2.5 px-4">
                                 {attempt.isPractice ? (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                    <FlaskConical className="w-3 h-3" /> Practice
-                                  </span>
+                                  <span className="text-zinc-500">Practice</span>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                                    <ShieldCheck className="w-3 h-3" /> Official
-                                  </span>
+                                  <span className="text-zinc-900 dark:text-zinc-100 font-medium">Official</span>
                                 )}
                               </td>
-                              <td className="py-3 px-4 text-slate-600 dark:text-slate-400">{formatDate(attempt.submittedAt || attempt.createdAt)}</td>
-                              <td className="py-3 px-4 text-center font-mono text-slate-600 dark:text-slate-400">
+                              <td className="py-2.5 px-4 text-zinc-500">{formatDate(attempt.submittedAt || attempt.createdAt)}</td>
+                              <td className="py-2.5 px-4 text-center font-mono text-zinc-500">
                                 {formatSeconds(attempt.timeTakenSeconds)}
                               </td>
-                              <td className="py-3 px-4 text-center tabular-nums font-semibold text-emerald-600 dark:text-emerald-400">
+                              <td className="py-2.5 px-4 text-center font-mono tabular-nums text-zinc-700 dark:text-zinc-300">
                                 {(attempt.correct || 0) + (attempt.incorrect || 0)}
                               </td>
-                              <td className="py-3 px-4 text-right font-bold text-slate-900 dark:text-white tabular-nums">
+                              <td className="py-2.5 px-4 text-right font-mono font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">
                                 {attempt.score} pts
                               </td>
-                              <td className={`py-3 px-4 text-right font-bold tabular-nums ${getAccuracyColor(attempt.accuracy)}`}>
+                              <td className={`py-2.5 px-4 text-right font-mono font-semibold tabular-nums ${getAccuracyColor(attempt.accuracy)}`}>
                                 {attempt.accuracy}%
                               </td>
-                              <td className="py-3 px-4 text-right">
+                              <td className="py-2.5 px-4 text-right">
                                 <button
                                   type="button"
                                   onClick={() => navigate(`/test/${examId}/review/${attempt._id}`)}
-                                  className="btn-secondary text-[11px] py-1 px-2.5 inline-flex items-center gap-1 hover:border-blue-500 hover:text-blue-600"
+                                  className="text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-medium cursor-pointer"
                                 >
-                                  <FileText className="w-3 h-3 text-blue-500" />
-                                  <span>Responses</span>
+                                  Responses
                                 </button>
                               </td>
                             </tr>
@@ -961,126 +916,100 @@ export default function ExamDetailPage() {
           /* ── Non-Examiner Candidate View ───────────────────────────────── */
           <section className="space-y-6">
             {bestAttempt && (
-              <div
-                style={{
-                  background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%)',
-                }}
-                className="rounded-xl p-4 sm:p-5 text-white shadow-xs relative overflow-hidden border border-blue-400/30"
-              >
-                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/15 text-white text-[10px] font-semibold uppercase tracking-wider backdrop-blur-xs">
-                      <Trophy className="w-3 h-3 text-yellow-300" />
-                      <span>Personal Best Performance</span>
-                    </div>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-2xl sm:text-3xl font-extrabold tabular-nums tracking-tight">{bestAttempt.score}</span>
-                      <span className="text-blue-100 text-xs font-medium">/ {exam.totalMarks} points</span>
-                    </div>
-                    <p className="text-[11px] text-blue-100/80">
-                      Recorded on {formatDate(bestAttempt.submittedAt || bestAttempt.createdAt)}
-                    </p>
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs text-zinc-500">
+                    <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="font-medium text-[11px] uppercase tracking-wider">Personal Best</span>
                   </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-2xl sm:text-3xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">{bestAttempt.score}</span>
+                    <span className="text-xs text-zinc-400">/ {exam.totalMarks} pts</span>
+                  </div>
+                </div>
 
-                  <div className="grid grid-cols-3 gap-2 sm:gap-4 bg-black/15 py-2.5 px-3.5 rounded-lg border border-white/10 backdrop-blur-xs text-center min-w-[240px]">
-                    <div>
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-200">Accuracy</span>
-                      <span className="text-base sm:text-lg font-bold tabular-nums text-white block mt-0.5">{bestAttempt.accuracy}%</span>
-                    </div>
-                    <div className="border-x border-white/15 px-2">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-300">Correct</span>
-                      <span className="text-base sm:text-lg font-bold tabular-nums text-white block mt-0.5">{bestAttempt.correct ?? '—'}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-rose-300">Incorrect</span>
-                      <span className="text-base sm:text-lg font-bold tabular-nums text-white block mt-0.5">{bestAttempt.incorrect ?? '—'}</span>
-                    </div>
+                <div className="grid grid-cols-3 divide-x divide-zinc-200 dark:divide-zinc-800 text-center min-w-[240px]">
+                  <div className="px-3">
+                    <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Accuracy</span>
+                    <span className="text-sm font-semibold tabular-nums text-zinc-900 dark:text-zinc-100 mt-0.5 block">{bestAttempt.accuracy}%</span>
+                  </div>
+                  <div className="px-3">
+                    <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Correct</span>
+                    <span className="text-sm font-semibold tabular-nums text-emerald-600 dark:text-emerald-400 mt-0.5 block">{bestAttempt.correct ?? '—'}</span>
+                  </div>
+                  <div className="px-3">
+                    <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider block">Incorrect</span>
+                    <span className="text-sm font-semibold tabular-nums text-rose-600 dark:text-rose-400 mt-0.5 block">{bestAttempt.incorrect ?? '—'}</span>
                   </div>
                 </div>
               </div>
             )}
 
             {/* Candidate Submissions Table */}
-            <div className="card-base overflow-hidden elevation-card">
-              <div className="px-6 py-4 border-b border-slate-100 dark:border-[#334155]">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+            <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900">
+              <div className="px-5 py-3.5 border-b border-zinc-200 dark:border-zinc-800">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
                   Attempt History
                 </h3>
               </div>
 
               {attempts.length === 0 ? (
-                <div className="p-12 text-center">
-                  <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#151f32] flex items-center justify-center text-slate-400 mx-auto mb-3">
-                    <BookOpen className="w-6 h-6" />
-                  </div>
-                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">No attempts logged yet</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-                    Begin this assessment to record your verified test results, question breakdowns, and timing.
-                  </p>
+                <div className="p-8 text-center text-zinc-400 text-xs">
+                  No attempts logged yet. Begin this assessment to record your verified test results.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-200 dark:border-[#334155] bg-slate-100/75 dark:bg-[#151f32] text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                        <th className="py-3 px-5">Attempt</th>
-                        <th className="py-3 px-5">Mode</th>
-                        <th className="py-3 px-5">Submission Date</th>
-                        <th className="py-3 px-5">Time Taken</th>
-                        <th className="py-3 px-5 text-center">Answered</th>
-                        <th className="py-3 px-5 text-right">Score</th>
-                        <th className="py-3 px-5 text-right">Accuracy</th>
-                        <th className="py-3 px-5 text-right">Responses</th>
+                      <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/75 dark:bg-zinc-900/75 text-[11px] font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                        <th className="py-2.5 px-4">Attempt</th>
+                        <th className="py-2.5 px-4">Mode</th>
+                        <th className="py-2.5 px-4">Submission Date</th>
+                        <th className="py-2.5 px-4 text-center">Time Taken</th>
+                        <th className="py-2.5 px-4 text-center">Answered</th>
+                        <th className="py-2.5 px-4 text-right">Score</th>
+                        <th className="py-2.5 px-4 text-right">Accuracy</th>
+                        <th className="py-2.5 px-4 text-right">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-[#334155] text-xs">
+                    <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60 text-xs">
                       {attempts.map((attempt, idx) => (
-                        <tr key={attempt._id || idx} className="hover:bg-slate-50/80 dark:hover:bg-[#243147]/50 transition-colors">
-                          <td className="py-3.5 px-5 font-bold text-slate-900 dark:text-white tabular-nums">#{attempts.length - idx}</td>
-                          <td className="py-3.5 px-5">
+                        <tr key={attempt._id || idx} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 transition-colors">
+                          <td className="py-2.5 px-4 font-mono tabular-nums text-zinc-900 dark:text-zinc-100">#{attempts.length - idx}</td>
+                          <td className="py-2.5 px-4">
                             {attempt.isPractice ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40">
-                                <FlaskConical className="w-2.5 h-2.5" />
-                                Practice
-                              </span>
+                              <span className="text-zinc-500">Practice</span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
-                                <ShieldCheck className="w-2.5 h-2.5" />
-                                Official
-                              </span>
+                              <span className="text-zinc-900 dark:text-zinc-100 font-medium">Official</span>
                             )}
                           </td>
-                          <td className="py-3.5 px-5 text-slate-600 dark:text-slate-300">{formatDate(attempt.submittedAt || attempt.createdAt)}</td>
-                          <td className="py-3.5 px-5 text-slate-600 dark:text-slate-300 tabular-nums">
+                          <td className="py-2.5 px-4 text-zinc-500">{formatDate(attempt.submittedAt || attempt.createdAt)}</td>
+                          <td className="py-2.5 px-4 text-center font-mono text-zinc-500">
                             {formatSeconds(attempt.timeTakenSeconds)}
                           </td>
-                          <td className="py-3.5 px-5 text-center tabular-nums">
-                            <span className="badge-emerald">
-                              {(attempt.correct || 0) + (attempt.incorrect || 0)}
-                            </span>
+                          <td className="py-2.5 px-4 text-center font-mono tabular-nums text-zinc-700 dark:text-zinc-300">
+                            {(attempt.correct || 0) + (attempt.incorrect || 0)}
                           </td>
-                          <td className="py-3.5 px-5 text-right font-bold tabular-nums text-slate-900 dark:text-white">
+                          <td className="py-2.5 px-4 text-right font-mono font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums">
                             {attempt.score} / {exam.totalMarks} pts
                           </td>
-                          <td className={`py-3.5 px-5 text-right font-bold tabular-nums ${getAccuracyColor(attempt.accuracy)}`}>
+                          <td className={`py-2.5 px-4 text-right font-mono font-semibold tabular-nums ${getAccuracyColor(attempt.accuracy)}`}>
                             {attempt.accuracy}%
                           </td>
-                          <td className="py-3.5 px-5 text-right">
+                          <td className="py-2.5 px-4 text-right">
                             {canViewResponses ? (
                               <button
                                 onClick={() => navigate(`/test/${exam._id}/review/${attempt._id}`)}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/40 transition-colors"
+                                className="text-zinc-600 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-medium cursor-pointer"
                               >
-                                <CheckCheck className="w-3.5 h-3.5" />
                                 View Answers
                               </button>
                             ) : isReviewLockedBySchedule ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
-                                <Lock className="w-3 h-3" />
-                                After Schedule
+                              <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                                Locked
                               </span>
                             ) : (
-                              <span className="text-[11px] text-slate-400 italic">
+                              <span className="text-[11px] text-zinc-400">
                                 Disabled
                               </span>
                             )}
@@ -1098,34 +1027,34 @@ export default function ExamDetailPage() {
         {/* ── Lightbox Modal for Diagram Zoom ─────────────────────────────── */}
         {lightboxImage && (
           <div
-            className="fixed inset-0 z-[10000] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150"
+            className="fixed inset-0 z-[10000] bg-zinc-950/70 backdrop-blur-xs flex items-center justify-center p-4"
             onClick={() => setLightboxImage(null)}
           >
             <div
-              className="max-w-3xl w-full bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-[#334155] rounded-2xl overflow-hidden shadow-2xl p-5 space-y-3"
+              className="max-w-3xl w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden shadow-md p-4 space-y-3"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200">High Resolution Image Preview</h3>
+              <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2">
+                <h3 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Image Preview</h3>
                 <button
                   type="button"
                   onClick={() => setLightboxImage(null)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="p-1 rounded text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <div className="max-h-[70vh] flex items-center justify-center bg-slate-100 dark:bg-[#0f172a] rounded-xl overflow-hidden p-2">
+              <div className="max-h-[70vh] flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 rounded border border-zinc-200 dark:border-zinc-800 p-2 overflow-hidden">
                 <img src={lightboxImage} alt="Diagram preview" className="max-h-[65vh] w-auto object-contain" />
               </div>
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-1">
                 <a
                   href={lightboxImage}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 font-medium"
+                  className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1 font-medium"
                 >
-                  <span>Open original in new tab</span>
+                  <span>Open in new tab</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>

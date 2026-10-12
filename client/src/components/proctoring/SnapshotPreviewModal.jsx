@@ -26,45 +26,45 @@ export default function SnapshotPreviewModal({ snapshot, previewImage, onClose }
       role="dialog"
       aria-modal="true"
       aria-label="Live Proctoring Snapshot"
-      className="fixed inset-0 z-[10000] bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-[10000] bg-zinc-950/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
-        className="max-w-2xl w-full bg-white dark:bg-[#1e293b] border border-slate-200/90 dark:border-[#334155] rounded-2xl overflow-hidden shadow-2xl p-6 text-slate-900 dark:text-slate-100 space-y-4"
+        className="max-w-2xl w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden shadow-sm p-5 text-zinc-900 dark:text-zinc-100 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
           <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white">Live Proctoring Snapshot</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {data.userName || 'Student'} • {data.type || 'Snapshot'} • {formattedTime}
+            <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Live Proctoring Snapshot</h3>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+              {data.userName || 'Student'} · {data.type || 'Snapshot'} · {formattedTime}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close snapshot modal"
-            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#151f32] dark:hover:bg-[#243147] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors border border-slate-200/80 dark:border-[#334155]"
+            className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="rounded-xl overflow-hidden bg-slate-100 dark:bg-[#0f172a] border border-slate-200/80 dark:border-[#334155] max-h-[60vh] flex items-center justify-center">
+        <div className="rounded-md overflow-hidden bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 max-h-[60vh] flex items-center justify-center p-2">
           <img
             src={data.imageUrl}
             alt="Captured proctoring violation"
-            className="max-h-[60vh] w-auto object-contain"
+            className="max-h-[58vh] w-auto object-contain rounded"
           />
         </div>
 
         <div className="flex items-center justify-between text-xs pt-1">
-          <span className="text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+          <span className="text-zinc-500 dark:text-zinc-400 font-mono text-[11px]">
             Violation: {data.type || 'General'}
             {data.trustScore !== undefined && (
               <>
-                {' '}• Trust Score:{' '}
-                <strong className="text-rose-600 dark:text-rose-400">{data.trustScore}%</strong>
+                {' '}· Trust Score:{' '}
+                <strong className="text-rose-600 dark:text-rose-400 tabular-nums">{data.trustScore}%</strong>
               </>
             )}
           </span>
@@ -73,7 +73,7 @@ export default function SnapshotPreviewModal({ snapshot, previewImage, onClose }
               href={data.imageUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+              className="inline-flex items-center gap-1 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium transition-colors"
             >
               <span>Full Resolution</span>
               <ExternalLink className="w-3.5 h-3.5" />

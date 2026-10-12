@@ -123,155 +123,61 @@ export default function StrikeModal({ type, strikeCount, trustScore, maxWarnings
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        background: 'rgba(2, 6, 23, 0.75)',
-        backdropFilter: 'blur(8px)',
-        animation: 'strikeModalFadeIn 0.2s ease-out',
-      }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-zinc-950/70 backdrop-blur-[2px] animate-in fade-in duration-150"
       onClick={onClose}
     >
       <div
-        style={{
-          width: '100%',
-          maxWidth: '400px',
-          background: '#111827',
-          border: '1px solid #1f293d',
-          borderRadius: '20px',
-          overflow: 'hidden',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
-          animation: 'strikeModalSlideUp 0.25s ease-out',
-        }}
+        className="w-full max-w-sm bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-lg overflow-hidden shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top accent bar */}
-        <div style={{
-          height: '3px',
-          background: info.color,
-        }} />
+        <div
+          className={`h-1 ${
+            type === 'CELL_PHONE' || type === 'MULTI_FACE' || type === 'FULLSCREEN_EXIT'
+              ? 'bg-rose-500'
+              : 'bg-amber-500'
+          }`}
+        />
 
-        <div style={{ padding: '24px' }}>
+        <div className="p-5">
           {/* Icon + Title */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', marginBottom: '20px' }}>
-            <div style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '12px',
-              background: info.bgColor,
-              border: `1px solid ${info.borderColor}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <IconComponent size={22} color={info.color} />
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-9 h-9 rounded-md bg-rose-50 dark:bg-rose-950/50 border border-rose-200/60 dark:border-rose-900/60 flex items-center justify-center shrink-0 mt-0.5">
+              <IconComponent className="w-4 h-4 text-rose-600 dark:text-rose-400" />
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <h3 style={{
-                margin: 0,
-                fontSize: '15px',
-                fontWeight: 700,
-                color: '#f1f5f9',
-                fontFamily: "'Inter', system-ui, sans-serif",
-              }}>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">
                 {info.label}
               </h3>
-              <p style={{
-                margin: '4px 0 0',
-                fontSize: '12px',
-                color: '#94a3b8',
-                lineHeight: 1.5,
-                fontFamily: "'Inter', system-ui, sans-serif",
-              }}>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1">
                 {info.description}
               </p>
             </div>
           </div>
 
           {/* Stats row */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '10px',
-            marginBottom: '16px',
-          }}>
+          <div className="grid grid-cols-2 gap-2.5 mb-4">
             {/* Strike count */}
-            <div style={{
-              background: 'rgba(15, 23, 42, 0.6)',
-              border: '1px solid rgba(148, 163, 184, 0.1)',
-              borderRadius: '12px',
-              padding: '12px',
-              textAlign: 'center',
-            }}>
-              <div style={{
-                fontSize: '10px',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                color: '#64748b',
-                marginBottom: '4px',
-                fontFamily: "'Inter', system-ui, sans-serif",
-              }}>
+            <div className="bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-md p-3 text-center">
+              <div className="text-[10px] font-medium uppercase tracking-wider text-zinc-400 mb-0.5">
                 Strikes
               </div>
-              <div style={{
-                fontSize: '22px',
-                fontWeight: 800,
-                color: getSeverityColor(),
-                fontVariantNumeric: 'tabular-nums',
-                fontFamily: "'Inter', system-ui, sans-serif",
-              }}>
+              <div className="text-xl font-semibold text-rose-600 dark:text-rose-400 tabular-nums">
                 {strikeCount}
-                <span style={{
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  color: '#475569',
-                  marginLeft: '2px',
-                }}>
+                <span className="text-xs font-normal text-zinc-400 ml-1">
                   / {maxWarnings || '∞'}
                 </span>
               </div>
             </div>
 
             {/* Trust score */}
-            <div style={{
-              background: 'rgba(15, 23, 42, 0.6)',
-              border: '1px solid rgba(148, 163, 184, 0.1)',
-              borderRadius: '12px',
-              padding: '12px',
-              textAlign: 'center',
-            }}>
-              <div style={{
-                fontSize: '10px',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                color: '#64748b',
-                marginBottom: '4px',
-                fontFamily: "'Inter', system-ui, sans-serif",
-              }}>
+            <div className="bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-md p-3 text-center">
+              <div className="text-[10px] font-medium uppercase tracking-wider text-zinc-400 mb-0.5">
                 Trust Score
               </div>
-              <div style={{
-                fontSize: '22px',
-                fontWeight: 800,
-                color: getTrustColor(),
-                fontVariantNumeric: 'tabular-nums',
-                fontFamily: "'Inter', system-ui, sans-serif",
-              }}>
+              <div className="text-xl font-semibold text-zinc-900 dark:text-white tabular-nums">
                 {trustScore}
-                <span style={{
-                  fontSize: '12px',
-                  fontWeight: 500,
-                  color: '#475569',
-                  marginLeft: '2px',
-                }}>
+                <span className="text-xs font-normal text-zinc-400 ml-1">
                   /100
                 </span>
               </div>
@@ -279,70 +185,33 @@ export default function StrikeModal({ type, strikeCount, trustScore, maxWarnings
           </div>
 
           {/* Trust score progress bar */}
-          <div style={{
-            width: '100%',
-            height: '6px',
-            borderRadius: '3px',
-            background: 'rgba(148, 163, 184, 0.15)',
-            overflow: 'hidden',
-            marginBottom: '16px',
-          }}>
-            <div style={{
-              height: '100%',
-              width: `${trustScore}%`,
-              borderRadius: '3px',
-              background: getTrustColor(),
-              transition: 'width 0.5s ease-out',
-            }} />
+          <div className="w-full h-1 bg-zinc-200 dark:bg-zinc-800 rounded-sm overflow-hidden mb-4">
+            <div
+              className={`h-full transition-all duration-300 rounded-sm ${
+                trustScore >= 70
+                  ? 'bg-emerald-500'
+                  : trustScore >= 40
+                  ? 'bg-amber-500'
+                  : 'bg-rose-500'
+              }`}
+              style={{ width: `${trustScore}%` }}
+            />
           </div>
 
           {/* Warning text */}
-          <p style={{
-            margin: '0 0 16px',
-            fontSize: '11px',
-            color: '#94a3b8',
-            textAlign: 'center',
-            lineHeight: 1.5,
-            fontFamily: "'Inter', system-ui, sans-serif",
-          }}>
+          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 text-center mb-4 leading-relaxed">
             Repeated violations will result in automatic exam termination.
           </p>
 
           {/* Dismiss button */}
           <button
             onClick={onClose}
-            style={{
-              width: '100%',
-              padding: '10px',
-              borderRadius: '10px',
-              border: 'none',
-              background: info.color,
-              color: '#ffffff',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontFamily: "'Inter', system-ui, sans-serif",
-              transition: 'opacity 0.15s ease',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+            className="w-full py-2 rounded-md bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-medium transition-colors cursor-pointer shadow-sm"
           >
             I Understand
           </button>
         </div>
       </div>
-
-      {/* Animations */}
-      <style>{`
-        @keyframes strikeModalFadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes strikeModalSlideUp {
-          from { opacity: 0; transform: translateY(12px) scale(0.96); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
     </div>
   );
 }

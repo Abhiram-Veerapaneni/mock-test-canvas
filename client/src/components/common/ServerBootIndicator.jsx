@@ -16,51 +16,40 @@ export default function ServerBootIndicator() {
   return (
     <aside
       aria-label="Backend Server Status"
-      className="fixed bottom-5 right-5 z-[99999] max-w-md w-[calc(100vw-2.5rem)] animate-in fade-in slide-in-from-bottom-4 duration-300 pointer-events-auto"
+      className="fixed bottom-5 right-5 z-[99999] max-w-sm w-[calc(100vw-2.5rem)] animate-in fade-in slide-in-from-bottom-2 duration-200 pointer-events-auto"
     >
       <div
-        className={`relative overflow-hidden rounded-2xl border p-4 shadow-2xl backdrop-blur-xl transition-all duration-500 ${
+        className={`relative overflow-hidden rounded-lg border p-4 shadow-sm transition-colors duration-200 ${
           justWokeUp
-            ? 'bg-emerald-950/90 dark:bg-emerald-950/90 border-emerald-500/40 text-emerald-100 shadow-emerald-500/20'
-            : 'bg-slate-900/95 dark:bg-slate-900/95 border-amber-500/30 text-slate-100 shadow-amber-500/10'
+            ? 'bg-zinc-900 border-emerald-500/30 text-zinc-100'
+            : 'bg-zinc-900 border-zinc-800 text-zinc-100'
         }`}
       >
-        {/* Ambient background glow */}
-        <div
-          className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-2xl pointer-events-none transition-colors duration-500 ${
-            justWokeUp ? 'bg-emerald-500/20' : 'bg-amber-500/15'
-          }`}
-        />
-
-        <div className="flex items-start gap-3.5 relative z-10">
-          {/* Animated Status Icon */}
-          <div className="relative shrink-0 mt-0.5">
+        <div className="flex items-start gap-3 relative z-10">
+          {/* Status Icon */}
+          <div className="shrink-0 mt-0.5">
             {justWokeUp ? (
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-                <CheckCircle2 className="w-5 h-5 animate-bounce" />
+              <div className="w-8 h-8 rounded-md bg-emerald-950/60 border border-emerald-800/60 flex items-center justify-center text-emerald-400">
+                <CheckCircle2 className="w-4 h-4" />
               </div>
             ) : (
-              <div className="relative w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                {/* Pulsing beacon ring */}
-                <span className="absolute inset-0 rounded-xl bg-amber-400/20 animate-ping" />
-                <Server className="w-5 h-5 relative z-10 animate-pulse" />
+              <div className="w-8 h-8 rounded-md bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300">
+                <Server className="w-4 h-4 animate-pulse" />
               </div>
             )}
           </div>
 
           {/* Text Content */}
-          <div className="flex-1 min-w-0 pr-2">
+          <div className="flex-1 min-w-0 pr-1">
             <div className="flex items-center gap-2">
-              <h4 className="text-xs font-semibold tracking-tight text-white flex items-center gap-1.5">
+              <h4 className="text-xs font-semibold text-white flex items-center gap-1.5">
                 {justWokeUp ? (
-                  <>
-                    <span>Server Ready & Connected</span>
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                  </>
+                  <span>Server Connected</span>
                 ) : (
                   <>
                     <span>Waking Up Backend Server</span>
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <span className="flex items-center gap-1 text-[10px] text-amber-400 font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                       Cold Boot
                     </span>
                   </>
@@ -68,29 +57,27 @@ export default function ServerBootIndicator() {
               </h4>
             </div>
 
-            <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+            <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
               {justWokeUp
                 ? 'Backend container is alive! Your requests will now process instantly.'
-                : 'Render free tier spins down after 15 min of inactivity. Spinning up container (~30–50s)...'}
+                : 'Server spins down after inactivity. Initializing container (~30–50s)...'}
             </p>
 
             {/* Progress Bar & Timer */}
             <div className="mt-3 space-y-1.5">
-              <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+              <div className="flex items-center justify-between text-[10px] font-mono text-zinc-400">
                 <span className="flex items-center gap-1">
-                  <Cpu className="w-3 h-3 text-amber-400" />
-                  {justWokeUp ? 'Operational' : `Initializing container (${elapsedSeconds}s)`}
+                  <Cpu className="w-3 h-3 text-zinc-400" />
+                  {justWokeUp ? 'Operational' : `Initializing (${elapsedSeconds}s)`}
                 </span>
-                <span>{progressPercent}%</span>
+                <span className="tabular-nums">{progressPercent}%</span>
               </div>
 
               {/* Progress bar line */}
-              <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50">
+              <div className="w-full h-1 bg-zinc-800 rounded-sm overflow-hidden border border-zinc-800">
                 <div
-                  className={`h-full transition-all duration-500 rounded-full ${
-                    justWokeUp
-                      ? 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]'
-                      : 'bg-gradient-to-r from-amber-500 via-orange-400 to-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.5)]'
+                  className={`h-full transition-all duration-300 rounded-sm ${
+                    justWokeUp ? 'bg-emerald-500' : 'bg-zinc-100'
                   }`}
                   style={{ width: `${progressPercent}%` }}
                 />
@@ -103,7 +90,7 @@ export default function ServerBootIndicator() {
                 <button
                   type="button"
                   onClick={() => checkHealth(false)}
-                  className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-300 hover:text-amber-200 underline cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[10px] font-medium text-zinc-300 hover:text-white underline cursor-pointer"
                 >
                   <RefreshCw className="w-3 h-3 animate-spin" />
                   Check connection again
@@ -117,9 +104,9 @@ export default function ServerBootIndicator() {
             type="button"
             onClick={dismiss}
             aria-label="Dismiss notification"
-            className="shrink-0 p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800/80 transition-colors cursor-pointer"
+            className="shrink-0 p-1 text-zinc-400 hover:text-white rounded-md hover:bg-zinc-800 transition-colors cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

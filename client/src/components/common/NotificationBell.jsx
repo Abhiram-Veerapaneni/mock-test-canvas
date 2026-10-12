@@ -120,33 +120,33 @@ export default function NotificationBell() {
         aria-label="Open notifications"
         aria-expanded={isOpen}
         title="Notifications"
-        className="relative inline-flex items-center justify-center w-8 h-8 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100/80 dark:bg-[#151f32] hover:bg-slate-200/80 dark:hover:bg-[#243147] border border-slate-200/80 dark:border-[#334155] transition-all duration-150 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-2xs"
+        aria-label="Open notifications"
+        aria-expanded={isOpen}
+        title="Notifications"
+        className="relative inline-flex items-center justify-center w-8 h-8 rounded-md text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 transition-colors cursor-pointer shadow-sm"
       >
         <Bell className="w-4 h-4" />
 
         {/* Unread Counter Badge */}
         {unreadCount > 0 && (
-          <>
-            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-rose-600 text-[9px] font-bold text-white shadow-xs ring-2 ring-white dark:ring-[#0f172a] animate-in zoom-in">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-rose-500 animate-ping opacity-40 pointer-events-none" />
-          </>
+          <span className="absolute -top-1 -right-1 flex h-3.5 min-w-3.5 px-0.5 items-center justify-center rounded-full bg-zinc-900 dark:bg-zinc-100 text-[9px] font-mono font-medium text-white dark:text-zinc-900 shadow-none ring-1 ring-white dark:ring-zinc-950">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
         )}
       </button>
 
       {/* Dropdown Panel */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white dark:bg-[#1e293b] border border-slate-200/90 dark:border-[#334155] shadow-2xl elevation-card z-50 overflow-hidden animate-in fade-in-50 zoom-in-95 duration-150">
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm z-50 overflow-hidden animate-in fade-in-50 duration-150">
           {/* Header */}
-          <div className="px-4 py-3 border-b border-slate-100 dark:border-[#334155] flex items-center justify-between bg-slate-50/70 dark:bg-[#151f32]">
+          <div className="px-4 py-2.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50/75 dark:bg-zinc-950/50">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
+              <span className="text-xs font-semibold text-zinc-900 dark:text-white">
                 Notifications
               </span>
               {unreadCount > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-400">
-                  {unreadCount} unread
+                <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 font-mono">
+                  ({unreadCount} unread)
                 </span>
               )}
             </div>
@@ -154,7 +154,7 @@ export default function NotificationBell() {
             {unreadCount > 0 && (
               <button
                 onClick={() => markAllAsRead()}
-                className="text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-[11px] font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 flex items-center gap-1 cursor-pointer transition-colors"
               >
                 <CheckCheck className="w-3 h-3" />
                 <span>Mark all read</span>
@@ -163,16 +163,16 @@ export default function NotificationBell() {
           </div>
 
           {/* List */}
-          <div className="max-h-[340px] overflow-y-auto divide-y divide-slate-100 dark:divide-[#334155]">
+          <div className="max-h-[340px] overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800">
             {recentNotifications.length === 0 ? (
               <div className="py-8 text-center px-4">
-                <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-slate-100 dark:bg-[#151f32] flex items-center justify-center text-slate-400">
-                  <Bell className="w-5 h-5 opacity-60" />
+                <div className="w-8 h-8 mx-auto mb-2 rounded-md bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
+                  <Bell className="w-4 h-4 opacity-60" />
                 </div>
-                <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                <p className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
                   No notifications yet
                 </p>
-                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-0.5">
                   Live proctoring alerts and submission updates will appear here
                 </p>
               </div>
@@ -185,18 +185,18 @@ export default function NotificationBell() {
                   <div
                     key={n._id}
                     onClick={() => handleItemClick(n)}
-                    className={`p-3 transition-colors cursor-pointer flex items-start gap-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/60 ${
+                    className={`p-3 transition-colors cursor-pointer flex items-start gap-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 ${
                       !n.read
-                        ? 'bg-blue-50/40 dark:bg-blue-950/20'
+                        ? 'bg-zinc-50/50 dark:bg-zinc-800/30'
                         : 'bg-white dark:bg-transparent'
                     }`}
                   >
-                    {/* Icon Badge */}
+                    {/* Icon Box */}
                     <div
-                      className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center border mt-0.5 ${
+                      className={`w-7 h-7 rounded-md shrink-0 flex items-center justify-center border mt-0.5 ${
                         isViolation
-                          ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200/80 dark:border-rose-900/60'
-                          : 'bg-slate-100 dark:bg-slate-800 border-slate-200/80 dark:border-slate-700/80'
+                          ? 'bg-rose-50/60 dark:bg-rose-950/40 border-rose-200/60 dark:border-rose-900/60 text-rose-600'
+                          : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300'
                       }`}
                     >
                       {getNotificationIcon(n.type, vType)}
@@ -205,25 +205,25 @@ export default function NotificationBell() {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1">
-                        <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">
+                        <p className="text-xs font-semibold text-zinc-900 dark:text-white truncate">
                           {n.title}
                         </p>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0 font-medium">
+                        <span className="text-[10px] text-zinc-400 font-mono shrink-0">
                           {formatTimeAgo(n.createdAt)}
                         </span>
                       </div>
 
-                      <p className="text-[11px] text-slate-600 dark:text-slate-300 line-clamp-2 mt-0.5">
+                      <p className="text-[11px] text-zinc-600 dark:text-zinc-300 line-clamp-2 mt-0.5">
                         {n.message}
                       </p>
 
                       {isViolation && n.data?.candidateName && (
-                        <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-400 dark:text-slate-500">
-                          <span className="font-medium text-slate-700 dark:text-slate-300 truncate">
+                        <div className="flex items-center gap-2 mt-1 text-[10px] text-zinc-400">
+                          <span className="font-medium text-zinc-700 dark:text-zinc-300 truncate">
                             {n.data.candidateName}
                           </span>
                           {n.data.trustScore != null && (
-                            <span className="font-mono text-rose-600 dark:text-rose-400">
+                            <span className="font-mono text-rose-600 dark:text-rose-400 tabular-nums">
                               Trust: {n.data.trustScore}%
                             </span>
                           )}
@@ -233,7 +233,7 @@ export default function NotificationBell() {
 
                     {/* Unread indicator dot */}
                     {!n.read && (
-                      <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0 mt-2" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-900 dark:bg-zinc-100 shrink-0 mt-2" />
                     )}
                   </div>
                 );
@@ -242,11 +242,11 @@ export default function NotificationBell() {
           </div>
 
           {/* Footer */}
-          <div className="p-2 border-t border-slate-100 dark:border-[#334155] bg-slate-50/70 dark:bg-[#151f32] text-center">
+          <div className="p-2 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/75 dark:bg-zinc-950/50 text-center">
             <Link
               to="/notifications"
               onClick={() => setIsOpen(false)}
-              className="w-full py-1.5 px-3 rounded-lg text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 flex items-center justify-center gap-1.5 transition-colors"
+              className="w-full py-1 px-3 rounded-md text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white flex items-center justify-center gap-1.5 transition-colors"
             >
               <span>View all notifications</span>
               <ChevronRight className="w-3.5 h-3.5" />
