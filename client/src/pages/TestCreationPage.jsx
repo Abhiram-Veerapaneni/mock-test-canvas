@@ -10,6 +10,7 @@ import QuestionPaperPDFModal from '../components/test-builder/QuestionPaperPDFMo
 import MathRenderer from '../components/common/MathRenderer';
 import api from '../services/api';
 import useAuthStore from '../store/useAuthStore';
+import { formatDateTime12h } from '../utils/dateUtils';
 import {
   CheckCircle2,
   AlertCircle,
@@ -1764,10 +1765,10 @@ export default function TestCreationPage() {
                       <span>Scheduled Window</span>
                     </span>
                     <div className="text-[11px] text-zinc-700 dark:text-zinc-300 font-mono">
-                      <strong>Opens:</strong> {new Date(startTime).toLocaleString()}
+                      <strong>Opens:</strong> {formatDateTime12h(startTime)}
                     </div>
                     <div className="text-[11px] text-zinc-700 dark:text-zinc-300 font-mono">
-                      <strong>Closes:</strong> {new Date(endTime).toLocaleString()}
+                      <strong>Closes:</strong> {formatDateTime12h(endTime)}
                     </div>
                   </>
                 ) : (

@@ -5,6 +5,7 @@ import BackButton from '../components/common/BackButton';
 import Breadcrumbs from '../components/common/Breadcrumbs';
 import api from '../services/api';
 import useAuthStore from '../store/useAuthStore';
+import { formatDateTime12h } from '../utils/dateUtils';
 import {
   ShieldAlert, Users, Award, Clock, ArrowLeft, Loader2,
   AlertTriangle, Eye, X, CheckCircle2, Search, Filter,
@@ -343,7 +344,7 @@ export default function ExamAuditReportPage() {
                           >
                             {/* 1. Timestamp */}
                             <td className="py-3 px-4 whitespace-nowrap font-mono tabular-nums text-zinc-600 dark:text-zinc-300">
-                              {v.timestamp ? new Date(v.timestamp).toLocaleString() : '—'}
+                              {v.timestamp ? formatDateTime12h(v.timestamp, { includeYear: true, includeSeconds: true }) : '—'}
                             </td>
 
                             {/* 2. User */}
@@ -585,9 +586,7 @@ export default function ExamAuditReportPage() {
 
                             {/* 10. Submitted At */}
                             <td className="py-3 px-4 whitespace-nowrap text-right font-mono text-zinc-500 text-[11px]">
-                              {item.submittedAt ? new Date(item.submittedAt).toLocaleDateString('en-IN', {
-                                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
-                              }) : '—'}
+                              {item.submittedAt ? formatDateTime12h(item.submittedAt) : '—'}
                             </td>
 
                             {/* 11. Actions */}
@@ -654,7 +653,7 @@ export default function ExamAuditReportPage() {
               <div className="flex items-center justify-between text-xs pt-1">
                 <div className="space-y-0.5">
                   <div className="text-zinc-500 dark:text-zinc-400 font-mono text-[11px]">
-                    Timestamp: {selectedSnapshot.timestamp ? new Date(selectedSnapshot.timestamp).toLocaleString() : '—'}
+                    Timestamp: {selectedSnapshot.timestamp ? formatDateTime12h(selectedSnapshot.timestamp, { includeYear: true, includeSeconds: true }) : '—'}
                   </div>
                   <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
                     Total violations by user: <strong className="text-rose-600 dark:text-rose-400">{selectedSnapshot.noOfViolations}</strong>

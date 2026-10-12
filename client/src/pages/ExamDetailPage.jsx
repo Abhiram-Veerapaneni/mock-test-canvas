@@ -8,6 +8,7 @@ import api from '../services/api';
 import useExamStore from '../store/useExamStore';
 import useAuthStore from '../store/useAuthStore';
 import ExamLiveMonitorModal from '../components/proctoring/ExamLiveMonitorModal';
+import { formatTime12h, formatDateTime12h } from '../utils/dateUtils';
 import {
   Clock,
   BookOpen,
@@ -244,11 +245,62 @@ export default function ExamDetailPage() {
   const isExhausted = !isUnlimited && attemptsLeft === 0;
   const hasAttempted = officialAttempts.length > 0;
 
-  // Schedule status calculations
-  const nowTime = Date.now();
+  // Schedule status calculations and live ticker
+  const [nowTime, setNowTime] = useState(Date.now());
   const isScheduled = Boolean(exam?.schedule?.isScheduled);
   const startTime = exam?.schedule?.startTime ? new Date(exam.schedule.startTime).getTime() : null;
   const endTime = exam?.schedule?.endTime ? new Date(exam.schedule.endTime).getTime() : null;
+
+  useEffect(() => {
+    if (!isScheduled) return;
+    const interval = setInterval(() => {
+      setNowTime(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isScheduled]);
+
+  // Format schedule remaining duration:
+  // e.g. 4153 mins -> "2d 21h 13m", < 24h -> "02:53:15", < 1h -> "00:02:55"
+  const formatScheduleCountdown = (targetTime, currentNow = Date.now()) => {
+    if (!targetTime) return '';
+    const diffMs = Math.max(0, targetTime - currentNow);
+    if (diffMs <= 0) return '00:00:00';
+
+    const totalSeconds = Math.floor(diffMs / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const pad = (n) => String(n).padStart(2, '0');
+
+    if (days > 0) {
+      const parts = [`${days}d`];
+      if (hours > 0) parts.push(`${hours}h`);
+      if (minutes > 0 || parts.length === 1) parts.push(`${minutes}m`);
+      return parts.join(' ');
+    }
+    return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+  };
+
+  const formatScheduleVerbose = (targetTime, currentNow = Date.now()) => {
+    if (!targetTime) return '';
+    const diffMs = Math.max(0, targetTime - currentNow);
+    if (diffMs <= 0) return 'Concluded';
+
+    const totalSeconds = Math.floor(diffMs / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const parts = [];
+    if (days > 0) parts.push(`${days} day${days > 1 ? 's' : ''}`);
+    if (hours > 0) parts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
+    if (minutes > 0) parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
+    if (parts.length === 0) parts.push(`${seconds} second${seconds !== 1 ? 's' : ''}`);
+    return parts.join(' ');
+  };
 
   const isScheduleUpcoming = isScheduled && startTime && nowTime < startTime;
   const isScheduleConcluded = isScheduled && endTime && nowTime > endTime;
@@ -274,10 +326,7 @@ export default function ExamDetailPage() {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    });
+    return formatDateTime12h(dateStr, { includeYear: true });
   };
 
   const formatSeconds = (sec) => {
@@ -488,7 +537,7 @@ export default function ExamDetailPage() {
                       className="px-4 py-2 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-medium text-xs flex items-center justify-center gap-1.5 cursor-not-allowed"
                     >
                       <Clock className="w-3.5 h-3.5" />
-                      <span>Starts {new Date(startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span>Starts {formatTime12h(startTime)}</span>
                     </button>
                   ) : isScheduleConcluded ? (
                     <button
@@ -599,19 +648,25 @@ export default function ExamDetailPage() {
                       : 'Live Examination Window Active'}
                   </div>
                   <div className="text-[11px] opacity-80 font-mono mt-0.5">
-                    Start: {startTime ? new Date(startTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'Anytime'} • End: {endTime ? new Date(endTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'Open'}
+                    Start: {startTime ? formatDateTime12h(startTime) : 'Anytime'} • End: {endTime ? formatDateTime12h(endTime) : 'Open'}
                   </div>
                 </div>
               </div>
               <div className="text-xs font-semibold shrink-0">
                 {isScheduleUpcoming && (
-                  <span className="text-amber-600 dark:text-amber-400 font-mono">
-                    Starts in {Math.max(1, Math.round((startTime - nowTime) / (1000 * 60)))} mins
+                  <span
+                    className="text-amber-600 dark:text-amber-400 font-mono"
+                    title={formatScheduleVerbose(startTime, nowTime)}
+                  >
+                    Starts in {formatScheduleCountdown(startTime, nowTime)}
                   </span>
                 )}
                 {isScheduleActive && endTime && (
-                  <span className="text-emerald-600 dark:text-emerald-400 font-mono">
-                    Window closes in {Math.max(1, Math.round((endTime - nowTime) / (1000 * 60)))} mins
+                  <span
+                    className="text-emerald-600 dark:text-emerald-400 font-mono"
+                    title={formatScheduleVerbose(endTime, nowTime)}
+                  >
+                    Window closes in {formatScheduleCountdown(endTime, nowTime)}
                   </span>
                 )}
                 {isScheduleConcluded && (

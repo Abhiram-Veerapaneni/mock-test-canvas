@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import useAuthStore from '../store/useAuthStore';
 import api from '../services/api';
+import { formatDateTime12h } from '../utils/dateUtils';
 import {
   BookOpen,
   Search,
@@ -180,7 +181,7 @@ export default function DashboardPage() {
 
   const getScheduleMeta = (schedule) => {
     if (!schedule?.isScheduled) {
-      return 'Flexible Window';
+      return 'Flexible · Anytime';
     }
     const now = Date.now();
     const start = schedule.startTime ? new Date(schedule.startTime) : null;
@@ -189,12 +190,18 @@ export default function DashboardPage() {
     const endMs = end?.getTime();
 
     if (startMs && now < startMs) {
-      return `Opens ${start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+      return `Opens ${formatDateTime12h(start)}`;
     }
     if (endMs && now > endMs) {
-      return 'Concluded Window';
+      return `Ended ${formatDateTime12h(end)}`;
     }
-    return 'Active Window';
+    if (endMs) {
+      return `Closes ${formatDateTime12h(end)}`;
+    }
+    if (startMs) {
+      return `Live since ${formatDateTime12h(start)}`;
+    }
+    return 'Schedule open';
   };
 
   const [questionBankCount, setQuestionBankCount] = useState(null);

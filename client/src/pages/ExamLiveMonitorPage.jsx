@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { getSocket, joinExamRoom } from '../services/socket';
+import { formatTime12h, formatDateTime12h } from '../utils/dateUtils';
 import ThemeToggle from '../components/common/ThemeToggle';
 import {
   ShieldAlert, Radio, RefreshCw, Eye, AlertTriangle,
@@ -372,7 +373,7 @@ export default function ExamLiveMonitorPage() {
                   <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-[11px]">
                     <span className="flex items-center gap-1 font-mono text-zinc-500 dark:text-zinc-400">
                       <Clock className="w-3 h-3 text-zinc-400" />
-                      {v.timestamp ? new Date(v.timestamp).toLocaleTimeString() : 'Just now'}
+                      {v.timestamp ? formatTime12h(v.timestamp, { includeSeconds: true }) : 'Just now'}
                     </span>
                     {v.candidateTrustScore !== undefined && (
                       <span className="text-zinc-500 dark:text-zinc-400 font-mono text-[11px]">
@@ -446,7 +447,7 @@ export default function ExamLiveMonitorPage() {
                 </h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
                   {selectedImageModal.userName} • {VIOLATION_LABELS[selectedImageModal.type] || selectedImageModal.type} •{' '}
-                  {new Date(selectedImageModal.timestamp).toLocaleString()}
+                  {formatDateTime12h(selectedImageModal.timestamp, { includeYear: true, includeSeconds: true })}
                 </p>
               </div>
               <button

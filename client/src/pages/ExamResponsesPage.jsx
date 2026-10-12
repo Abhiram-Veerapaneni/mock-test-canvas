@@ -5,6 +5,7 @@ import BackButton from '../components/common/BackButton';
 import Breadcrumbs from '../components/common/Breadcrumbs';
 import MathRenderer from '../components/common/MathRenderer';
 import api from '../services/api';
+import { formatDateTime12h } from '../utils/dateUtils';
 import {
   CheckCircle2,
   XCircle,
@@ -86,14 +87,7 @@ export default function ExamResponsesPage() {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
+    return formatDateTime12h(dateStr, { includeYear: true, includeSeconds: true });
   };
 
   const scrollToQuestion = (idx) => {
@@ -131,7 +125,7 @@ export default function ExamResponsesPage() {
             </p>
             {errorDetails?.scheduledEndTime && (
               <div className="p-3 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-700 dark:text-zinc-300 font-mono">
-                Scheduled Release Time: {new Date(errorDetails.scheduledEndTime).toLocaleString()}
+                Scheduled Release Time: {formatDateTime12h(errorDetails.scheduledEndTime, { includeYear: true })}
               </div>
             )}
             <div className="pt-2 flex justify-center gap-3">

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X, ExternalLink } from 'lucide-react';
+import { formatTime12h } from '../../utils/dateUtils';
 
 export default function SnapshotPreviewModal({ snapshot, previewImage, onClose }) {
   const data = snapshot || previewImage;
@@ -17,9 +18,7 @@ export default function SnapshotPreviewModal({ snapshot, previewImage, onClose }
 
   if (!data) return null;
 
-  const formattedTime = data.timestamp
-    ? new Date(data.timestamp).toLocaleTimeString()
-    : new Date().toLocaleTimeString();
+  const formattedTime = formatTime12h(data.timestamp || new Date(), { includeSeconds: true });
 
   return (
     <div

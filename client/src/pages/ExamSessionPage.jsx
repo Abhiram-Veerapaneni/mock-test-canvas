@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import useExamStore from '../store/useExamStore';
 import useProctorStore from '../store/useProctorStore';
 import api from '../services/api';
+import { formatTime12h } from '../utils/dateUtils';
 import ExamHeader from '../components/exam-player/ExamHeader';
 import QuestionCanvas from '../components/exam-player/QuestionCanvas';
 import QuestionPalette from '../components/exam-player/QuestionPalette';
@@ -701,7 +702,7 @@ export default function ExamSessionPage() {
                     </div>
                     <span className="text-zinc-400 tabular-nums text-[11px] flex items-center gap-1 font-mono">
                       <ClockIcon className="w-3 h-3" />
-                      {new Date(v.timestamp).toLocaleTimeString()}
+                      {formatTime12h(v.timestamp, { includeSeconds: true })}
                     </span>
                   </li>
                 ))}

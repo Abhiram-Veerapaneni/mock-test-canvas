@@ -4,6 +4,7 @@ import Navbar from '../components/common/Navbar';
 import Breadcrumbs from '../components/common/Breadcrumbs';
 import useNotificationStore from '../store/useNotificationStore';
 import useAuthStore from '../store/useAuthStore';
+import { formatDateTime12h } from '../utils/dateUtils';
 import {
   Bell,
   BellRing,
@@ -544,7 +545,7 @@ export default function NotificationsPage() {
                   {snapshotPreview.candidateName || 'Candidate'} •{' '}
                   {VIOLATION_LABELS[snapshotPreview.violationType] || snapshotPreview.violationType} •{' '}
                   {snapshotPreview.timestamp
-                    ? new Date(snapshotPreview.timestamp).toLocaleTimeString()
+                    ? formatDateTime12h(snapshotPreview.timestamp, { includeYear: true, includeSeconds: true })
                     : 'Active Exam'}
                 </p>
               </div>
