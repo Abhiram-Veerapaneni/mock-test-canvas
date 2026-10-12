@@ -228,16 +228,22 @@ export const createExam = async (req, res) => {
  */
 export const getAllExams = async (req, res) => {
   try {
-    const { category, search, status, page = 1, limit = 12 } = req.query;
+    const { category, search, status, page = 1, limit = 24 } = req.query;
 
-    const query = {};
+    const andConditions = [];
 
     if (category && category !== 'ALL') {
-      query.category = category.toUpperCase();
+      andConditions.push({ category: category.toUpperCase() });
     }
 
     if (search && search.trim()) {
-      query.title = { $regex: escapeRegex(search.trim()), $options: 'i' };
+      const escaped = escapeRegex(search.trim());
+      andConditions.push({
+        $or: [
+          { title: { $regex: escaped, $options: 'i' } },
+          { description: { $regex: escaped, $options: 'i' } }
+        ]
+      });
     }
 
     // Status and visibility filter:
@@ -252,20 +258,22 @@ export const getAllExams = async (req, res) => {
     };
 
     if (status) {
-      query.status = status;
+      andConditions.push({ status });
     } else if (req.user?._id) {
-      query.$or = [
-        publicCondition,
-        { creatorId: req.user._id }
-      ];
+      andConditions.push({
+        $or: [
+          publicCondition,
+          { creatorId: req.user._id }
+        ]
+      });
     } else {
-      query.$or = [
-        publicCondition
-      ];
+      andConditions.push(publicCondition);
     }
 
+    const query = andConditions.length > 0 ? { $and: andConditions } : {};
+
     const pageNumber = Math.max(1, parseInt(page, 10) || 1);
-    const limitNumber = Math.max(1, Math.min(100, parseInt(limit, 10) || 12));
+    const limitNumber = Math.max(1, Math.min(100, parseInt(limit, 10) || 24));
     const skip = (pageNumber - 1) * limitNumber;
 
     const total = await Exam.countDocuments(query);
@@ -274,12 +282,12 @@ export const getAllExams = async (req, res) => {
       .populate('creatorId', 'name')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limitNumber);
+      .limit(limitNumber)
+      .lean();
 
     // Build a map of examId -> attempt count for the logged-in user
     let userAttemptMap = {};
     if (req.user?._id) {
-      const { User } = await import('../models/User.model.js');
       const userDoc = await User.findById(req.user._id).select('attemptedTests').lean();
       if (userDoc?.attemptedTests) {
         userDoc.attemptedTests.forEach((a) => {

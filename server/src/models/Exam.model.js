@@ -124,5 +124,10 @@ const examSchema = new mongoose.Schema(
   }
 );
 
+examSchema.index({ status: 1, isPublic: 1, createdAt: -1 });
+examSchema.index({ category: 1, status: 1 });
+examSchema.index({ creatorId: 1, createdAt: -1 });
+examSchema.index({ title: 'text', description: 'text' });
+
 export const Exam = mongoose.model('Exam', examSchema);
 export default Exam;

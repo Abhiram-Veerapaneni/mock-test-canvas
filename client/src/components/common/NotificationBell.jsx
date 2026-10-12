@@ -96,6 +96,24 @@ export default function NotificationBell() {
     };
   }, [isOpen]);
 
+  // Automatically mark notifications as read after reading them in the popup
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (unreadCount > 0) {
+      // Mark as read after 1.2s of having the popup open (giving time to view)
+      const timer = setTimeout(() => {
+        markAllAsRead();
+      }, 1200);
+
+      return () => {
+        clearTimeout(timer);
+        // When closing after viewing, ensure unread notifications are marked as read
+        markAllAsRead();
+      };
+    }
+  }, [isOpen, unreadCount, markAllAsRead]);
+
   if (!isAuthenticated) return null;
 
   const recentNotifications = notifications.slice(0, 5);
@@ -117,9 +135,6 @@ export default function NotificationBell() {
       {/* Bell Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        aria-label="Open notifications"
-        aria-expanded={isOpen}
-        title="Notifications"
         aria-label="Open notifications"
         aria-expanded={isOpen}
         title="Notifications"
@@ -185,6 +200,11 @@ export default function NotificationBell() {
                   <div
                     key={n._id}
                     onClick={() => handleItemClick(n)}
+                    onMouseEnter={() => {
+                      if (!n.read) {
+                        markAsRead(n._id);
+                      }
+                    }}
                     className={`p-3 transition-colors cursor-pointer flex items-start gap-3 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 ${
                       !n.read
                         ? 'bg-zinc-50/50 dark:bg-zinc-800/30'

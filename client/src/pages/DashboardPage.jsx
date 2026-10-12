@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import useAuthStore from '../store/useAuthStore';
@@ -16,7 +16,8 @@ import {
   FileText,
   Award,
   Calendar,
-  Compass
+  Compass,
+  X
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -27,7 +28,9 @@ export default function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState(null);
+  const searchDebounceRef = useRef(null);
 
   const categories = ['ALL', 'JEE', 'NEET', 'GATE', 'APTITUDE', 'CUSTOM'];
 
@@ -106,17 +109,18 @@ export default function DashboardPage() {
     };
   }, [isAuthenticated, loginWithGoogle]);
 
-  useEffect(() => {
-    fetchExams();
-  }, [selectedCategory]);
-
-  const fetchExams = async () => {
-    setIsLoading(true);
+  const fetchExams = async (showFullLoader = true, searchOverride = null) => {
+    if (showFullLoader) {
+      setIsLoading(true);
+    } else {
+      setIsSearching(true);
+    }
     setError(null);
     try {
-      const params = {};
+      const activeSearch = searchOverride !== null ? searchOverride : searchQuery;
+      const params = { limit: 50 };
       if (selectedCategory !== 'ALL') params.category = selectedCategory;
-      if (searchQuery.trim()) params.search = searchQuery.trim();
+      if (activeSearch.trim()) params.search = activeSearch.trim();
 
       const res = await api.get('/exams', { params });
       if (res.data?.success) {
@@ -126,13 +130,48 @@ export default function DashboardPage() {
       console.error('Failed to load exams:', err);
       setError('Unable to load available exams. Please try again later.');
     } finally {
-      setIsLoading(false);
+      if (showFullLoader) setIsLoading(false);
+      setIsSearching(false);
     }
   };
 
+  useEffect(() => {
+    fetchExams(true);
+  }, [selectedCategory]);
+
+  // Debounced server search without full-page re-rendering
+  useEffect(() => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    searchDebounceRef.current = setTimeout(() => {
+      fetchExams(false, searchQuery);
+    }, 250);
+
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchQuery]);
+
+  // Instant 0ms client-side filtering on loaded exams for instantaneous response
+  const displayExams = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return exams;
+
+    return exams.filter((exam) => {
+      const titleMatch = exam.title?.toLowerCase().includes(q);
+      const descMatch = exam.description?.toLowerCase().includes(q);
+      const catMatch = exam.category?.toLowerCase().includes(q);
+      const creatorMatch = exam.creatorName?.toLowerCase().includes(q);
+      return titleMatch || descMatch || catMatch || creatorMatch;
+    });
+  }, [exams, searchQuery]);
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    fetchExams();
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    fetchExams(false, searchQuery);
   };
 
   const handleAuthorExamClick = () => {
@@ -158,7 +197,26 @@ export default function DashboardPage() {
     return 'Active Window';
   };
 
-  const totalQuestions = exams.reduce((sum, e) => sum + (e.questions?.length || 0), 0);
+  const [questionBankCount, setQuestionBankCount] = useState(null);
+
+  // Fetch true Question Bank count from question repository
+  useEffect(() => {
+    api.get('/questions', { params: { limit: 1 } })
+      .then((res) => {
+        if (res.data?.success && typeof res.data.total === 'number') {
+          setQuestionBankCount(res.data.total);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to fetch question bank count:', err);
+      });
+  }, []);
+
+  const totalExamQuestions = useMemo(() => {
+    return exams.reduce((sum, e) => sum + (e.questionCount || e.questions?.length || 0), 0);
+  }, [exams]);
+
+  const totalQuestions = questionBankCount !== null ? questionBankCount : totalExamQuestions;
   const completedAttempts = user?.attemptedTests?.length || 0;
 
   const getCategoryBadgeClass = (category) => {
@@ -211,13 +269,22 @@ export default function DashboardPage() {
           <div className="p-4 sm:p-5">
             <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Active Tests</p>
             <p className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 tabular-nums mt-1">
-              {exams.length}
+              {displayExams.length}
             </p>
             <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">Ready for testing</p>
           </div>
 
-          <div className="p-4 sm:p-5">
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Question Bank</p>
+          <div
+            onClick={() => navigate('/question-bank')}
+            className="p-4 sm:p-5 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-850/50 transition-colors group"
+            title="Browse Question Bank repository"
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors">
+                Question Bank
+              </p>
+              <Compass className="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
+            </div>
             <p className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 tabular-nums mt-1">
               {totalQuestions}
             </p>
@@ -238,15 +305,30 @@ export default function DashboardPage() {
         {/* Control Bar: Search Input & Category Filters */}
         <section className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
           {/* Search */}
-          <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-72">
+          <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-80">
             <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter by title..."
-              className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-colors"
+              placeholder="Search tests by title or topic..."
+              className="w-full pl-8 pr-16 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-zinc-600 transition-colors"
             />
+            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {isSearching && (
+                <Loader2 className="w-3 h-3 text-zinc-400 animate-spin" />
+              )}
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="p-0.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 rounded transition-colors"
+                  title="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </form>
 
           {/* Stream Filter text tabs */}
@@ -289,25 +371,45 @@ export default function DashboardPage() {
                 Retry
               </button>
             </div>
-          ) : exams.length === 0 ? (
+          ) : displayExams.length === 0 ? (
             <div className="text-center py-16 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg p-8">
-              <BookOpen className="w-6 h-6 text-zinc-400 mx-auto mb-2" />
-              <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
-                No examinations found
-              </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto mb-4">
-                No active tests match your filter ({selectedCategory}). You can author a new examination paper in the studio.
-              </p>
-              <button
-                onClick={() => navigate('/create-test')}
-                className="btn-primary"
-              >
-                Create Exam
-              </button>
+              {searchQuery.trim() ? (
+                <>
+                  <Search className="w-6 h-6 text-zinc-400 mx-auto mb-2" />
+                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
+                    No matching examinations found
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto mb-4">
+                    No active tests match "{searchQuery}" in category ({selectedCategory}).
+                  </p>
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="btn-secondary text-xs py-1.5 px-3"
+                  >
+                    Clear Search Query
+                  </button>
+                </>
+              ) : (
+                <>
+                  <BookOpen className="w-6 h-6 text-zinc-400 mx-auto mb-2" />
+                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
+                    No examinations found
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto mb-4">
+                    No active tests match your filter ({selectedCategory}). You can author a new examination paper in the studio.
+                  </p>
+                  <button
+                    onClick={() => navigate('/create-test')}
+                    className="btn-primary"
+                  >
+                    Create Exam
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
-              {exams.map((exam) => {
+              {displayExams.map((exam) => {
                 const attemptsUsed = exam.userAttemptCount || 0;
                 const maxAttempts = exam.maxAttempts;
                 const isUnlimited = maxAttempts === null || maxAttempts === undefined;

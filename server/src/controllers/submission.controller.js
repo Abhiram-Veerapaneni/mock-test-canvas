@@ -12,7 +12,7 @@ import cloudinary, { isCloudinaryConfigured } from '../config/cloudinary.js';
  */
 export const startAttempt = async (req, res) => {
   try {
-    const { examId, isPractice = false } = req.body;
+    const { examId, isPractice = false, isPreview = false } = req.body;
     const userId = req.user._id;
 
     if (!examId) {
@@ -26,28 +26,39 @@ export const startAttempt = async (req, res) => {
 
     const now = new Date();
 
-    // 1. PRACTICE MODE VALIDATIONS
-    if (isPractice) {
-      // Check if examiner allows practice mode
-      if (exam.allowPracticeMode === false) {
-        return res.status(403).json({
-          success: false,
-          message: 'Practice mode is not allowed for this exam.'
-        });
-      }
+    const isOwner = Boolean(
+      userId && exam.creatorId && (
+        (exam.creatorId._id && exam.creatorId._id.toString() === userId.toString()) ||
+        (exam.creatorId.toString() === userId.toString())
+      )
+    );
+    const isPrivileged = isOwner || req.user.role === 'examiner' || req.user.role === 'admin';
 
-      // If exam is scheduled, practice mode is only unlocked after the schedule ends
-      if (exam.schedule?.isScheduled && exam.schedule?.endTime && now < new Date(exam.schedule.endTime)) {
-        return res.status(403).json({
-          success: false,
-          message: `Practice mode for this scheduled exam will only be unlocked after the exam schedule concludes at ${new Date(exam.schedule.endTime).toLocaleString()}.`
-        });
+    // 1. PRACTICE / PREVIEW MODE VALIDATIONS
+    if (isPractice || isPreview) {
+      // If privileged creator/admin, bypass practice mode disabled & schedule end lock
+      if (!isPrivileged) {
+        // Check if examiner allows practice mode
+        if (exam.allowPracticeMode === false) {
+          return res.status(403).json({
+            success: false,
+            message: 'Practice mode is not allowed for this exam.'
+          });
+        }
+
+        // If exam is scheduled, practice mode is only unlocked after the schedule ends
+        if (exam.schedule?.isScheduled && exam.schedule?.endTime && now < new Date(exam.schedule.endTime)) {
+          return res.status(403).json({
+            success: false,
+            message: `Practice mode for this scheduled exam will only be unlocked after the exam schedule concludes at ${new Date(exam.schedule.endTime).toLocaleString()}.`
+          });
+        }
       }
-      // Practice mode does NOT consume or check official maxAttempts limit
+      // Practice / Preview mode does NOT consume or check official maxAttempts limit
     } else {
       // 2. OFFICIAL ATTEMPT VALIDATIONS
-      // Schedule Window enforcement
-      if (exam.schedule?.isScheduled) {
+      // Schedule Window enforcement (privileged creator preview is not blocked by schedule)
+      if (exam.schedule?.isScheduled && !isPrivileged) {
         if (exam.schedule.startTime && now < new Date(exam.schedule.startTime)) {
           return res.status(403).json({
             success: false,
@@ -62,8 +73,8 @@ export const startAttempt = async (req, res) => {
         }
       }
 
-      // Check official attempt limit (null = unlimited)
-      if (exam.maxAttempts !== null) {
+      // Check official attempt limit (null = unlimited; privileged creator preview does not consume limit)
+      if (exam.maxAttempts !== null && !isPrivileged) {
         const existingCount = await Attempt.countDocuments({
           examId,
           userId,
@@ -84,7 +95,7 @@ export const startAttempt = async (req, res) => {
       examId,
       userId,
       status: 'IN_PROGRESS',
-      isPractice: Boolean(isPractice)
+      isPractice: Boolean(isPractice || isPreview)
     }).sort({ createdAt: -1 });
 
     if (!attempt) {
@@ -93,7 +104,8 @@ export const startAttempt = async (req, res) => {
         userId,
         status: 'IN_PROGRESS',
         startedAt: new Date(),
-        isPractice: Boolean(isPractice),
+        isPractice: Boolean(isPractice || isPreview),
+        isPreview: Boolean(isPreview),
         trustScore: 100,
         violations: []
       });
@@ -103,6 +115,7 @@ export const startAttempt = async (req, res) => {
       success: true,
       attemptId: attempt._id,
       isPractice: attempt.isPractice,
+      isPreview: Boolean(attempt.isPreview),
       trustScore: attempt.trustScore,
       violations: attempt.violations,
       startedAt: attempt.startedAt
@@ -120,7 +133,7 @@ export const startAttempt = async (req, res) => {
  */
 export const submitExam = async (req, res) => {
   try {
-    const { examId, answers = {}, isPractice = false, timeSpentSeconds } = req.body;
+    const { examId, answers = {}, isPractice = false, isPreview = false, timeSpentSeconds } = req.body;
     const userId = req.user._id;
 
     if (!examId) {
@@ -133,8 +146,16 @@ export const submitExam = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Exam not found' });
     }
 
-    // Check official attempt limit (practice attempts do not count against maxAttempts)
-    if (!isPractice && exam.maxAttempts !== null) {
+    const isOwner = Boolean(
+      userId && exam.creatorId && (
+        (exam.creatorId._id && exam.creatorId._id.toString() === userId.toString()) ||
+        (exam.creatorId.toString() === userId.toString())
+      )
+    );
+    const isPrivileged = isOwner || req.user.role === 'examiner' || req.user.role === 'admin';
+
+    // Check official attempt limit (practice attempts and creator preview attempts do not count against maxAttempts)
+    if (!isPractice && !isPreview && !isPrivileged && exam.maxAttempts !== null) {
       const existingCount = await Attempt.countDocuments({
         examId,
         userId,
@@ -170,7 +191,7 @@ export const submitExam = async (req, res) => {
       examId,
       userId,
       status: 'IN_PROGRESS',
-      isPractice: Boolean(isPractice)
+      isPractice: Boolean(isPractice || isPreview)
     }).sort({ createdAt: -1 });
 
     const submittedAt = new Date();

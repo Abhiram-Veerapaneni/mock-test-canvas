@@ -97,6 +97,7 @@ export default function ExamDetailPage() {
     return false;
   });
   const [showRevealConfirmationModal, setShowRevealConfirmationModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isRevealingQuestions, setIsRevealingQuestions] = useState(false);
 
   const fetchExam = useCallback(async (explicitReveal = false) => {
@@ -141,27 +142,48 @@ export default function ExamDetailPage() {
     fetchAttempts();
   }, [fetchExam, fetchAttempts]);
 
-  const handleStartExam = (isPractice = false) => {
+  const handleStartExam = (isPractice = false, isPreview = false) => {
+    // Sanitize in case a click Event was passed
+    const practice = typeof isPractice === 'boolean' ? isPractice : false;
+    const preview = typeof isPreview === 'boolean' ? isPreview : false;
+
     if (!examId) return;
+
+    const qCount = exam?.questionCount || exam?.questions?.length || 0;
+    if (exam && qCount === 0) {
+      setError('This exam does not have any questions yet. Please add questions in Authoring Studio first.');
+      return;
+    }
+
     if (!isAuthenticated) {
       openAuthModal({
-        title: isPractice ? 'Sign In for Practice Mode' : 'Sign In to Start Assessment',
-        subtitle: isPractice
+        title: preview
+          ? 'Sign In to Preview Test Run'
+          : practice
+          ? 'Sign In for Practice Mode'
+          : 'Sign In to Start Assessment',
+        subtitle: preview
+          ? 'Log in to test run this exam in candidate simulation mode.'
+          : practice
           ? 'Log in or create an account to start unproctored practice.'
           : 'Log in or create a candidate account to begin this proctored test.',
         onSuccess: () => {
           localStorage.setItem('active_exam_id', examId);
-          sessionStorage.setItem('active_exam_mode', isPractice ? 'PRACTICE' : 'OFFICIAL');
+          sessionStorage.setItem('active_exam_mode', practice ? 'PRACTICE' : 'OFFICIAL');
+          if (preview) sessionStorage.setItem('active_exam_preview', 'true');
+          else sessionStorage.removeItem('active_exam_preview');
           useExamStore.getState().setActiveExamId(examId);
-          navigate('/test', { state: { examId, isPractice } });
+          navigate('/test', { state: { examId, isPractice: practice, isPreview: preview } });
         }
       });
       return;
     }
     localStorage.setItem('active_exam_id', examId);
-    sessionStorage.setItem('active_exam_mode', isPractice ? 'PRACTICE' : 'OFFICIAL');
+    sessionStorage.setItem('active_exam_mode', practice ? 'PRACTICE' : 'OFFICIAL');
+    if (preview) sessionStorage.setItem('active_exam_preview', 'true');
+    else sessionStorage.removeItem('active_exam_preview');
     useExamStore.getState().setActiveExamId(examId);
-    navigate('/test', { state: { examId, isPractice } });
+    navigate('/test', { state: { examId, isPractice: practice, isPreview: preview } });
   };
 
   const isOwner = Boolean(
@@ -448,11 +470,11 @@ export default function ExamDetailPage() {
 
                   {/* Candidate Test Run for Creator */}
                   <button
-                    onClick={handleStartExam}
-                    className="btn-secondary border-dashed text-xs py-2 px-3"
-                    title="Simulate candidate experience"
+                    onClick={() => setShowPreviewModal(true)}
+                    className="btn-secondary border-dashed text-xs py-2 px-3 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors cursor-pointer"
+                    title="Simulate candidate experience before conducting or publishing"
                   >
-                    <Play className="w-3 h-3" />
+                    <Play className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
                     <span>Preview Test Run</span>
                   </button>
                 </>
@@ -1315,6 +1337,120 @@ export default function ExamDetailPage() {
                       <span>Reveal Questions & Studio Access</span>
                     </>
                   )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Creator Preview Test Run Simulation Modal */}
+        {showPreviewModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl w-full max-w-lg shadow-2xl p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                    <Play className="w-5 h-5 fill-current" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+                      Preview Test Run Simulation
+                    </h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                      Test candidate experience, question flow, and scoring before publishing.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowPreviewModal(false)}
+                  className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {(exam?.questionCount === 0 || (!exam?.questions || exam.questions.length === 0)) ? (
+                <div className="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 text-xs text-amber-800 dark:text-amber-300 space-y-2">
+                  <div className="flex items-center gap-2 font-medium">
+                    <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span>No questions in this examination paper yet</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-amber-700 dark:text-amber-400">
+                    Add questions in the Authoring Studio before previewing.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowPreviewModal(false);
+                      navigate(`/create-test?examId=${examId}`);
+                    }}
+                    className="btn-primary text-xs py-1.5 px-3"
+                  >
+                    Open Authoring Studio
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3 pt-1">
+                  {/* Mode 1: Quick Unproctored Preview */}
+                  <div className="p-3.5 rounded-lg border border-indigo-200/80 dark:border-indigo-900/60 bg-indigo-50/40 dark:bg-indigo-950/20 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                            Quick Test Run (Practice Mode)
+                          </span>
+                          <span className="text-[10px] font-medium uppercase px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300">
+                            Recommended
+                          </span>
+                        </div>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                          Test questions, math renderer, timer, answer palette, and instant grading. No webcam, mic, or browser lockdown required.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowPreviewModal(false);
+                          handleStartExam(true, true);
+                        }}
+                        className="btn-primary text-xs py-2 px-3.5 shrink-0 whitespace-nowrap cursor-pointer flex items-center gap-1.5"
+                      >
+                        <FlaskConical className="w-3.5 h-3.5" />
+                        <span>Quick Preview</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mode 2: Full Proctored Simulation */}
+                  <div className="p-3.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-850/60 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                          Full Proctored Simulation
+                        </span>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                          Test the full candidate security flow, including hardware verification gate, camera monitor, face detection, and browser lockdown.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowPreviewModal(false);
+                          handleStartExam(false, true);
+                        }}
+                        className="btn-secondary text-xs py-2 px-3.5 shrink-0 whitespace-nowrap cursor-pointer flex items-center gap-1.5"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span>Proctored Run</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setShowPreviewModal(false)}
+                  className="btn-secondary text-xs py-1.5 px-3"
+                >
+                  Close
                 </button>
               </div>
             </div>

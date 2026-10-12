@@ -44,10 +44,13 @@ export default function ExamSessionPage() {
   const isJustSubmitted = searchParams?.get('submitted') === 'true';
   const urlExamId = searchParams?.get('examId');
 
-  // Check practice mode flag
+  // Check practice mode and preview flags
   const isPractice =
-    location.state?.isPractice ??
+    location.state?.isPractice === true ||
     (typeof window !== 'undefined' ? sessionStorage.getItem('active_exam_mode') === 'PRACTICE' : false);
+  const isPreview =
+    location.state?.isPreview === true ||
+    (typeof window !== 'undefined' ? sessionStorage.getItem('active_exam_preview') === 'true' : false);
 
   // Resolve examId from URL query, location state, localStorage, or Zustand store
   const examId =
@@ -319,6 +322,7 @@ export default function ExamSessionPage() {
         answers: answersByQuestionId,
         violations: isPractice ? [] : currentViolations,
         isPractice: Boolean(isPractice),
+        isPreview: Boolean(isPreview),
         timeSpentSeconds,
       });
       if (res.data?.success) {
@@ -522,7 +526,11 @@ export default function ExamSessionPage() {
         const [examRes, attemptsRes, startRes] = await Promise.all([
           api.get(`/exams/${examId}`),
           api.get(`/submissions/my/${examId}`).catch(() => ({ data: { success: true, attempts: [] } })),
-          api.post('/submissions/start', { examId, isPractice: Boolean(isPractice) }).catch((err) => {
+          api.post('/submissions/start', {
+            examId,
+            isPractice: Boolean(isPractice),
+            isPreview: Boolean(isPreview),
+          }).catch((err) => {
             console.warn('[ExamSession] Start attempt error:', err?.response?.data || err?.message);
             return { data: { success: false } };
           }),
@@ -535,8 +543,8 @@ export default function ExamSessionPage() {
         if (examRes.data?.success && examRes.data.exam) {
           const examData = examRes.data.exam;
           
-          // Prevent manual navigation bypass for exhausted official attempts (practice attempts don't count)
-          if (examData.maxAttempts !== null && isFreshAttempt && !isPractice) {
+          // Prevent manual navigation bypass for exhausted official attempts (practice and creator preview don't count)
+          if (examData.maxAttempts !== null && isFreshAttempt && !isPractice && !isPreview && !examData.isCreator) {
             const officialAttemptsUsed = (attemptsRes.data?.attempts || []).filter((a) => !a.isPractice).length;
             if (officialAttemptsUsed >= examData.maxAttempts) {
               throw new Error('You have exhausted all official attempts for this examination.');
@@ -596,12 +604,17 @@ export default function ExamSessionPage() {
             <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3">
               <CheckCircle2 className="w-5 h-5" />
             </div>
-            {isPractice && (
+            {isPreview ? (
+              <div className="inline-flex items-center gap-1.5 text-xs text-purple-700 dark:text-purple-400 font-medium mb-2 bg-purple-50 dark:bg-purple-950/40 px-2.5 py-1 rounded-md border border-purple-200 dark:border-purple-900/50">
+                <FlaskConical className="w-3.5 h-3.5" />
+                <span>Examiner Preview Test Run</span>
+              </div>
+            ) : isPractice ? (
               <div className="inline-flex items-center gap-1.5 text-xs text-indigo-700 dark:text-indigo-400 font-medium mb-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                 <span>Practice Session</span>
               </div>
-            )}
+            ) : null}
             <h2 className="text-base font-semibold text-zinc-900 dark:text-white mb-1">Examination Submitted</h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
               {snap?.title || 'Your answers have been recorded.'}

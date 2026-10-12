@@ -105,6 +105,10 @@ const attemptSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    isPreview: {
+      type: Boolean,
+      default: false
+    },
     timeTakenSeconds: {
       type: Number,
       default: 0
