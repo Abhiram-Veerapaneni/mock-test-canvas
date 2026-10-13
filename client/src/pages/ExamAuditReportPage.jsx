@@ -5,26 +5,11 @@ import BackButton from '../components/common/BackButton';
 import Breadcrumbs from '../components/common/Breadcrumbs';
 import api from '../services/api';
 import useAuthStore from '../store/useAuthStore';
-import { formatDateTime12h } from '../utils/dateUtils';
-import {
-  ShieldAlert, Users, Award, Clock, ArrowLeft, Loader2,
-  AlertTriangle, Eye, X, CheckCircle2, Search, Filter,
-  ExternalLink, Calendar, RefreshCw, FileText, BarChart3,
-  Check, ChevronDown, Radio, FlaskConical, ShieldCheck, CheckCheck,
-  ChevronRight
-} from 'lucide-react';
-
-const VIOLATION_LABELS = {
-  TAB_SWITCH: 'Tab Switch',
-  WINDOW_BLUR: 'Focus Lost',
-  FULLSCREEN_EXIT: 'Fullscreen Exit',
-  NO_FACE: 'No Face Detected',
-  MULTI_FACE: 'Multiple Faces',
-  NOISE_SPIKE: 'Excessive Noise',
-  CELL_PHONE: 'Mobile Phone Detected',
-  PROHIBITED_BOOK: 'Study Material / Book',
-  PROHIBITED_OBJECT: 'Prohibited Device',
-};
+import AuditHeaderMetrics from '../components/audit/AuditHeaderMetrics';
+import AuditViolationLogsTable from '../components/audit/AuditViolationLogsTable';
+import AuditCompletionReportTable from '../components/audit/AuditCompletionReportTable';
+import AuditSnapshotModal from '../components/audit/AuditSnapshotModal';
+import { Loader2, AlertTriangle } from 'lucide-react';
 
 export default function ExamAuditReportPage() {
   const { testId, examId: routeExamId } = useParams();
@@ -82,7 +67,7 @@ export default function ExamAuditReportPage() {
     fetchData();
   }, [fetchData]);
 
-  // ── Filtered Violation Logs ──────────────────────────────────────────────────
+  // Filtered Violation Logs
   const filteredViolations = (data?.violations || []).filter((v) => {
     const matchesSearch =
       !violationSearch.trim() ||
@@ -95,7 +80,7 @@ export default function ExamAuditReportPage() {
     return matchesSearch && matchesType && matchesImage;
   });
 
-  // ── Filtered & Sorted Completion Report ──────────────────────────────────────
+  // Filtered & Sorted Completion Report
   const filteredCompletion = (data?.completionReport || [])
     .filter((rep) => {
       const matchesSearch =
@@ -123,23 +108,13 @@ export default function ExamAuditReportPage() {
       return new Date(b.submittedAt || b.startedAt) - new Date(a.submittedAt || a.startedAt);
     });
 
-  const getBadgeStyle = (type) => {
-    switch (type) {
-      case 'CELL_PHONE':
-      case 'PROHIBITED_OBJECT':
-        return 'text-rose-700 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-950/40 border border-rose-200/50 dark:border-rose-900/50';
-      case 'PROHIBITED_BOOK':
-        return 'text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-900/50';
-      case 'MULTI_FACE':
-        return 'text-rose-700 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-950/40 border border-rose-200/50 dark:border-rose-900/50';
-      case 'NO_FACE':
-        return 'text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-900/50';
-      case 'NOISE_SPIKE':
-        return 'text-amber-700 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-900/50';
-      default:
-        return 'text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700';
-    }
-  };
+  const avgTrustScore =
+    data?.completionReport?.length > 0
+      ? Math.round(
+          data.completionReport.reduce((sum, r) => sum + r.trustScore, 0) /
+            data.completionReport.length
+        )
+      : 100;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0C0F17] text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
@@ -158,101 +133,25 @@ export default function ExamAuditReportPage() {
           />
         </div>
 
-        {/* ── Header Banner & Quick Metrics ─────────────────────────────────── */}
-        <section className="rounded-lg bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none p-6 space-y-6 shadow-none">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
-            <div className="space-y-1.5 flex-1">
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
-                  Creator Proctoring Suite
-                </span>
-                {data?.exam?.proctorSettings?.liveNotifications && (
-                  <span className="flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 font-medium">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                    Live Alerts Active
-                  </span>
-                )}
-              </div>
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                {data?.exam?.title || 'Examination Audit & Results'}
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                Review candidate biometric logs, webcam snapshots, trust scores, and submission records.
-              </p>
-            </div>
+        {/* Header Banner & Quick Metrics */}
+        <AuditHeaderMetrics
+          exam={data?.exam}
+          attemptsCount={data?.completionReport?.length || 0}
+          totalViolations={data?.totalViolations || 0}
+          avgTrustScore={avgTrustScore}
+          isLoading={isLoading}
+          onRefresh={fetchData}
+          activeTab={activeTab}
+          onSelectTab={setActiveTab}
+          violationsCount={data?.violations?.length || 0}
+          completionCount={data?.completionReport?.length || 0}
+        />
 
-            {/* Quick Metrics */}
-            <div className="flex items-center gap-3">
-              <div className="grid grid-cols-3 divide-x divide-slate-200/80 dark:divide-slate-800/80 border border-slate-200/80 dark:border-slate-800/80 rounded-lg bg-slate-50/50 dark:bg-[#162030]/50">
-                <div className="p-3 text-center min-w-[84px]">
-                  <div className="text-[10px] uppercase text-slate-400 font-medium tracking-wider">Attempts</div>
-                  <div className="text-xl font-semibold tabular-nums text-slate-900 dark:text-slate-100 mt-0.5">
-                    {data?.completionReport?.length || 0}
-                  </div>
-                </div>
-                <div className="p-3 text-center min-w-[84px]">
-                  <div className="text-[10px] uppercase text-slate-400 font-medium tracking-wider">Violations</div>
-                  <div className="text-xl font-semibold tabular-nums text-rose-600 dark:text-rose-400 mt-0.5">
-                    {data?.totalViolations || 0}
-                  </div>
-                </div>
-                <div className="p-3 text-center min-w-[84px]">
-                  <div className="text-[10px] uppercase text-slate-400 font-medium tracking-wider">Avg Trust</div>
-                  <div className="text-xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400 mt-0.5">
-                    {data?.completionReport?.length > 0
-                      ? `${Math.round(
-                          data.completionReport.reduce((sum, r) => sum + r.trustScore, 0) /
-                            data.completionReport.length
-                        )}%`
-                      : '100%'}
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={fetchData}
-                disabled={isLoading}
-                title="Refresh audit data"
-                className="btn-secondary p-2.5 rounded-md cursor-pointer"
-              >
-                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
-          </div>
-
-          {/* ── Table Switch Tabs ─────────────────────────────────────────── */}
-          <div className="flex items-center gap-6 border-t border-slate-100 dark:border-slate-800/80 pt-4 -mb-2">
-            <button
-              onClick={() => setActiveTab('violations')}
-              className={`flex items-center gap-2 pb-3 text-xs transition-colors cursor-pointer border-b-2 -mb-[1px] ${
-                activeTab === 'violations'
-                  ? 'border-indigo-600 dark:border-indigo-400 text-slate-900 dark:text-slate-100 font-semibold'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
-              }`}
-            >
-              <ShieldAlert className="w-4 h-4" />
-              <span>Violation Logs ({data?.violations?.length || 0})</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('completion')}
-              className={`flex items-center gap-2 pb-3 text-xs transition-colors cursor-pointer border-b-2 -mb-[1px] ${
-                activeTab === 'completion'
-                  ? 'border-indigo-600 dark:border-indigo-400 text-slate-900 dark:text-slate-100 font-semibold'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 font-medium'
-              }`}
-            >
-              <FileText className="w-4 h-4" />
-              <span>Candidate Completion Report ({data?.completionReport?.length || 0})</span>
-            </button>
-          </div>
-        </section>
-
-        {/* ── Loading / Error States ────────────────────────────────────────── */}
+        {/* Loading / Error States */}
         {isLoading && (
           <div className="py-20 flex flex-col items-center justify-center text-slate-400 space-y-2">
             <Loader2 className="w-6 h-6 animate-spin text-slate-600 dark:text-slate-400" />
-            <p className="text-xs">Loading audit data & candidate snapshots...</p>
+            <p className="text-xs">Loading audit data &amp; candidate snapshots...</p>
           </div>
         )}
 
@@ -262,10 +161,7 @@ export default function ExamAuditReportPage() {
               <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
               <span>{error}</span>
             </div>
-            <button
-              onClick={fetchData}
-              className="btn-secondary text-xs px-3 py-1"
-            >
+            <button onClick={fetchData} className="btn-secondary text-xs px-3 py-1">
               Retry
             </button>
           </div>
@@ -273,416 +169,47 @@ export default function ExamAuditReportPage() {
 
         {!isLoading && !error && (
           <>
-            {/* ═════════════════════════════════════════════════════════════════════
-                TAB 1: VIOLATION LOGS TABLE
-               ═════════════════════════════════════════════════════════════════════ */}
+            {/* TAB 1: VIOLATION LOGS TABLE */}
             {activeTab === 'violations' && (
-              <section className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-none overflow-hidden space-y-4 p-6">
-                {/* Filters */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-                    {['ALL', 'CELL_PHONE', 'PROHIBITED_BOOK', 'NO_FACE', 'MULTI_FACE', 'NOISE_SPIKE', 'TAB_SWITCH', 'FULLSCREEN_EXIT'].map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => setViolationTypeFilter(type)}
-                        className={`px-2.5 py-1 rounded-md text-xs font-medium whitespace-nowrap transition-colors cursor-pointer border ${
-                          violationTypeFilter === type
-                            ? 'bg-indigo-600 text-white border-indigo-600 dark:bg-indigo-500 dark:text-white dark:border-indigo-500 shadow-sm'
-                            : 'bg-white dark:bg-[#131926] text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-[#162030]'
-                        }`}
-                      >
-                        {type === 'ALL' ? 'All Types' : VIOLATION_LABELS[type] || type}
-                      </button>
-                    ))}
-
-                    <label className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-[#131926] text-slate-700 dark:text-slate-300 font-medium cursor-pointer ml-1 select-none border border-slate-200/80 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-[#162030]">
-                      <input
-                        type="checkbox"
-                        checked={onlyWithImages}
-                        onChange={(e) => setOnlyWithImages(e.target.checked)}
-                        className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-700 text-slate-900 focus:ring-indigo-500/20 focus:border-indigo-500"
-                      />
-                      <span>Only with Images</span>
-                    </label>
-                  </div>
-
-                  <div className="relative w-full sm:w-64">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="text"
-                      value={violationSearch}
-                      onChange={(e) => setViolationSearch(e.target.value)}
-                      placeholder="Search candidate..."
-                      className="input-base text-xs pl-8 pr-3 py-1.5"
-                    />
-                  </div>
-                </div>
-
-                {/* Table */}
-                {filteredViolations.length === 0 ? (
-                  <div className="py-16 text-center text-slate-400 space-y-2">
-                    <ShieldAlert className="w-8 h-8 mx-auto opacity-40 text-emerald-500" />
-                    <p className="text-xs font-medium">No violation logs match the active filters.</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto rounded-lg border border-slate-200/80 dark:border-slate-800/80">
-                    <table className="w-full text-left border-collapse text-xs">
-                      <thead>
-                        <tr className="bg-slate-50/75 dark:bg-[#0C0F17]/75 border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                          <th className="py-3 px-4">Timestamp</th>
-                          <th className="py-3 px-4">User</th>
-                          <th className="py-3 px-4">Violation Type</th>
-                          <th className="py-3 px-4 text-center">No. of Violations</th>
-                          <th className="py-3 px-4 text-center">Image Evidence</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                        {filteredViolations.map((v, idx) => (
-                          <tr
-                            key={idx}
-                            className="hover:bg-slate-50/50 dark:hover:bg-[#162030]/50 transition-colors"
-                          >
-                            {/* 1. Timestamp */}
-                            <td className="py-3 px-4 whitespace-nowrap font-mono tabular-nums text-slate-600 dark:text-slate-300">
-                              {v.timestamp ? formatDateTime12h(v.timestamp, { includeYear: true, includeSeconds: true }) : '—'}
-                            </td>
-
-                            {/* 2. User */}
-                            <td className="py-3 px-4 whitespace-nowrap">
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-semibold flex items-center justify-center text-[10px]">
-                                  {v.userName ? v.userName.charAt(0).toUpperCase() : 'U'}
-                                </div>
-                                <div>
-                                  <div className="font-medium text-slate-900 dark:text-slate-100">
-                                    {v.userName || 'Anonymous'}
-                                  </div>
-                                  <div className="text-[10px] text-slate-400">{v.userEmail || 'Candidate'}</div>
-                                </div>
-                              </div>
-                            </td>
-
-                            {/* 3. Violation Type */}
-                            <td className="py-3 px-4 whitespace-nowrap">
-                              <span className={`px-2 py-0.5 rounded text-[11px] font-medium border ${getBadgeStyle(v.type)}`}>
-                                {VIOLATION_LABELS[v.type] || v.type}
-                              </span>
-                            </td>
-
-                            {/* 4. Number of Violations */}
-                            <td className="py-3 px-4 whitespace-nowrap text-center">
-                              <span className="inline-block px-2 py-0.5 rounded text-xs font-semibold tabular-nums text-rose-700 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-950/40 border border-rose-200/50 dark:border-rose-900/50">
-                                {v.noOfViolations ?? 1}
-                              </span>
-                            </td>
-
-                            {/* 5. Image (if applicable) */}
-                            <td className="py-3 px-4 whitespace-nowrap text-center">
-                              {v.imageUrl ? (
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedSnapshot(v)}
-                                  title="Inspect Snapshot"
-                                  className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors cursor-pointer"
-                                >
-                                  <Eye className="w-3.5 h-3.5 text-slate-500" />
-                                  <span>View Snapshot</span>
-                                </button>
-                              ) : (
-                                <span className="text-slate-400 text-xs">None</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </section>
+              <AuditViolationLogsTable
+                filteredViolations={filteredViolations}
+                violationSearch={violationSearch}
+                setViolationSearch={setViolationSearch}
+                violationTypeFilter={violationTypeFilter}
+                setViolationTypeFilter={setViolationTypeFilter}
+                onlyWithImages={onlyWithImages}
+                setOnlyWithImages={setOnlyWithImages}
+                onSelectSnapshot={setSelectedSnapshot}
+              />
             )}
 
-            {/* ═════════════════════════════════════════════════════════════════════
-                TAB 2: COMPLETION REPORT TABLE
-               ═════════════════════════════════════════════════════════════════════ */}
+            {/* TAB 2: COMPLETION REPORT TABLE */}
             {activeTab === 'completion' && (
-              <section className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-none overflow-hidden space-y-4 p-6">
-                {/* Filters & Sorting */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {/* Status filter */}
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="px-2.5 py-1.5 rounded-md bg-white dark:bg-[#131926] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80 focus:outline-none cursor-pointer text-xs"
-                    >
-                      <option value="ALL">All Statuses</option>
-                      <option value="SUBMITTED">Submitted</option>
-                      <option value="IN_PROGRESS">In Progress</option>
-                      <option value="DISQUALIFIED">Disqualified</option>
-                    </select>
-
-                    {/* Mode filter */}
-                    <select
-                      value={modeFilter}
-                      onChange={(e) => setModeFilter(e.target.value)}
-                      className="px-2.5 py-1.5 rounded-md bg-white dark:bg-[#131926] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80 focus:outline-none cursor-pointer text-xs"
-                    >
-                      <option value="ALL">All Modes</option>
-                      <option value="OFFICIAL">Official Exams</option>
-                      <option value="PRACTICE">Practice Sessions</option>
-                    </select>
-
-                    {/* Trust score filter */}
-                    <select
-                      value={trustFilter}
-                      onChange={(e) => setTrustFilter(e.target.value)}
-                      className="px-2.5 py-1.5 rounded-md bg-white dark:bg-[#131926] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80 focus:outline-none cursor-pointer text-xs"
-                    >
-                      <option value="ALL">All Trust Scores</option>
-                      <option value="LOW">Low Trust (&lt; 70%)</option>
-                      <option value="HIGH">High Trust (≥ 80%)</option>
-                    </select>
-
-                    {/* Sort Order */}
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="px-2.5 py-1.5 rounded-md bg-white dark:bg-[#131926] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-800/80 focus:outline-none cursor-pointer text-xs"
-                    >
-                      <option value="RECENT">Sort: Most Recent</option>
-                      <option value="SCORE_DESC">Sort: Highest Score</option>
-                      <option value="TRUST_ASC">Sort: Lowest Trust Score</option>
-                      <option value="VIOLATIONS_DESC">Sort: Most Violations</option>
-                    </select>
-                  </div>
-
-                  <div className="relative w-full sm:w-64">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="text"
-                      value={completionSearch}
-                      onChange={(e) => setCompletionSearch(e.target.value)}
-                      placeholder="Search candidate..."
-                      className="input-base text-xs pl-8 pr-3 py-1.5"
-                    />
-                  </div>
-                </div>
-
-                {/* Table */}
-                {filteredCompletion.length === 0 ? (
-                  <div className="py-16 text-center text-slate-400 space-y-2">
-                    <FileText className="w-8 h-8 mx-auto opacity-40 text-slate-400" />
-                    <p className="text-xs font-medium">No candidate reports match the active filters.</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto rounded-lg border border-slate-200/80 dark:border-slate-800/80">
-                    <table className="w-full text-left border-collapse text-xs">
-                      <thead>
-                        <tr className="bg-slate-50/75 dark:bg-[#0C0F17]/75 border-b border-slate-200/80 dark:border-slate-800/80 text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                          <th className="py-3 px-4">User</th>
-                          <th className="py-3 px-4 text-center">Mode</th>
-                          <th className="py-3 px-4 text-center">Status</th>
-                          <th className="py-3 px-4 text-center">Time Taken</th>
-                          <th className="py-3 px-4 text-center">Score</th>
-                          <th className="py-3 px-4 text-center">Accuracy</th>
-                          <th className="py-3 px-4 text-center">Answered / Unanswered</th>
-                          <th className="py-3 px-4 text-center">Violations</th>
-                          <th className="py-3 px-4 text-center">Trust Score</th>
-                          <th className="py-3 px-4 text-right">Submitted At</th>
-                          <th className="py-3 px-4 text-right">Responses</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                        {filteredCompletion.map((item, idx) => (
-                          <tr
-                            key={idx}
-                            className="hover:bg-slate-50/50 dark:hover:bg-[#162030]/50 transition-colors"
-                          >
-                            {/* 1. User */}
-                            <td className="py-3 px-4 whitespace-nowrap">
-                              <div className="flex items-center gap-2">
-                                <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 font-semibold flex items-center justify-center text-[10px]">
-                                  {item.user?.name ? item.user.name.charAt(0).toUpperCase() : 'U'}
-                                </div>
-                                <div>
-                                  <div className="font-medium text-slate-900 dark:text-slate-100">
-                                    {item.user?.name || 'Candidate'}
-                                  </div>
-                                  <div className="text-[10px] text-slate-400">{item.user?.email}</div>
-                                </div>
-                              </div>
-                            </td>
-
-                            {/* 2. Mode */}
-                            <td className="py-3 px-4 whitespace-nowrap text-center">
-                              {item.isPractice ? (
-                                <span className="inline-flex items-center gap-1 text-xs text-slate-500">
-                                  <FlaskConical className="w-3 h-3 text-slate-400" />
-                                  Practice
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                                  <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                                  Official
-                                </span>
-                              )}
-                            </td>
-
-                            {/* 3. Status */}
-                            <td className="py-3 px-4 whitespace-nowrap text-center">
-                              <span className="inline-flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                                <span className={`w-1.5 h-1.5 rounded-full ${item.status === 'SUBMITTED' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                                {item.status === 'SUBMITTED' ? 'Submitted' : item.status}
-                              </span>
-                            </td>
-
-                            {/* 4. Time Taken */}
-                            <td className="py-3 px-4 whitespace-nowrap text-center tabular-nums text-slate-600 dark:text-slate-300 font-mono">
-                              {formatSeconds(item.timeTakenSeconds)}
-                            </td>
-
-                            {/* 5. Score */}
-                            <td className="py-3 px-4 whitespace-nowrap text-center">
-                              <span className="font-semibold text-slate-900 dark:text-slate-100 tabular-nums text-sm">
-                                {item.score}
-                              </span>
-                              <span className="text-[10px] text-slate-400 ml-1">pts</span>
-                            </td>
-
-                            {/* 6. Accuracy */}
-                            <td className="py-3 px-4 whitespace-nowrap text-center font-medium tabular-nums">
-                              <span className={item.accuracy >= 70 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-600 dark:text-slate-400'}>
-                                {item.accuracy}%
-                              </span>
-                            </td>
-
-                            {/* 7. Answered / Unanswered */}
-                            <td className="py-3 px-4 whitespace-nowrap text-center font-mono">
-                              <span className="text-slate-800 dark:text-slate-200 font-semibold">{item.answeredCount}</span>
-                              <span className="text-slate-400 mx-1">/</span>
-                              <span className="text-slate-400">{item.unansweredCount}</span>
-                            </td>
-
-                            {/* 8. Violations Count */}
-                            <td className="py-3 px-4 whitespace-nowrap text-center">
-                              <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold tabular-nums ${
-                                item.violationsCount > 0
-                                  ? 'bg-rose-50/60 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200/50 dark:border-rose-900/50'
-                                  : 'text-slate-400'
-                              }`}>
-                                {item.violationsCount}
-                              </span>
-                            </td>
-
-                            {/* 9. Trust Score at End */}
-                            <td className="py-3 px-4 whitespace-nowrap text-center">
-                              <span className="inline-flex items-center gap-1.5 text-xs font-medium tabular-nums text-slate-700 dark:text-slate-300">
-                                <span className={`w-1.5 h-1.5 rounded-full ${
-                                  item.trustScore >= 80 ? 'bg-emerald-500' : item.trustScore >= 50 ? 'bg-amber-500' : 'bg-rose-500'
-                                }`} />
-                                {item.trustScore}%
-                              </span>
-                            </td>
-
-                            {/* 10. Submitted At */}
-                            <td className="py-3 px-4 whitespace-nowrap text-right font-mono text-slate-500 text-[11px]">
-                              {item.submittedAt ? formatDateTime12h(item.submittedAt) : '—'}
-                            </td>
-
-                            {/* 11. Actions */}
-                            <td className="py-3 px-4 whitespace-nowrap text-right">
-                              <button
-                                onClick={() => navigate(`/test/${examId}/review/${item.attemptId}`)}
-                                className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors cursor-pointer"
-                              >
-                                <span>Answers</span>
-                                <ChevronRight className="w-3.5 h-3.5" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </section>
+              <AuditCompletionReportTable
+                filteredCompletion={filteredCompletion}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                modeFilter={modeFilter}
+                setModeFilter={setModeFilter}
+                trustFilter={trustFilter}
+                setTrustFilter={setTrustFilter}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                completionSearch={completionSearch}
+                setCompletionSearch={setCompletionSearch}
+                formatSeconds={formatSeconds}
+                examId={examId}
+                navigate={navigate}
+              />
             )}
           </>
         )}
 
-        {/* ── High-Resolution Snapshot Modal ─────────────────────────────────── */}
-        {selectedSnapshot && (
-          <div
-            className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4"
-            onClick={() => setSelectedSnapshot(null)}
-          >
-            <div
-              className="max-w-2xl w-full bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg p-6 text-slate-900 dark:text-slate-100 space-y-4 shadow-sm"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Modal Header with Close Button */}
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-0.5 rounded text-[11px] font-medium border ${getBadgeStyle(selectedSnapshot.type)}`}>
-                    {VIOLATION_LABELS[selectedSnapshot.type] || selectedSnapshot.type}
-                  </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    Candidate: <strong className="text-slate-900 dark:text-slate-100 font-medium">{selectedSnapshot.userName}</strong>
-                  </span>
-                </div>
-
-                <button
-                  onClick={() => setSelectedSnapshot(null)}
-                  className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                  title="Close Modal"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Image Container */}
-              <div className="rounded-md overflow-hidden bg-slate-100 dark:bg-[#0C0F17] border border-slate-200/80 dark:border-slate-800/80 max-h-[60vh] flex items-center justify-center">
-                <img
-                  src={selectedSnapshot.imageUrl}
-                  alt="Candidate violation evidence"
-                  className="max-h-[60vh] w-auto object-contain"
-                />
-              </div>
-
-              {/* Modal Footer Metadata */}
-              <div className="flex items-center justify-between text-xs pt-1">
-                <div className="space-y-0.5">
-                  <div className="text-slate-500 dark:text-slate-400 font-mono text-[11px]">
-                    Timestamp: {selectedSnapshot.timestamp ? formatDateTime12h(selectedSnapshot.timestamp, { includeYear: true, includeSeconds: true }) : '—'}
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Total violations by user: <strong className="text-rose-600 dark:text-rose-400">{selectedSnapshot.noOfViolations}</strong>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <a
-                    href={selectedSnapshot.imageUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-primary text-xs inline-flex items-center gap-1.5 px-3 py-1.5"
-                  >
-                    <span>Full Original</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-
-                  <button
-                    onClick={() => setSelectedSnapshot(null)}
-                    className="btn-secondary text-xs px-3 py-1.5"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
+        {/* High-Resolution Snapshot Modal */}
+        <AuditSnapshotModal
+          selectedSnapshot={selectedSnapshot}
+          onClose={() => setSelectedSnapshot(null)}
+        />
       </main>
     </div>
   );

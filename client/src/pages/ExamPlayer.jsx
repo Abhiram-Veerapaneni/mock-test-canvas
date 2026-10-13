@@ -5,224 +5,14 @@ import ExamHeader from '../components/exam/ExamHeader';
 import QuestionWindow from '../components/exam/QuestionWindow';
 import SidebarPalette from '../components/exam/SidebarPalette';
 import ExamFooter from '../components/exam/ExamFooter';
-import LatexRenderer from '../components/LatexRenderer';
-import { X, CheckCircle, AlertTriangle, HelpCircle, FileText, Send, ArrowLeft, Award, Clock, Target, CheckCircle2, XCircle, MinusCircle, BookOpen } from 'lucide-react';
+import ExamScoreReport from '../components/exam/ExamScoreReport';
+import ExamInstructionsModal from '../components/exam/ExamInstructionsModal';
+import ExamQuestionPaperModal from '../components/exam/ExamQuestionPaperModal';
+import ExamSubmitModal from '../components/exam/ExamSubmitModal';
+import { FALLBACK_EXAM_PAPER } from '../utils/fallbackExamPaper';
+import { computeOfflineScore } from '../utils/examScoring';
+import { AlertTriangle, ArrowLeft } from 'lucide-react';
 import '../styles/ExamPlayer.css';
-
-const FALLBACK_EXAM_PAPER = {
-  _id: 'jee-adv-2024-p1',
-  title: 'JEE Advanced 2024 - Paper 1 (Slot 1)',
-  examType: 'JEE_ADVANCED',
-  durationMinutes: 180,
-  totalMarks: 180,
-  sections: [
-    {
-      name: 'Mathematics',
-      subject: 'Mathematics',
-      questionCount: 3,
-      questions: [
-        {
-          _id: 'm1',
-          questionNumber: 1,
-          questionType: 'MCQ',
-          subject: 'Mathematics',
-          questionText: 'Let f: R -> R be a differentiable function such that f(0) = 0, f(1) = 1 and f\'(x) > 0 for all x in [0, 1]. Find the value of integral from 0 to 1 of f(x) dx + integral from 0 to 1 of f^-1(y) dy.',
-          options: ['0.5', '1.0', '1.5', '2.0'],
-          correctAnswer: '1.0',
-          positiveMarks: 4,
-          negativeMarks: 1,
-          explanation: 'By Young inequality or geometric area decomposition of inverse functions, int f(x)dx + int f^-1(y)dy = 1 * 1 - 0 * 0 = 1.'
-        },
-        {
-          _id: 'm2',
-          questionNumber: 2,
-          questionType: 'NUMERICAL',
-          subject: 'Mathematics',
-          questionText: 'If the matrix A = [[1, 2], [0, 1]], compute the determinant of A^2024.',
-          correctAnswer: '1',
-          numericalTolerance: 0.01,
-          positiveMarks: 4,
-          negativeMarks: 0,
-          explanation: 'det(A) = 1*1 - 2*0 = 1. Therefore det(A^2024) = (det A)^2024 = 1^2024 = 1.'
-        },
-        {
-          _id: 'm3',
-          questionNumber: 3,
-          questionType: 'MSQ',
-          subject: 'Mathematics',
-          questionText: 'Which of the following functions are continuous at x = 0?',
-          options: ['f(x) = x * sin(1/x) for x != 0, f(0) = 0', 'g(x) = cos(x)', 'h(x) = |x|', 'k(x) = 1/x for x != 0'],
-          correctAnswer: ['f(x) = x * sin(1/x) for x != 0, f(0) = 0', 'g(x) = cos(x)', 'h(x) = |x|'],
-          positiveMarks: 4,
-          negativeMarks: 2,
-          explanation: 'Functions f, g, and h are continuous at x=0. k(x) is discontinuous at x=0.'
-        }
-      ]
-    },
-    {
-      name: 'Physics',
-      subject: 'Physics',
-      questionCount: 2,
-      questions: [
-        {
-          _id: 'p1',
-          questionNumber: 4,
-          questionType: 'MCQ',
-          subject: 'Physics',
-          questionText: 'A particle of mass m moves under a central force field with potential V(r) = -k/r. What is the orbit eccentricity when the total energy E = 0?',
-          options: ['0 (Circle)', '1 (Parabola)', 'Hyperbola', 'Ellipse'],
-          correctAnswer: '1 (Parabola)',
-          positiveMarks: 4,
-          negativeMarks: 1,
-          explanation: 'For total mechanical energy E = 0 in a Kepler central potential, the trajectory is parabolic with eccentricity e = 1.'
-        },
-        {
-          _id: 'p2',
-          questionNumber: 5,
-          questionType: 'NUMERICAL',
-          subject: 'Physics',
-          questionText: 'A photon of wavelength 400 nm strikes a metal surface with work function 2.0 eV. Calculate the maximum kinetic energy of emitted photoelectrons in eV. (Take hc = 1240 eV.nm)',
-          correctAnswer: '1.1',
-          numericalTolerance: 0.05,
-          positiveMarks: 4,
-          negativeMarks: 0,
-          explanation: 'Photon energy E = 1240 / 400 = 3.1 eV. Max KE = E - Work Function = 3.1 - 2.0 = 1.1 eV.'
-        }
-      ]
-    },
-    {
-      name: 'Chemistry',
-      subject: 'Chemistry',
-      questionCount: 2,
-      questions: [
-        {
-          _id: 'c1',
-          questionNumber: 6,
-          questionType: 'MCQ',
-          subject: 'Chemistry',
-          questionText: 'Which of the following coordination complex ions exhibits optical isomerism?',
-          options: ['[Co(NH3)6]3+', 'trans-[Co(en)2Cl2]+', 'cis-[Co(en)2Cl2]+', '[PtCl4]2-'],
-          correctAnswer: 'cis-[Co(en)2Cl2]+',
-          positiveMarks: 4,
-          negativeMarks: 1,
-          explanation: 'cis-[Co(en)2Cl2]+ lacks a plane or center of symmetry, thus making it chiral and optically active.'
-        },
-        {
-          _id: 'c2',
-          questionNumber: 7,
-          questionType: 'NUMERICAL',
-          subject: 'Chemistry',
-          questionText: 'Calculate the pH of a 0.01 M HCl aqueous solution at 25 deg C.',
-          correctAnswer: '2',
-          numericalTolerance: 0.01,
-          positiveMarks: 4,
-          negativeMarks: 0,
-          explanation: 'pH = -log10[H+] = -log10(10^-2) = 2.'
-        }
-      ]
-    }
-  ]
-};
-
-const computeOfflineScore = (examDoc, responses, timeSpentSecs) => {
-  let allQuestions = [];
-  const subjectBreakdownMap = {};
-  let totalScore = 0;
-  let maxScore = 0;
-  let correctCount = 0;
-  let incorrectCount = 0;
-  let unansweredCount = 0;
-
-  (examDoc.sections || []).forEach((sec) => {
-    (sec.questions || []).forEach((q) => {
-      allQuestions.push({ ...q, subject: sec.subject || sec.name });
-    });
-  });
-
-  allQuestions.forEach((q, idx) => {
-    const qId = q._id ? String(q._id) : String(idx);
-    const posMarks = q.positiveMarks || 4;
-    const negMarks = q.negativeMarks || 1;
-    maxScore += posMarks;
-
-    const subject = q.subject || 'General';
-    if (!subjectBreakdownMap[subject]) {
-      subjectBreakdownMap[subject] = {
-        subject,
-        totalQuestions: 0,
-        attempted: 0,
-        correct: 0,
-        incorrect: 0,
-        unanswered: 0,
-        scoreEarned: 0,
-        maxScore: 0
-      };
-    }
-    subjectBreakdownMap[subject].totalQuestions += 1;
-    subjectBreakdownMap[subject].maxScore += posMarks;
-
-    const resp = responses[qId];
-    const val = resp?.value;
-
-    if (val === undefined || val === null || val === '' || (Array.isArray(val) && val.length === 0)) {
-      unansweredCount++;
-      subjectBreakdownMap[subject].unanswered++;
-      return;
-    }
-
-    subjectBreakdownMap[subject].attempted++;
-    let isCorrect = false;
-
-    if (q.questionType === 'MCQ') {
-      isCorrect = String(val).trim().toUpperCase() === String(q.correctAnswer).trim().toUpperCase();
-    } else if (q.questionType === 'MSQ') {
-      const userArr = Array.isArray(val) ? val.map((v) => String(v).trim().toUpperCase()).sort() : [String(val).trim().toUpperCase()];
-      const correctArr = Array.isArray(q.correctAnswer)
-        ? q.correctAnswer.map((v) => String(v).trim().toUpperCase()).sort()
-        : [String(q.correctAnswer).trim().toUpperCase()];
-      isCorrect = userArr.length === correctArr.length && userArr.every((v, i) => v === correctArr[i]);
-    } else if (q.questionType === 'NUMERICAL' || q.questionType === 'NAT') {
-      const userNum = parseFloat(val);
-      const correctNum = parseFloat(q.correctAnswer);
-      const tolerance = q.numericalTolerance || 0.01;
-      if (!isNaN(userNum) && !isNaN(correctNum)) {
-        isCorrect = Math.abs(userNum - correctNum) <= tolerance;
-      }
-    }
-
-    if (isCorrect) {
-      totalScore += posMarks;
-      correctCount++;
-      subjectBreakdownMap[subject].correct++;
-      subjectBreakdownMap[subject].scoreEarned += posMarks;
-    } else {
-      totalScore -= negMarks;
-      incorrectCount++;
-      subjectBreakdownMap[subject].incorrect++;
-      subjectBreakdownMap[subject].scoreEarned -= negMarks;
-    }
-  });
-
-  const attemptedCount = correctCount + incorrectCount;
-  const accuracyPercentage = attemptedCount > 0 ? Math.round((correctCount / attemptedCount) * 100) : 0;
-  const overallPercentage = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
-
-  return {
-    examTitle: examDoc.title,
-    examType: examDoc.examType || 'JEE_ADVANCED',
-    totalScore,
-    maxScore,
-    overallPercentage,
-    totalQuestions: allQuestions.length,
-    attemptedCount,
-    correctCount,
-    incorrectCount,
-    unansweredCount,
-    accuracyPercentage,
-    timeSpentSeconds: timeSpentSecs,
-    subjectBreakdown: Object.values(subjectBreakdownMap)
-  };
-};
 
 export default function ExamPlayer() {
   const { examId } = useParams();
@@ -500,136 +290,14 @@ export default function ExamPlayer() {
   // Post-Exam Score Report Screen
   if (isSubmitted) {
     return (
-      <div className={`jee-exam-portal ${darkMode ? 'dark' : ''}`} style={{ overflowY: 'auto', height: 'auto', minHeight: '100vh', padding: '32px 24px' }}>
-        <div style={{ maxWidth: '900px', margin: '0 auto', width: '100%' }}>
-          {/* Top Success Badge */}
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <div style={{ width: '72px', height: '72px', backgroundColor: '#10b981', color: '#ffffff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyCenter: 'center', margin: '0 auto 16px', boxShadow: '0 10px 25px rgba(16, 185, 129, 0.4)' }}>
-              <CheckCircle size={38} />
-            </div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '6px' }}>Exam Submitted Successfully!</h1>
-            <p style={{ fontSize: '0.95rem', color: 'var(--jee-text-secondary)' }}>
-              Official Test Performance & Score Summary for <strong>{exam.title}</strong>
-            </p>
-          </div>
-
-          {/* Main Score Summary Card */}
-          {scoreResult && (
-            <div style={{ backgroundColor: 'var(--jee-bg-card)', border: '2px solid var(--jee-border-card)', borderRadius: '18px', padding: '32px', marginBottom: '32px', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-                {/* Score Box */}
-                <div style={{ backgroundColor: 'var(--jee-sidebar-bg)', border: '2px solid #2563eb', padding: '20px', borderRadius: '14px', textAlign: 'center' }}>
-                  <Award size={28} color="#2563eb" style={{ margin: '0 auto 8px' }} />
-                  <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--jee-text-muted)' }}>Score Obtained</div>
-                  <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#2563eb', margin: '4px 0' }}>
-                    {scoreResult.totalScore} <span style={{ fontSize: '1rem', color: 'var(--jee-text-secondary)' }}>/ {scoreResult.maxScore}</span>
-                  </div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#16a34a' }}>
-                    {scoreResult.overallPercentage}% Overall
-                  </div>
-                </div>
-
-                {/* Accuracy Box */}
-                <div style={{ backgroundColor: 'var(--jee-sidebar-bg)', border: '2px solid #10b981', padding: '20px', borderRadius: '14px', textAlign: 'center' }}>
-                  <Target size={28} color="#10b981" style={{ margin: '0 auto 8px' }} />
-                  <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--jee-text-muted)' }}>Accuracy</div>
-                  <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#10b981', margin: '4px 0' }}>
-                    {scoreResult.accuracyPercentage}%
-                  </div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--jee-text-secondary)' }}>
-                    {scoreResult.correctCount} Correct of {scoreResult.attemptedCount} Attempted
-                  </div>
-                </div>
-
-                {/* Time Spent Box */}
-                <div style={{ backgroundColor: 'var(--jee-sidebar-bg)', border: '2px solid #9333ea', padding: '20px', borderRadius: '14px', textAlign: 'center' }}>
-                  <Clock size={28} color="#9333ea" style={{ margin: '0 auto 8px' }} />
-                  <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--jee-text-muted)' }}>Time Spent</div>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#9333ea', margin: '8px 0' }}>
-                    {Math.floor((scoreResult.timeSpentSeconds || 0) / 60)}m {(scoreResult.timeSpentSeconds || 0) % 60}s
-                  </div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--jee-text-secondary)' }}>
-                    Out of {exam.durationMinutes} Mins
-                  </div>
-                </div>
-              </div>
-
-              {/* Question Attempt Status Counters */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', padding: '16px', backgroundColor: 'var(--jee-sidebar-bg)', borderRadius: '12px', textAlign: 'center', marginBottom: '32px' }}>
-                <div style={{ display: 'flex', itemsCenter: 'center', justifyCenter: 'center', gap: '8px', color: '#16a34a', fontWeight: 800, fontSize: '0.9rem' }}>
-                  <CheckCircle2 size={18} />
-                  <span>{scoreResult.correctCount} Correct</span>
-                </div>
-                <div style={{ display: 'flex', itemsCenter: 'center', justifyCenter: 'center', gap: '8px', color: '#dc2626', fontWeight: 800, fontSize: '0.9rem' }}>
-                  <XCircle size={18} />
-                  <span>{scoreResult.incorrectCount} Incorrect</span>
-                </div>
-                <div style={{ display: 'flex', itemsCenter: 'center', justifyCenter: 'center', gap: '8px', color: 'var(--jee-text-muted)', fontWeight: 800, fontSize: '0.9rem' }}>
-                  <MinusCircle size={18} />
-                  <span>{scoreResult.unansweredCount} Unanswered</span>
-                </div>
-              </div>
-
-              {/* Subject Breakdown Table */}
-              {scoreResult.subjectBreakdown && scoreResult.subjectBreakdown.length > 0 && (
-                <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '14px', color: 'var(--jee-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <BookOpen size={20} color="#2563eb" />
-                    <span>Subject Performance Breakdown</span>
-                  </h3>
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', fontSize: '0.85rem', textStyle: 'left', borderCollapse: 'collapse', border: '1px solid var(--jee-border-card)' }}>
-                      <thead>
-                        <tr style={{ backgroundColor: 'var(--jee-sidebar-bg)', color: 'var(--jee-text-muted)', fontWeight: 800 }}>
-                          <th style={{ padding: '12px 16px' }}>Subject</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'center' }}>Total Qs</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'center' }}>Attempted</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'center', color: '#16a34a' }}>Correct</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'center', color: '#dc2626' }}>Incorrect</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'center', color: '#2563eb' }}>Score</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {scoreResult.subjectBreakdown.map((sb, idx) => (
-                          <tr key={idx} style={{ borderTop: '1px solid var(--jee-border-card)', fontWeight: 700 }}>
-                            <td style={{ padding: '12px 16px', color: 'var(--jee-text-primary)', fontWeight: 800 }}>{sb.subject}</td>
-                            <td style={{ padding: '12px 16px', textAlign: 'center' }}>{sb.totalQuestions}</td>
-                            <td style={{ padding: '12px 16px', textAlign: 'center' }}>{sb.attempted}</td>
-                            <td style={{ padding: '12px 16px', textAlign: 'center', color: '#16a34a', fontWeight: 900 }}>{sb.correct}</td>
-                            <td style={{ padding: '12px 16px', textAlign: 'center', color: '#dc2626' }}>{sb.incorrect}</td>
-                            <td style={{ padding: '12px 16px', textAlign: 'center', color: '#2563eb', fontWeight: 900 }}>{sb.scoreEarned} / {sb.maxScore}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Bottom Action Navigation Buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyCenter: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => navigate('/exams')}
-              className="jee-btn-footer jee-btn-prev"
-              style={{ padding: '12px 28px', fontSize: '0.9rem' }}
-            >
-              <BookOpen size={18} />
-              <span>Browse More Exams</span>
-            </button>
-
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="jee-btn-footer jee-btn-save"
-              style={{ padding: '12px 28px', fontSize: '0.9rem' }}
-            >
-              <ArrowLeft size={18} />
-              <span>Return to Dashboard</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      <ExamScoreReport
+        scoreResult={scoreResult}
+        examTitle={exam.title}
+        durationMinutes={exam.durationMinutes}
+        onBrowseExams={() => navigate('/exams')}
+        onReturnDashboard={() => navigate('/dashboard')}
+        darkMode={darkMode}
+      />
     );
   }
 
@@ -685,134 +353,26 @@ export default function ExamPlayer() {
         }
       />
 
-      {/* Instructions Modal */}
-      {showInstructions && (
-        <div className="jee-modal-overlay">
-          <div className="jee-modal-card" style={{ maxWidth: '650px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid var(--jee-border-card)', paddingBottom: '12px', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--jee-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <HelpCircle size={20} color="#2563eb" />
-                <span>Examination Instructions</span>
-              </h3>
-              <button
-                onClick={() => setShowInstructions(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--jee-text-muted)', cursor: 'pointer' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div style={{ fontSize: '0.85rem', lineHeight: '1.8', color: 'var(--jee-text-secondary)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <p>1. The countdown timer at the top right displays the remaining time to complete the test.</p>
-              <p>2. The question palette on the right side shows the status of each question.</p>
-              <p>3. Click <strong>Save & Next</strong> to save your response and move to the next question.</p>
-            </div>
-            <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setShowInstructions(false)}
-                className="jee-btn-footer jee-btn-save"
-              >
-                Close Instructions
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ExamInstructionsModal
+        isOpen={showInstructions}
+        onClose={() => setShowInstructions(false)}
+      />
 
-      {/* Question Paper Modal */}
-      {showQuestionPaper && (
-        <div className="jee-modal-overlay">
-          <div className="jee-modal-card" style={{ maxWidth: '850px', maxHeight: '85vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid var(--jee-border-card)', paddingBottom: '12px', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--jee-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FileText size={20} color="#2563eb" />
-                <span>Full Question Paper - {exam.title}</span>
-              </h3>
-              <button
-                onClick={() => setShowQuestionPaper(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--jee-text-muted)', cursor: 'pointer' }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {exam.sections?.map((sec, secIdx) => (
-                <div key={secIdx}>
-                  <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#2563eb', borderBottom: '1px solid var(--jee-border-card)', paddingBottom: '6px', marginBottom: '12px' }}>
-                    {sec.name} ({sec.questions?.length} Questions)
-                  </h4>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {sec.questions?.map((q, qIdx) => (
-                      <div key={qIdx} style={{ backgroundColor: 'var(--jee-sidebar-bg)', padding: '16px', borderRadius: '10px', border: '1px solid var(--jee-border-card)' }}>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#2563eb', display: 'block', marginBottom: '8px' }}>
-                          Q{qIdx + 1} ({q.questionType}):
-                        </span>
-                        <LatexRenderer content={q.contentLaTeX} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      <ExamQuestionPaperModal
+        isOpen={showQuestionPaper}
+        onClose={() => setShowQuestionPaper(false)}
+        examTitle={exam.title}
+        sections={exam.sections}
+      />
 
-      {/* Submit Confirmation Modal */}
-      {showSubmitModal && (
-        <div className="jee-modal-overlay">
-          <div className="jee-modal-card">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '2px solid var(--jee-border-card)', paddingBottom: '12px', marginBottom: '16px' }}>
-              <Send size={22} color="#16a34a" />
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--jee-text-primary)' }}>Confirm Exam Submission</h3>
-            </div>
-
-            <p style={{ fontSize: '0.85rem', color: 'var(--jee-text-secondary)', marginBottom: '16px' }}>
-              Are you sure you want to submit <strong>{exam.title}</strong>? Here is your response summary:
-            </p>
-
-            <div style={{ overflowX: 'auto', marginBottom: '20px' }}>
-              <table style={{ width: '100%', fontSize: '0.8rem', textStyle: 'left', borderCollapse: 'collapse', border: '1px solid var(--jee-border-card)' }}>
-                <thead>
-                  <tr style={{ backgroundColor: 'var(--jee-sidebar-bg)', color: 'var(--jee-text-muted)', fontWeight: 800 }}>
-                    <th style={{ padding: '10px' }}>Section</th>
-                    <th style={{ padding: '10px', textAlign: 'center' }}>Total</th>
-                    <th style={{ padding: '10px', textAlign: 'center', color: '#16a34a' }}>Answered</th>
-                    <th style={{ padding: '10px', textAlign: 'center', color: '#dc2626' }}>Unanswered</th>
-                    <th style={{ padding: '10px', textAlign: 'center', color: '#9333ea' }}>Marked</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {submissionSummary.map((sec, idx) => (
-                    <tr key={idx} style={{ borderTop: '1px solid var(--jee-border-card)', fontWeight: 700 }}>
-                      <td style={{ padding: '10px', color: 'var(--jee-text-primary)' }}>{sec.sectionName}</td>
-                      <td style={{ padding: '10px', textAlign: 'center' }}>{sec.total}</td>
-                      <td style={{ padding: '10px', textAlign: 'center', color: '#16a34a', fontWeight: 900 }}>{sec.answered}</td>
-                      <td style={{ padding: '10px', textAlign: 'center', color: '#dc2626' }}>{sec.notAnswered}</td>
-                      <td style={{ padding: '10px', textAlign: 'center', color: '#9333ea' }}>{sec.markedForReview}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '12px' }}>
-              <button
-                onClick={() => setShowSubmitModal(false)}
-                className="jee-btn-footer jee-btn-prev"
-              >
-                Continue Exam
-              </button>
-              <button
-                onClick={handleFinalSubmit}
-                disabled={submitting}
-                className="jee-btn-footer jee-btn-submit"
-              >
-                {submitting ? 'Evaluating Score...' : 'Yes, Final Submit'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ExamSubmitModal
+        isOpen={showSubmitModal}
+        onClose={() => setShowSubmitModal(false)}
+        examTitle={exam.title}
+        submissionSummary={submissionSummary}
+        onConfirmSubmit={handleFinalSubmit}
+        submitting={submitting}
+      />
     </div>
   );
 }
