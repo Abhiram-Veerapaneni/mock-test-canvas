@@ -67,7 +67,7 @@ export default function QuestionBankSidebar({
   );
 
   return (
-    <aside className="w-full lg:w-64 shrink-0 space-y-4 font-sans">
+    <aside className="w-full lg:w-64 shrink-0 lg:sticky lg:top-16 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto space-y-4 font-sans pr-1">
       <div className="bg-white dark:bg-[#131926] border border-slate-200/80 dark:border-slate-800/90 rounded-xl p-4 shadow-sm space-y-4">
         {/* Header with Active Badge & Reset Action */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">

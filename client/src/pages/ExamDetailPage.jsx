@@ -327,6 +327,7 @@ export default function ExamDetailPage() {
   const allowPractice = exam?.allowPracticeMode !== false;
   const isPracticeLockedBySchedule = isScheduled && !isScheduleConcluded;
   const canStartPractice = allowPractice && !isPracticeLockedBySchedule;
+  const isPracticeExam = Boolean(exam?.examType === 'practice' || exam?.isGenerated || exam?.isPractice);
 
   // View responses security rule:
   // If exam is scheduled, released strictly after schedule concludes.
@@ -569,28 +570,28 @@ export default function ExamDetailPage() {
                     </button>
                   ) : hasAttempted ? (
                     <button
-                      onClick={() => handleStartExam(false)}
-                      className="btn-primary text-xs py-2.5 px-5 flex items-center justify-center gap-2"
+                      onClick={() => handleStartExam(isPracticeExam)}
+                      className="btn-primary text-xs py-2.5 px-5 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Retake Exam</span>
+                      <span>{isPracticeExam ? 'Retake Practice Exam' : 'Retake Exam'}</span>
                     </button>
                   ) : (
                     <button
-                      onClick={() => handleStartExam(false)}
-                      className="btn-primary text-xs py-2.5 px-5 flex items-center justify-center gap-2"
+                      onClick={() => handleStartExam(isPracticeExam)}
+                      className="btn-primary text-xs py-2.5 px-5 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
-                      <span>Start Proctored Exam</span>
+                      <span>{isPracticeExam ? 'Start Practice Exam' : 'Start Proctored Exam'}</span>
                     </button>
                   )}
 
-                  {/* Practice Mode Button (Unproctored) */}
-                  {allowPractice && (
+                  {/* Practice Mode Button (Unproctored) — for official exams with practice enabled */}
+                  {!isPracticeExam && allowPractice && (
                     canStartPractice ? (
                       <button
                         onClick={() => handleStartExam(true)}
-                        className="btn-secondary text-xs py-1.5 px-3 flex items-center justify-center gap-1.5 border-dashed"
+                        className="btn-secondary text-xs py-1.5 px-3 flex items-center justify-center gap-1.5 border-dashed cursor-pointer"
                         title="Practice this test with proctoring turned off. Attempts are private and will not notify the examiner."
                       >
                         <FlaskConical className="w-3 h-3 text-slate-500" />

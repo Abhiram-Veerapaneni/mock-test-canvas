@@ -14,6 +14,8 @@ import {
   Layers,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Loader2,
   AlertCircle,
   CheckCircle2,
@@ -60,6 +62,9 @@ export default function QuestionBankPage() {
       return next;
     });
   };
+
+  // Expand / collapse all cards details toggle
+  const [showAllDetails, setShowAllDetails] = useState(false);
 
   // Repository Overall Meta
   const [overallStreamCount, setOverallStreamCount] = useState(0);
@@ -285,19 +290,37 @@ export default function QuestionBankPage() {
             )}
           </div>
 
-          {/* Toolbar Right: Answer Key View Adjustment & Search Input */}
+          {/* Toolbar Right: Answer Key View Adjustment, Details Toggle & Search Input */}
           <div className="flex items-center gap-3 w-full md:w-auto">
+            {/* Show / Hide Details for All Cards */}
+            <button
+              type="button"
+              onClick={() => setShowAllDetails((prev) => !prev)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-colors cursor-pointer border shrink-0 ${showAllDetails
+                  ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700 font-medium shadow-xs'
+                  : 'bg-white dark:bg-[#131926] text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
+                }`}
+              title={showAllDetails ? 'Hide details across all question cards' : 'Show details across all question cards'}
+            >
+              {showAllDetails ? (
+                <ChevronUp className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+              )}
+              <span>{showAllDetails ? 'Hide Details for All' : 'Show Details for All'}</span>
+            </button>
+
             {/* Client-Side View Adjustment: Answer Key Toggle */}
             <button
               type="button"
               onClick={handleToggleAnswerKeys}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-colors cursor-pointer border shrink-0 ${showAnswerKeys
-                  ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700 font-medium'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 font-medium shadow-xs'
                   : 'bg-white dark:bg-[#131926] text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               title={showAnswerKeys ? 'Hide verified answers across cards for practice' : 'Display verified answers across question cards'}
             >
-              {showAnswerKeys ? <EyeOff className="w-3.5 h-3.5 text-slate-500" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
+              {showAnswerKeys ? <EyeOff className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
               <span>{showAnswerKeys ? 'Hide Answers' : 'Show Answers'}</span>
             </button>
 
@@ -389,6 +412,7 @@ export default function QuestionBankPage() {
                       key={q._id}
                       question={q}
                       showAnswerKey={showAnswerKeys}
+                      forceExpand={showAllDetails}
                       onEdit={handleEditQuestion}
                       onDelete={handleDeleteQuestion}
                     />

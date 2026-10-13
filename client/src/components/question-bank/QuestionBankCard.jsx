@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import MathRenderer from '../common/MathRenderer';
 import {
   Edit3,
@@ -10,27 +10,72 @@ import {
   ChevronDown,
   ChevronUp,
   Image as ImageIcon,
-  CheckCircle,
   HelpCircle,
-  AlertTriangle
+  AlertTriangle,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export default function QuestionBankCard({
   question,
   showAnswerKey = false,
+  forceExpand = false,
   onEdit,
   onDelete
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(forceExpand);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isCardAnswerRevealed, setIsCardAnswerRevealed] = useState(false);
+  const [isCardAnswerRevealed, setIsCardAnswerRevealed] = useState(showAnswerKey);
 
+  // Sync with forceExpand (e.g., from "Show Details for All" toggle)
+  useEffect(() => {
+    setIsExpanded(forceExpand);
+  }, [forceExpand]);
+
+  // Sync with global showAnswerKey toggle
+  useEffect(() => {
+    setIsCardAnswerRevealed(showAnswerKey);
+  }, [showAnswerKey]);
+
+  const isNat = question.questionType === 'NAT';
+  const hasOptions = Array.isArray(question.options) && question.options.length > 0;
   const hasAnswerData = Boolean(
     (question.correctAnswers && question.correctAnswers.length > 0) ||
     question.explanation
   );
 
-  const isAnswerVisible = showAnswerKey || isCardAnswerRevealed;
+  // Answers are displayed ONLY when details tab is expanded AND show answer is clicked/active
+  const isAnswerVisible = Boolean(isExpanded && isCardAnswerRevealed);
+
+  const handleToggleAnswer = () => {
+    if (!isExpanded) {
+      setIsExpanded(true);
+      setIsCardAnswerRevealed(true);
+    } else {
+      setIsCardAnswerRevealed((prev) => !prev);
+    }
+  };
+
+  // Human-readable formatted answers string
+  const formattedAnswers = useMemo(() => {
+    if (!question.correctAnswers || !Array.isArray(question.correctAnswers) || question.correctAnswers.length === 0) {
+      return '';
+    }
+    if (isNat) {
+      if (question.correctAnswers[0] === question.correctAnswers[1] || question.correctAnswers[1] === undefined) {
+        return `${question.correctAnswers[0]}`;
+      }
+      return `[${question.correctAnswers[0]}, ${question.correctAnswers[1]}]`;
+    }
+    return question.correctAnswers
+      .map((idx) => {
+        if (typeof idx === 'number') {
+          return `Option ${String.fromCharCode(65 + idx)}`;
+        }
+        return String(idx);
+      })
+      .join(', ');
+  }, [question.correctAnswers, isNat]);
 
   const contributorName = question.bankAddedBy?.name || 'Community Contributor';
   const formattedDate = question.createdAt
@@ -40,9 +85,6 @@ export default function QuestionBankCard({
       year: 'numeric'
     })
     : '';
-
-  const isNat = question.questionType === 'NAT';
-  const hasOptions = Array.isArray(question.options) && question.options.length > 0;
 
   return (
     <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:shadow-md transition-all duration-150 dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none dark:hover:border-slate-700 dark:hover:bg-[#162030] rounded-xl p-4 sm:p-5 flex flex-col justify-between space-y-4">
@@ -95,8 +137,7 @@ export default function QuestionBankCard({
 
       {/* Question Statement */}
       <div className="space-y-2">
-        <div className={`text-xs sm:text-sm text-slate-900 dark:text-slate-100 leading-relaxed font-sans ${!isExpanded ? 'line-clamp-3' : ''
-          }`}>
+        <div className={`text-xs sm:text-sm text-slate-900 dark:text-slate-100 leading-relaxed font-sans ${!isExpanded ? 'line-clamp-3' : ''}`}>
           {question.questionText ? (
             <MathRenderer text={question.questionText} />
           ) : (
@@ -114,27 +155,12 @@ export default function QuestionBankCard({
             />
           </div>
         )}
+
       </div>
 
       {/* Expanded Details: Options, Answers & Explanation */}
       {isExpanded && (
         <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 space-y-3">
-          {/* Card Answer Key Toolbar (when global showAnswerKey is false) */}
-          {hasAnswerData && !showAnswerKey && (
-            <div className="flex items-center justify-between pb-1 text-xs">
-              <span className="text-[11px] text-slate-400">
-                {isAnswerVisible ? 'Answer Key Revealed' : 'Answer Key Hidden'}
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsCardAnswerRevealed((prev) => !prev)}
-                className="text-[11px] text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 underline cursor-pointer"
-              >
-                {isAnswerVisible ? 'Hide Answer' : 'Reveal Answer'}
-              </button>
-            </div>
-          )}
-
           {/* Options for MCQ / MSQ */}
           {!isNat && hasOptions && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
@@ -147,7 +173,7 @@ export default function QuestionBankCard({
                   <div
                     key={oIdx}
                     className={`p-2 rounded-lg border flex items-start gap-2 ${isCorrect
-                        ? 'bg-emerald-50/50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-800/50 text-emerald-900 dark:text-emerald-200'
+                        ? 'bg-emerald-50/70 border-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-700/80 text-emerald-900 dark:text-emerald-100 shadow-xs'
                         : 'bg-slate-50 dark:bg-[#162030] border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300'
                       }`}
                   >
@@ -174,28 +200,13 @@ export default function QuestionBankCard({
           )}
 
           {/* Correct Answer Display for NAT */}
-          {isNat && (
-            isAnswerVisible && question.correctAnswers ? (
-              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs flex items-center gap-2">
-                <span className="text-slate-500 font-medium">Accepted Value:</span>
-                <span className="font-mono font-semibold text-emerald-700 dark:text-emerald-400">
-                  {question.correctAnswers[0] === question.correctAnswers[1] || question.correctAnswers[1] === undefined
-                    ? question.correctAnswers[0]
-                    : `[${question.correctAnswers[0]}, ${question.correctAnswers[1]}]`}
-                </span>
-              </div>
-            ) : hasAnswerData && !isAnswerVisible ? (
-              <div className="p-2 rounded-lg bg-slate-50 dark:bg-[#162030] border border-slate-200/80 dark:border-slate-800/80 text-xs text-slate-400 italic flex items-center justify-between">
-                <span>Numerical Answer (Hidden)</span>
-                <button
-                  type="button"
-                  onClick={() => setIsCardAnswerRevealed(true)}
-                  className="text-[11px] text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 underline cursor-pointer"
-                >
-                  Reveal
-                </button>
-              </div>
-            ) : null
+          {isNat && isAnswerVisible && question.correctAnswers && (
+            <div className="p-2.5 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-xs flex items-center gap-2">
+              <span className="text-emerald-800 dark:text-emerald-300 font-medium">Accepted Value:</span>
+              <span className="font-mono font-semibold text-emerald-700 dark:text-emerald-300">
+                {formattedAnswers}
+              </span>
+            </div>
           )}
 
           {/* Explanation if visible */}
@@ -229,13 +240,38 @@ export default function QuestionBankCard({
           )}
         </div>
 
-        {/* Contributor and Expand Button */}
+        {/* Contributor & Action Buttons */}
         <div className="flex items-center gap-3 ml-auto">
           <span className="flex items-center gap-1 text-[11px]">
             <User className="w-3 h-3 text-slate-400" />
             <span className="truncate max-w-[120px]">{contributorName}</span>
             {formattedDate && <span>· {formattedDate}</span>}
           </span>
+
+          {hasAnswerData && (
+            <button
+              type="button"
+              onClick={handleToggleAnswer}
+              className={`flex items-center gap-1 font-medium text-[11px] cursor-pointer transition-colors ${
+                isAnswerVisible
+                  ? 'text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300'
+                  : 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline'
+              }`}
+              title={isAnswerVisible ? 'Hide answer for this question' : 'Show answer for this question'}
+            >
+              {isAnswerVisible ? (
+                <>
+                  <EyeOff className="w-3 h-3" />
+                  <span>Hide Answer</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-3 h-3" />
+                  <span>Show Answer</span>
+                </>
+              )}
+            </button>
+          )}
 
           <button
             type="button"

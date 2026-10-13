@@ -45,14 +45,6 @@ export default function ExamSessionPage() {
   const isJustSubmitted = searchParams?.get('submitted') === 'true';
   const urlExamId = searchParams?.get('examId');
 
-  // Check practice mode and preview flags
-  const isPractice =
-    location.state?.isPractice === true ||
-    (typeof window !== 'undefined' ? sessionStorage.getItem('active_exam_mode') === 'PRACTICE' : false);
-  const isPreview =
-    location.state?.isPreview === true ||
-    (typeof window !== 'undefined' ? sessionStorage.getItem('active_exam_preview') === 'true' : false);
-
   // Resolve examId from URL query, location state, localStorage, or Zustand store
   const examId =
     urlExamId ||
@@ -68,6 +60,26 @@ export default function ExamSessionPage() {
     answers,
     clearStoredSession,
   } = useExamStore();
+
+  // Check practice mode and preview flags (considers location state, session storage, and exam metadata)
+  const isPractice = Boolean(
+    location.state?.isPractice === true ||
+    (typeof window !== 'undefined' ? sessionStorage.getItem('active_exam_mode') === 'PRACTICE' : false) ||
+    exam?.isPractice === true ||
+    exam?.examType === 'practice' ||
+    exam?.isGenerated === true
+  );
+  const isPreview = Boolean(
+    location.state?.isPreview === true ||
+    (typeof window !== 'undefined' ? sessionStorage.getItem('active_exam_preview') === 'true' : false)
+  );
+
+  // Synchronize sessionStorage with practice mode to ensure it survives page refreshes
+  useEffect(() => {
+    if (isPractice && typeof window !== 'undefined') {
+      sessionStorage.setItem('active_exam_mode', 'PRACTICE');
+    }
+  }, [isPractice]);
 
   // Read saved result if arriving via auto-refresh after submission
   const savedResultData = useMemo(() => {
@@ -193,9 +205,9 @@ export default function ExamSessionPage() {
   }, [addViolation, isPractice]);
 
   // ── Show violation warning popup after each new violation ────────────────────
-  // Skip when the fullscreen blocker is already covering the screen.
+  // Skip when the fullscreen blocker is already covering the screen or in practice mode.
   useEffect(() => {
-    if (violationCount === 0 || isSubmitted || isFullscreenBlocked) return;
+    if (isPractice || violationCount === 0 || isSubmitted || isFullscreenBlocked) return;
     const latest = violations[violations.length - 1];
     if (!latest) return;
 
@@ -208,11 +220,12 @@ export default function ExamSessionPage() {
     );
     return () => clearTimeout(violationTimerRef.current);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [violationCount]);
+  }, [violationCount, isPractice]);
 
   // ── S4: Final warning when trust score first drops to/below threshold ────────
   useEffect(() => {
     if (
+      !isPractice &&
       trustScore <= FINAL_WARNING_THRESHOLD &&
       trustScore > 0 &&
       !finalWarningShownRef.current &&
@@ -225,11 +238,11 @@ export default function ExamSessionPage() {
       clearTimeout(violationTimerRef.current);
       setViolationWarning({ open: false, type: null });
     }
-  }, [trustScore, isInitialized, isSubmitted]);
+  }, [trustScore, isInitialized, isSubmitted, isPractice]);
 
   // ── Trust score zero → auto-terminate exam ───────────────────────────────────
   useEffect(() => {
-    if (trustScore !== 0 || isSubmitted || !isInitialized) return;
+    if (isPractice || trustScore !== 0 || isSubmitted || !isInitialized) return;
     setTrustZeroModal(true);
     setFinalWarningModal(false);
     clearTimeout(violationTimerRef.current);
@@ -420,25 +433,39 @@ export default function ExamSessionPage() {
     doSubmit();
   }, [stopTimer, doSubmit, stopProctoringMedia]);
 
-  // ── 3.2 Browser lockdown (disabled in practice mode) ───────────────────────
+  // ── 3.2 Browser lockdown (disabled in practice mode or if lockdown disabled) ──
   const { dismissBlocker } = useBrowserLockdown({
-    active: isSessionActive && !isPractice,
+    active: isSessionActive && !isPractice && exam?.proctorSettings?.fullScreenLock !== false,
     onViolation: handleViolation,
   });
 
   useEffect(() => {
-    const onBlock = () => setIsFullscreenBlocked(true);
+    if (isPractice) {
+      setIsFullscreenBlocked(false);
+      setNeedsFullscreenGate(false);
+      setIsWindowBlurred(false);
+      return;
+    }
+    const onBlock = () => {
+      if (!isPractice) setIsFullscreenBlocked(true);
+    };
     const onUnblock = () => {
       setIsFullscreenBlocked(false);
       setNeedsFullscreenGate(false);
     };
     // S6: Handle browsers where fullscreen is not supported
-    const onNoFullscreen = () => setIsFullscreenUnsupported(true);
+    const onNoFullscreen = () => {
+      if (!isPractice) setIsFullscreenUnsupported(true);
+    };
     // Alt+Tab overlay
-    const onWindowBlur = () => setIsWindowBlurred(true);
+    const onWindowBlur = () => {
+      if (!isPractice) setIsWindowBlurred(true);
+    };
     const onWindowFocus = () => setIsWindowBlurred(false);
     // Fullscreen auto-enter failed (browser needs gesture)
-    const onFullscreenGate = () => setNeedsFullscreenGate(true);
+    const onFullscreenGate = () => {
+      if (!isPractice) setNeedsFullscreenGate(true);
+    };
     window.addEventListener('lockdown:block', onBlock);
     window.addEventListener('lockdown:unblock', onUnblock);
     window.addEventListener('lockdown:nofullscreen', onNoFullscreen);
@@ -453,7 +480,7 @@ export default function ExamSessionPage() {
       window.removeEventListener('lockdown:windowfocus', onWindowFocus);
       window.removeEventListener('lockdown:fullscreengate', onFullscreenGate);
     };
-  }, []);
+  }, [isPractice]);
 
   // ── Tab-return wall-clock correction ─────────────────────────────────────────
   // When the user returns from a hidden tab, deduct the actual elapsed wall-clock
@@ -808,8 +835,8 @@ export default function ExamSessionPage() {
 
   // ── Fullscreen Entry Gate ─────────────────────────────────────────────────────
   // Browsers block auto-fullscreen without a user gesture (e.g. after a page refresh).
-  // Show a click-to-enter-fullscreen screen so the user initiates it themselves.
-  if (needsFullscreenGate && !isSubmitted) {
+  // Show a click-to-enter-fullscreen screen so the user initiates it themselves (official exams only).
+  if (!isPractice && needsFullscreenGate && !isSubmitted) {
     return (
       <div className="h-screen w-screen bg-[#F8FAFC] dark:bg-[#0C0F17] flex flex-col items-center justify-center p-6 text-center transition-colors duration-200">
         <div className="max-w-md w-full bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg p-7 sm:p-8 shadow-sm space-y-4">
@@ -858,6 +885,7 @@ export default function ExamSessionPage() {
       <ExamHeader
         onSubmitClick={() => setIsSubmitModalOpen(true)}
         violationCount={violationCount}
+        isPractice={isPractice}
       />
 
       {/* 2. Main Workspace */}
@@ -877,25 +905,27 @@ export default function ExamSessionPage() {
         />
       )}
 
-      {/* Phase 4: StrikeModal for vision/audio violations */}
-      <StrikeModal
-        type={strikeModalState.type}
-        strikeCount={strikeCount}
-        trustScore={trustScore}
-        maxWarnings={exam?.proctorSettings?.maxWarningsAllowed || 5}
-        isOpen={strikeModalState.open}
-        onClose={() => setStrikeModalState({ open: false, type: null })}
-      />
+      {/* Phase 4: StrikeModal for vision/audio violations (disabled in practice mode) */}
+      {!isPractice && (
+        <StrikeModal
+          type={strikeModalState.type}
+          strikeCount={strikeCount}
+          trustScore={trustScore}
+          maxWarnings={exam?.proctorSettings?.maxWarningsAllowed || 5}
+          isOpen={strikeModalState.open}
+          onClose={() => setStrikeModalState({ open: false, type: null })}
+        />
+      )}
 
-      {/* S6: Fullscreen not supported warning banner */}
-      {isFullscreenUnsupported && (
+      {/* S6: Fullscreen not supported warning banner (official exams only) */}
+      {!isPractice && isFullscreenUnsupported && (
         <div className="fixed top-0 inset-x-0 z-50 bg-amber-500 text-white text-xs font-semibold text-center py-2 px-4 shadow-sm">
           ⚠️ Fullscreen mode is not supported in this browser. Proctoring may be limited.
         </div>
       )}
 
-      {/* 3a. Fullscreen Blocked Overlay */}
-      {isFullscreenBlocked && (
+      {/* 3a. Fullscreen Blocked Overlay (strictly disabled in practice mode) */}
+      {!isPractice && isFullscreenBlocked && (
         <div className="fixed inset-0 z-[9999] bg-slate-950/70 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-150">
           <div className="max-w-md w-full bg-white dark:bg-[#131926] border border-slate-100 dark:border-slate-800/80 rounded-lg p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100">
             <div className="bg-red-50 text-red-600 border border-red-100/50 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -922,8 +952,8 @@ export default function ExamSessionPage() {
         </div>
       )}
 
-      {/* 3b. Alt+Tab / Window Blur Overlay — blurs screen when user switches apps */}
-      {isWindowBlurred && !isFullscreenBlocked && (
+      {/* 3b. Alt+Tab / Window Blur Overlay (strictly disabled in practice mode) */}
+      {!isPractice && isWindowBlurred && !isFullscreenBlocked && (
         <div className="fixed inset-0 z-[9997] bg-slate-950/70 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-150">
           <div className="max-w-md w-full bg-white dark:bg-[#131926] border border-slate-100 dark:border-slate-800/80 rounded-lg p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100">
             <div className="bg-amber-50 text-amber-600 border border-amber-100/50 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -946,8 +976,8 @@ export default function ExamSessionPage() {
         </div>
       )}
 
-      {/* 4a. Per-violation warning popup */}
-      {violationWarning.open && (
+      {/* 4a. Per-violation warning popup (strictly disabled in practice mode) */}
+      {!isPractice && violationWarning.open && (
         <div className="fixed inset-0 z-[9998] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-6">
           <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-sm w-full max-w-sm overflow-hidden">
             <div className="h-1 bg-rose-500" />
@@ -1007,8 +1037,8 @@ export default function ExamSessionPage() {
         </div>
       )}
 
-      {/* 4b. S4: Final warning modal — shown once when trust score ≤ 30 */}
-      {finalWarningModal && (
+      {/* 4b. S4: Final warning modal — shown once when trust score ≤ 30 (official exams only) */}
+      {!isPractice && finalWarningModal && (
         <div className="fixed inset-0 z-[9998] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-6">
           <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-sm w-full max-w-sm overflow-hidden">
             <div className="h-1 bg-amber-500" />
@@ -1035,8 +1065,8 @@ export default function ExamSessionPage() {
         </div>
       )}
 
-      {/* 4c. Trust-score-zero termination modal */}
-      {trustZeroModal && (
+      {/* 4c. Trust-score-zero termination modal (official exams only) */}
+      {!isPractice && trustZeroModal && (
         <div className="fixed inset-0 z-[10000] bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-6">
           <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-sm w-full max-w-sm overflow-hidden">
             <div className="h-1 bg-rose-600" />

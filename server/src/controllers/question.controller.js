@@ -89,9 +89,8 @@ export const getBankQuestions = async (req, res) => {
         editedAt: q.editedAt,
         createdAt: q.createdAt,
         updatedAt: q.updatedAt,
-        // Only contributor sees answers and explanation
-        correctAnswers: isContributor ? q.correctAnswers : undefined,
-        explanation: isContributor ? q.explanation : undefined
+        correctAnswers: q.correctAnswers,
+        explanation: q.explanation || ''
       };
     });
 
@@ -269,8 +268,8 @@ export const getQuestionById = async (req, res) => {
       question: {
         ...question,
         isContributor,
-        correctAnswers: isContributor ? question.correctAnswers : undefined,
-        explanation: isContributor ? question.explanation : undefined
+        correctAnswers: question.correctAnswers,
+        explanation: question.explanation || ''
       }
     });
   } catch (error) {
