@@ -716,3 +716,53 @@ export const getExamViolations = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Delete an exam or draft assessment (creator or admin only)
+ * @route   DELETE /api/exams/:id
+ * @access  Private (Creator only)
+ */
+export const deleteExam = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const exam = await Exam.findById(id);
+    if (!exam) {
+      return res.status(404).json({ success: false, message: 'Assessment not found' });
+    }
+
+    const isCreator = exam.creatorId && exam.creatorId.toString() === userId.toString();
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access restricted: Only the creator of this assessment can discard or delete it.'
+      });
+    }
+
+    // Clean up questions that are NOT marked as part of the question bank
+    if (Array.isArray(exam.questions) && exam.questions.length > 0) {
+      await Question.deleteMany({
+        _id: { $in: exam.questions },
+        isInBank: { $ne: true }
+      });
+    }
+
+    // Clean up any attempts recorded for this exam
+    await Attempt.deleteMany({ examId: id });
+
+    await Exam.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Assessment draft discarded and permanently removed.'
+    });
+  } catch (err) {
+    console.error('Delete exam error:', err);
+    return res.status(500).json({
+      success: false,
+      message: err.message || 'Server error deleting exam'
+    });
+  }
+};

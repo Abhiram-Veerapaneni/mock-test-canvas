@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import MathRenderer from '../common/MathRenderer';
 import api from '../../services/api';
+import useAuthStore from '../../store/useAuthStore';
 import {
   Plus,
   Trash2,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 
 export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', examTitle = 'exam' }) {
+  const { user } = useAuthStore();
   const [questionText, setQuestionText] = useState('');
   const [questionType, setQuestionType] = useState('MCQ');
   const [imageAttachment, setImageAttachment] = useState('');
@@ -74,19 +76,25 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
       (d.explanation && d.explanation.trim()) ||
       (Array.isArray(d.options) && d.options.some((o) => o.text && o.text.trim()))
     );
+    const uId = user?._id || 'guest';
+    const key = `pmt_draft_manual_question_${uId}`;
     if (!hasContent) {
-      try { localStorage.removeItem('pmt_draft_manual_question'); } catch (e) {}
+      try {
+        localStorage.removeItem(key);
+        localStorage.removeItem('pmt_draft_manual_question');
+      } catch (e) {}
       return;
     }
     try {
-      localStorage.setItem('pmt_draft_manual_question', JSON.stringify(d));
+      localStorage.setItem(key, JSON.stringify(d));
     } catch (e) {}
-  }, []);
+  }, [user?._id]);
 
   // Restore on mount from local storage
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('pmt_draft_manual_question');
+      const uId = user?._id || 'guest';
+      const saved = localStorage.getItem(`pmt_draft_manual_question_${uId}`) || localStorage.getItem('pmt_draft_manual_question');
       if (saved) {
         const q = JSON.parse(saved);
         if (q.questionText || (Array.isArray(q.options) && q.options.some((o) => o.text))) {
@@ -107,7 +115,7 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
     } catch (e) {
       console.warn('Failed to restore manual question draft:', e);
     }
-  }, []);
+  }, [user?._id]);
 
   // Save on every change
   useEffect(() => {

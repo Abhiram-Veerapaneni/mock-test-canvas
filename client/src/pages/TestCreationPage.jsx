@@ -7,6 +7,7 @@ import ManualQuestionForm from '../components/test-builder/ManualQuestionForm';
 import IngestionReviewModal from '../components/test-builder/IngestionReviewModal';
 import QuestionEditModal from '../components/test-builder/QuestionEditModal';
 import QuestionPaperPDFModal from '../components/test-builder/QuestionPaperPDFModal';
+import DiscardDraftModal from '../components/common/DiscardDraftModal';
 import MathRenderer from '../components/common/MathRenderer';
 import api from '../services/api';
 import useAuthStore from '../store/useAuthStore';
@@ -14,6 +15,7 @@ import { formatDateTime12h } from '../utils/dateUtils';
 import {
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Layers,
   Trash2,
   Loader2,
@@ -54,7 +56,7 @@ export default function TestCreationPage() {
   const [searchParams] = useSearchParams();
   const examIdParam = searchParams.get('examId');
 
-  const { isAuthenticated, openAuthModal } = useAuthStore();
+  const { user, isAuthenticated, openAuthModal } = useAuthStore();
 
   const [existingExamId, setExistingExamId] = useState(examIdParam || null);
   const [examStatus, setExamStatus] = useState('draft');
@@ -121,12 +123,20 @@ export default function TestCreationPage() {
   const [lastSavedTime, setLastSavedTime] = useState(null);
   const [draftRestored, setDraftRestored] = useState(false);
   const [draftRestoredTime, setDraftRestoredTime] = useState('');
+  const [draftToastHovered, setDraftToastHovered] = useState(false);
+  const [toastConfirmDiscard, setToastConfirmDiscard] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState(null);
   const [leaveModalError, setLeaveModalError] = useState('');
+  const [discardModalOpen, setDiscardModalOpen] = useState(false);
+  const [isDiscardingCloud, setIsDiscardingCloud] = useState(false);
+
   const originalExamRef = useRef(null);
   const isInitialMountRef = useRef(true);
+  const isDiscardingOrLoggingOutRef = useRef(false);
+  const hasUnsavedChangesRef = useRef(false);
+  const isInitialLoadFinishedRef = useRef(false);
 
   // Keep draftDataRef updated on every render
   const draftDataRef = useRef(null);
@@ -155,10 +165,66 @@ export default function TestCreationPage() {
     activeStudioTab
   };
 
-  const getDraftStorageKey = useCallback((examId) => (examId ? `pmt_draft_exam_${examId}` : 'pmt_draft_exam_new'), []);
+  // Draft key scoped strictly to active user ID
+  const getDraftStorageKey = useCallback((examId) => {
+    const uId = user?._id || 'guest';
+    return examId ? `pmt_draft_exam_${uId}_${examId}` : `pmt_draft_exam_${uId}_new`;
+  }, [user?._id]);
+
+  // Find local draft for an existing exam (checks scoped key, legacy key, and any wildcard match for the examId)
+  const findLocalDraftForExam = useCallback((examId) => {
+    if (!examId) return null;
+    const uId = user?._id || 'guest';
+
+    // 1. Try exact user scoped key
+    if (uId && uId !== 'guest') {
+      const scopedKey = `pmt_draft_exam_${uId}_${examId}`;
+      const raw = localStorage.getItem(scopedKey);
+      if (raw) return { key: scopedKey, raw };
+    }
+
+    // 2. Try unscoped key
+    const legacyKey = `pmt_draft_exam_${examId}`;
+    const rawLegacy = localStorage.getItem(legacyKey);
+    if (rawLegacy) return { key: legacyKey, raw: rawLegacy };
+
+    // 3. Robust scan: any key ending with `_${examId}`
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('pmt_draft_exam_') && k.endsWith(`_${examId}`)) {
+        const raw = localStorage.getItem(k);
+        if (raw) return { key: k, raw };
+      }
+    }
+
+    return null;
+  }, [user?._id]);
+
+  // Find local draft for a new exam
+  const findLocalDraftForNew = useCallback(() => {
+    const uId = user?._id || 'guest';
+    if (uId && uId !== 'guest') {
+      const scopedKey = `pmt_draft_exam_${uId}_new`;
+      const raw = localStorage.getItem(scopedKey);
+      if (raw) return { key: scopedKey, raw };
+    }
+    const generalKey = 'pmt_draft_exam_new';
+    const rawGen = localStorage.getItem(generalKey);
+    if (rawGen) return { key: generalKey, raw: rawGen };
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('pmt_draft_exam_') && k.endsWith('_new')) {
+        const raw = localStorage.getItem(k);
+        if (raw) return { key: k, raw };
+      }
+    }
+    return null;
+  }, [user?._id]);
 
   // Save current draft to local storage
   const saveDraftToStorage = useCallback((customData = null) => {
+    if (isDiscardingOrLoggingOutRef.current) return false;
     const data = customData || draftDataRef.current;
     if (!data) return false;
 
@@ -171,9 +237,14 @@ export default function TestCreationPage() {
 
     if (!hasContent) return false;
 
+    const isNew = !data.existingExamId;
+    const isUnsaved = Boolean(hasUnsavedChangesRef.current || isNew);
+
     const key = getDraftStorageKey(data.existingExamId);
     const payload = {
       ...data,
+      hasUnsavedChanges: isUnsaved,
+      isSyncedWithServer: !isUnsaved,
       savedAt: new Date().toISOString()
     };
 
@@ -188,12 +259,54 @@ export default function TestCreationPage() {
     }
   }, [getDraftStorageKey]);
 
+  useEffect(() => {
+    hasUnsavedChangesRef.current = hasUnsavedChanges;
+  }, [hasUnsavedChanges]);
+
+  // Auto-dismiss draft restored toast (pauses while hovering, confirming discard, or when discard modal is open)
+  useEffect(() => {
+    if (!draftRestored) {
+      setDraftToastHovered(false);
+      setToastConfirmDiscard(false);
+      return;
+    }
+    if (discardModalOpen || draftToastHovered || toastConfirmDiscard) return;
+
+    const timer = setTimeout(() => {
+      setDraftRestored(false);
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [draftRestored, discardModalOpen, draftToastHovered, toastConfirmDiscard]);
+
+  useEffect(() => {
+    const handleLogoutInProgress = () => {
+      isDiscardingOrLoggingOutRef.current = true;
+    };
+    const handleFlushDraft = () => {
+      if (hasUnsavedChangesRef.current && !isDiscardingOrLoggingOutRef.current) {
+        saveDraftToStorage();
+      }
+    };
+
+    window.addEventListener('pmt_logout_in_progress', handleLogoutInProgress);
+    window.addEventListener('pmt_flush_draft_before_logout', handleFlushDraft);
+    return () => {
+      window.removeEventListener('pmt_logout_in_progress', handleLogoutInProgress);
+      window.removeEventListener('pmt_flush_draft_before_logout', handleFlushDraft);
+    };
+  }, [saveDraftToStorage]);
+
   // 1. Store draft in local storage after each change
   useEffect(() => {
     if (isLoadingExisting) return;
 
     if (isInitialMountRef.current) {
       isInitialMountRef.current = false;
+      return;
+    }
+
+    if (isInitialLoadFinishedRef.current) {
+      isInitialLoadFinishedRef.current = false;
       return;
     }
 
@@ -325,9 +438,9 @@ export default function TestCreationPage() {
     if (examIdParam) return; // Handled by existing exam fetch below
 
     try {
-      const rawDraft = localStorage.getItem('pmt_draft_exam_new');
-      if (rawDraft) {
-        const draft = JSON.parse(rawDraft);
+      const draftMatch = findLocalDraftForNew();
+      if (draftMatch?.raw) {
+        const draft = JSON.parse(draftMatch.raw);
         const hasContent = Boolean(
           (draft.title && draft.title.trim()) ||
           (draft.description && draft.description.trim()) ||
@@ -369,18 +482,30 @@ export default function TestCreationPage() {
     } catch (err) {
       console.warn('Failed to parse draft from localStorage:', err);
     }
-  }, [examIdParam]);
+  }, [examIdParam, user?._id]);
 
-  // Discard draft and clear local storage
-  const handleDiscardDraft = () => {
-    const key = getDraftStorageKey(existingExamId);
+  // Discard local restored draft changes only (without deleting cloud assessment)
+  const handleDiscardLocalDraft = () => {
+    isDiscardingOrLoggingOutRef.current = true;
+    const uId = user?._id || 'guest';
+
     try {
-      localStorage.removeItem(key);
+      if (existingExamId) {
+        localStorage.removeItem(`pmt_draft_exam_${uId}_${existingExamId}`);
+        localStorage.removeItem(`pmt_draft_exam_${existingExamId}`);
+      }
+      localStorage.removeItem(`pmt_draft_exam_${uId}_new`);
+      localStorage.removeItem('pmt_draft_exam_new');
     } catch (e) {
-      console.warn('Error clearing draft:', e);
+      console.warn('Error clearing local draft:', e);
     }
 
+    setDraftRestored(false);
+    setDraftRestoredTime(null);
+    setToastConfirmDiscard(false);
+
     if (existingExamId && originalExamRef.current) {
+      // Revert to original server assessment data
       const ex = originalExamRef.current;
       setTitle(ex.title || '');
       setDescription(ex.description || '');
@@ -404,10 +529,33 @@ export default function TestCreationPage() {
         setObjectCheck(ex.proctorSettings.objectCheck ?? true);
         setLiveNotifications(ex.proctorSettings.liveNotifications ?? false);
       }
-      if (ex.allowPracticeMode !== undefined) setAllowPracticeMode(Boolean(ex.allowPracticeMode));
-      if (ex.allowReviewResponses !== undefined) setAllowReviewResponses(Boolean(ex.allowReviewResponses));
-      if (Array.isArray(ex.questions)) setQuestions(ex.questions);
+      if (ex.allowPracticeMode !== undefined) {
+        setAllowPracticeMode(Boolean(ex.allowPracticeMode));
+      }
+      if (ex.allowReviewResponses !== undefined) {
+        setAllowReviewResponses(Boolean(ex.allowReviewResponses));
+      }
+      if (ex.schedule) {
+        setIsScheduled(Boolean(ex.schedule.isScheduled));
+        const pad = (n) => String(n).padStart(2, '0');
+        if (ex.schedule.startTime) {
+          const st = new Date(ex.schedule.startTime);
+          setStartTime(`${st.getFullYear()}-${pad(st.getMonth() + 1)}-${pad(st.getDate())}T${pad(st.getHours())}:${pad(st.getMinutes())}`);
+        }
+        if (ex.schedule.endTime) {
+          const et = new Date(ex.schedule.endTime);
+          setEndTime(`${et.getFullYear()}-${pad(et.getMonth() + 1)}-${pad(et.getDate())}T${pad(et.getHours())}:${pad(et.getMinutes())}`);
+        }
+      }
+      if (Array.isArray(ex.questions)) {
+        setQuestions(ex.questions);
+      }
+      setHasUnsavedChanges(false);
+      hasUnsavedChangesRef.current = false;
+      setAutoSaveStatus('idle');
+      setSuccessMsg('Local draft changes discarded. Reverted to database version.');
     } else {
+      // Clean blank test
       setTitle('');
       setDescription('');
       setCategory('JEE');
@@ -427,12 +575,80 @@ export default function TestCreationPage() {
       setObjectCheck(true);
       setLiveNotifications(false);
       setQuestions([]);
+      setHasUnsavedChanges(false);
+      hasUnsavedChangesRef.current = false;
+      setAutoSaveStatus('idle');
+      setSuccessMsg('Local draft discarded.');
     }
 
-    setDraftRestored(false);
-    setAutoSaveStatus('idle');
-    setLastSavedTime(null);
-    setHasUnsavedChanges(false);
+    setTimeout(() => {
+      isDiscardingOrLoggingOutRef.current = false;
+    }, 400);
+  };
+
+  // Discard draft: Open safety confirmation modal
+  const handleDiscardDraft = () => {
+    setDiscardModalOpen(true);
+  };
+
+  // Confirmed discard (both cloud & local device)
+  const handleConfirmDiscardDraft = async () => {
+    setIsDiscardingCloud(true);
+    isDiscardingOrLoggingOutRef.current = true;
+    const uId = user?._id || 'guest';
+
+    try {
+      if (existingExamId) {
+        await api.delete(`/exams/${existingExamId}`);
+      }
+
+      try {
+        if (existingExamId) {
+          localStorage.removeItem(`pmt_draft_exam_${uId}_${existingExamId}`);
+          localStorage.removeItem(`pmt_draft_exam_${existingExamId}`);
+        }
+        localStorage.removeItem(`pmt_draft_exam_${uId}_new`);
+        localStorage.removeItem('pmt_draft_exam_new');
+      } catch (e) {
+        console.warn('Error clearing draft:', e);
+      }
+
+      setDraftRestored(false);
+      setAutoSaveStatus('idle');
+      setLastSavedTime(null);
+      setHasUnsavedChanges(false);
+      setDiscardModalOpen(false);
+
+      if (existingExamId) {
+        navigate('/dashboard');
+      } else {
+        setTitle('');
+        setDescription('');
+        setCategory('JEE');
+        setDurationMinutes(60);
+        setCorrectMark(4);
+        setIncorrectMark(-1);
+        setIsUnlimitedAttempts(true);
+        setMaxAttemptsValue(3);
+        setAllowPracticeMode(true);
+        setAllowReviewResponses(true);
+        setIsScheduled(false);
+        setStartTime('');
+        setEndTime('');
+        setFaceCheck(true);
+        setAudioCheck(true);
+        setFullScreenLock(true);
+        setObjectCheck(true);
+        setLiveNotifications(false);
+        setQuestions([]);
+        setSuccessMsg('Draft discarded successfully.');
+      }
+    } catch (err) {
+      console.error('Failed to discard draft:', err);
+      setError(err.response?.data?.message || 'Error discarding assessment draft.');
+    } finally {
+      setIsDiscardingCloud(false);
+    }
   };
 
   // If examId is in URL, fetch existing exam for editing (with offline fallback and local draft merge)
@@ -449,13 +665,21 @@ export default function TestCreationPage() {
           // Check if local storage has a newer unsaved draft
           let restoredFromLocal = false;
           try {
-            const rawDraft = localStorage.getItem(`pmt_draft_exam_${ex._id}`);
-            if (rawDraft) {
-              const draft = JSON.parse(rawDraft);
+            const draftMatch = findLocalDraftForExam(ex._id);
+            if (draftMatch?.raw) {
+              const draft = JSON.parse(draftMatch.raw);
               const draftTime = draft.savedAt ? new Date(draft.savedAt).getTime() : 0;
               const serverTime = ex.updatedAt ? new Date(ex.updatedAt).getTime() : 0;
 
-              if (draftTime > serverTime) {
+              // Draft should be restored if it has unsaved changes, different question count, or newer timestamp
+              const hasLocalChanges = Boolean(
+                draft.hasUnsavedChanges === true ||
+                draft.isSyncedWithServer === false ||
+                (Array.isArray(draft.questions) && draft.questions.length !== (ex.questions?.length || 0)) ||
+                draftTime > serverTime
+              );
+
+              if (hasLocalChanges) {
                 if (draft.title !== undefined) setTitle(draft.title);
                 if (draft.description !== undefined) setDescription(draft.description);
                 if (draft.category !== undefined) setCategory(draft.category);
@@ -478,11 +702,13 @@ export default function TestCreationPage() {
                 if (draft.activeStudioTab) setActiveStudioTab(draft.activeStudioTab);
 
                 setDraftRestored(true);
-                const d = new Date(draft.savedAt);
+                const d = draft.savedAt ? new Date(draft.savedAt) : new Date();
                 setDraftRestoredTime(d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
                 setLastSavedTime(d);
                 setAutoSaveStatus('saved');
                 setHasUnsavedChanges(true);
+                hasUnsavedChangesRef.current = true;
+                isInitialLoadFinishedRef.current = true;
                 restoredFromLocal = true;
               }
             }
@@ -535,6 +761,8 @@ export default function TestCreationPage() {
               setQuestions(ex.questions);
             }
             setHasUnsavedChanges(false);
+            hasUnsavedChangesRef.current = false;
+            isInitialLoadFinishedRef.current = true;
           }
         }
       })
@@ -542,9 +770,9 @@ export default function TestCreationPage() {
         console.error('Failed to fetch existing exam (offline or network error):', err);
         // Offline Fallback: Check local storage for offline draft
         try {
-          const rawDraft = localStorage.getItem(`pmt_draft_exam_${examIdParam}`);
-          if (rawDraft) {
-            const draft = JSON.parse(rawDraft);
+          const draftMatch = findLocalDraftForExam(examIdParam);
+          if (draftMatch?.raw) {
+            const draft = JSON.parse(draftMatch.raw);
             if (draft.title !== undefined) setTitle(draft.title);
             if (draft.description !== undefined) setDescription(draft.description);
             if (draft.category !== undefined) setCategory(draft.category);
@@ -620,52 +848,67 @@ export default function TestCreationPage() {
   };
 
   const handleConfirmIngestedQuestions = (approvedQuestions) => {
-    setQuestions((prev) => [...prev, ...approvedQuestions]);
+    const updated = [...questions, ...approvedQuestions];
+    setQuestions(updated);
+    setHasUnsavedChanges(true);
+    hasUnsavedChangesRef.current = true;
     setIngestionModalOpen(false);
     setIngestedQuestions([]);
     setSuccessMsg(`Successfully imported ${approvedQuestions.length} questions from AI document extraction!`);
+    saveDraftToStorage({ ...draftDataRef.current, questions: updated, hasUnsavedChanges: true, isSyncedWithServer: false });
   };
 
   const handleAddQuestion = (newQuestion) => {
-    setQuestions([...questions, newQuestion]);
-    setSuccessMsg(`Question #${questions.length + 1} added.`);
+    const updated = [...questions, newQuestion];
+    setQuestions(updated);
+    setHasUnsavedChanges(true);
+    hasUnsavedChangesRef.current = true;
+    setSuccessMsg(`Question #${updated.length} added.`);
+    saveDraftToStorage({ ...draftDataRef.current, questions: updated, hasUnsavedChanges: true, isSyncedWithServer: false });
   };
 
   const handleRemoveQuestion = (index) => {
-    setQuestions(questions.filter((_, idx) => idx !== index));
+    const updated = questions.filter((_, idx) => idx !== index);
+    setQuestions(updated);
+    setHasUnsavedChanges(true);
+    hasUnsavedChangesRef.current = true;
+    saveDraftToStorage({ ...draftDataRef.current, questions: updated, hasUnsavedChanges: true, isSyncedWithServer: false });
   };
 
   // Re-ordering questions
   const handleMoveQuestionUp = (index) => {
     if (index <= 0) return;
-    setQuestions((prev) => {
-      const copy = [...prev];
-      const temp = copy[index - 1];
-      copy[index - 1] = copy[index];
-      copy[index] = temp;
-      return copy;
-    });
+    const copy = [...questions];
+    const temp = copy[index - 1];
+    copy[index - 1] = copy[index];
+    copy[index] = temp;
+    setQuestions(copy);
+    setHasUnsavedChanges(true);
+    hasUnsavedChangesRef.current = true;
+    saveDraftToStorage({ ...draftDataRef.current, questions: copy, hasUnsavedChanges: true, isSyncedWithServer: false });
   };
 
   const handleMoveQuestionDown = (index) => {
     if (index >= questions.length - 1) return;
-    setQuestions((prev) => {
-      const copy = [...prev];
-      const temp = copy[index + 1];
-      copy[index + 1] = copy[index];
-      copy[index] = temp;
-      return copy;
-    });
+    const copy = [...questions];
+    const temp = copy[index + 1];
+    copy[index + 1] = copy[index];
+    copy[index] = temp;
+    setQuestions(copy);
+    setHasUnsavedChanges(true);
+    hasUnsavedChangesRef.current = true;
+    saveDraftToStorage({ ...draftDataRef.current, questions: copy, hasUnsavedChanges: true, isSyncedWithServer: false });
   };
 
   // Updating an edited question
   const handleUpdateQuestion = (index, updatedQ) => {
-    setQuestions((prev) => {
-      const copy = [...prev];
-      copy[index] = updatedQ;
-      return copy;
-    });
+    const copy = [...questions];
+    copy[index] = updatedQ;
+    setQuestions(copy);
+    setHasUnsavedChanges(true);
+    hasUnsavedChangesRef.current = true;
     setSuccessMsg(`Question #${index + 1} updated successfully.`);
+    saveDraftToStorage({ ...draftDataRef.current, questions: copy, hasUnsavedChanges: true, isSyncedWithServer: false });
   };
 
   // Pop out clean printable preview of question paper in new window
@@ -907,18 +1150,24 @@ export default function TestCreationPage() {
       if (res.data?.success) {
         setExamStatus(targetStatus);
         const savedExam = res.data.exam;
+        originalExamRef.current = savedExam;
         const newExamId = savedExam?._id || existingExamId;
         if (savedExam?._id) setExistingExamId(savedExam._id);
 
         setHasUnsavedChanges(false);
+        hasUnsavedChangesRef.current = false;
 
         if (isDraft) {
           try {
+            const uId = user?._id || 'guest';
+            localStorage.removeItem(`pmt_draft_exam_${uId}_new`);
             localStorage.removeItem('pmt_draft_exam_new');
             if (newExamId) {
-              localStorage.setItem(`pmt_draft_exam_${newExamId}`, JSON.stringify({
+              localStorage.setItem(`pmt_draft_exam_${uId}_${newExamId}`, JSON.stringify({
                 ...payload,
                 existingExamId: newExamId,
+                hasUnsavedChanges: false,
+                isSyncedWithServer: true,
                 savedAt: new Date().toISOString()
               }));
               if (!skipRedirect) {
@@ -935,9 +1184,12 @@ export default function TestCreationPage() {
           return true;
         } else {
           try {
+            const uId = user?._id || 'guest';
             if (newExamId) {
+              localStorage.removeItem(`pmt_draft_exam_${uId}_${newExamId}`);
               localStorage.removeItem(`pmt_draft_exam_${newExamId}`);
             }
+            localStorage.removeItem(`pmt_draft_exam_${uId}_new`);
             localStorage.removeItem('pmt_draft_exam_new');
           } catch (e) {
             console.warn('Failed to clear local storage draft after publish:', e);
@@ -1044,33 +1296,6 @@ export default function TestCreationPage() {
           />
         </div>
 
-        {/* Local Storage Draft Restored Banner */}
-        {draftRestored && (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-900 dark:text-amber-200 animate-in fade-in slide-in-from-top-1">
-            <div className="flex items-center gap-2.5">
-              <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span>
-                <strong>Draft loaded from local storage:</strong> Recovered your in-progress assessment {draftRestoredTime ? `(${draftRestoredTime})` : ''} with {questions.length} question{questions.length !== 1 ? 's' : ''}.
-              </span>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={handleDiscardDraft}
-                className="px-2.5 py-1 text-slate-600 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 border border-slate-200 dark:border-slate-800 rounded font-medium transition-colors cursor-pointer"
-              >
-                Discard Draft
-              </button>
-              <button
-                type="button"
-                onClick={() => setDraftRestored(false)}
-                className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded font-medium transition-colors shadow-xs cursor-pointer"
-              >
-                Keep Draft
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Top Header Action Bar with Inline Title Edit */}
         <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-none">
@@ -1162,6 +1387,20 @@ export default function TestCreationPage() {
                 </>
               )}
             </button>
+
+            {/* Discard Draft Button */}
+            {Boolean(title.trim() || questions.length > 0 || existingExamId || draftRestored) && (
+              <button
+                type="button"
+                onClick={handleDiscardDraft}
+                disabled={isSavingDraft || isSaving || isDiscardingCloud}
+                className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:border-rose-200 dark:hover:border-rose-900/50 cursor-pointer"
+                title="Discard draft and remove uncommitted changes"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                <span>Discard Draft</span>
+              </button>
+            )}
 
             {/* Publish Button */}
             <button
@@ -2500,6 +2739,76 @@ export default function TestCreationPage() {
         }}
         onClose={() => setIsPDFModalOpen(false)}
       />
+
+      {/* Discard Draft Safety Confirmation Modal (Requires typing DISCARD) */}
+      <DiscardDraftModal
+        isOpen={discardModalOpen}
+        onClose={() => setDiscardModalOpen(false)}
+        onConfirm={handleConfirmDiscardDraft}
+        examTitle={title || 'Untitled Assessment Draft'}
+        isDeleting={isDiscardingCloud}
+        isCloudDraft={Boolean(existingExamId)}
+      />
+
+      {/* Floating Draft Restored Corner Toast */}
+      {draftRestored && (
+        <aside
+          role="status"
+          aria-live="polite"
+          onMouseEnter={() => setDraftToastHovered(true)}
+          onMouseLeave={() => setDraftToastHovered(false)}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-white dark:bg-[#131926] border border-slate-200/90 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-lg text-xs animate-in slide-in-from-bottom-4 fade-in duration-200"
+        >
+          {!toastConfirmDiscard ? (
+            <>
+              <Clock className="w-4 h-4 text-slate-400 stroke-[2] shrink-0" />
+              <span className="text-slate-700 dark:text-slate-200 font-medium whitespace-nowrap">
+                Draft restored{draftRestoredTime ? ` from ${draftRestoredTime}` : ''} ({questions.length} question{questions.length !== 1 ? 's' : ''})
+              </span>
+              <button
+                type="button"
+                onClick={() => setToastConfirmDiscard(true)}
+                className="text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 font-medium px-2 py-1 rounded transition-colors ml-auto cursor-pointer"
+                title="Discard restored local draft changes"
+              >
+                Discard
+              </button>
+              <button
+                type="button"
+                onClick={() => setDraftRestored(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-md transition-colors cursor-pointer"
+                title="Dismiss notification"
+                aria-label="Dismiss notification"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </>
+          ) : (
+            <>
+              <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+              <span className="text-slate-700 dark:text-slate-200 font-medium whitespace-nowrap">
+                Discard local changes?
+              </span>
+              <div className="flex items-center gap-1.5 ml-auto">
+                <button
+                  type="button"
+                  onClick={() => setToastConfirmDiscard(false)}
+                  className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium px-2 py-1 rounded transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDiscardLocalDraft}
+                  className="bg-rose-600 hover:bg-rose-700 text-white font-medium px-2.5 py-1 rounded-lg transition-colors cursor-pointer shadow-xs"
+                >
+                  Discard
+                </button>
+              </div>
+            </>
+          )}
+        </aside>
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import {
   getAllExams,
   getExamById,
   updateExam,
+  deleteExam,
   uploadExamMedia,
   getExamViolations
 } from '../controllers/exam.controller.js';
@@ -20,7 +21,8 @@ router.post('/upload-media', protect, uploadImage, uploadExamMedia);
 
 router.route('/:id')
   .get(optionalAuth, getExamById)
-  .put(protect, updateExam);
+  .put(protect, updateExam)
+  .delete(protect, deleteExam);
 
 router.get('/:id/live-violations', protect, getExamViolations);
 

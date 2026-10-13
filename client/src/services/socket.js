@@ -20,9 +20,6 @@ export const getSocket = () => {
       reconnectionDelay: 2000,
     });
 
-    socket.on('connect', () => {
-      console.log('[Socket.IO] Connected to server:', socket.id);
-    });
 
     socket.on('connect_error', (err) => {
       console.warn('[Socket.IO] Connection error:', err.message);

@@ -1,8 +1,17 @@
 import { create } from 'zustand';
 import api from '../services/api';
 
+const getStoredUser = () => {
+  try {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    return null;
+  }
+};
+
 export const useAuthStore = create((set, get) => ({
-  user: null,
+  user: getStoredUser(),
   token: localStorage.getItem('token') || null,
   isAuthenticated: !!localStorage.getItem('token'),
   isLoading: false,
@@ -41,6 +50,7 @@ export const useAuthStore = create((set, get) => ({
   fetchMe: async () => {
     const token = localStorage.getItem('token');
     if (!token) {
+      localStorage.removeItem('user');
       set({ user: null, isAuthenticated: false, isLoading: false });
       return;
     }
@@ -49,6 +59,7 @@ export const useAuthStore = create((set, get) => ({
     try {
       const response = await api.get('/auth/me');
       if (response.data?.success && response.data?.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
         set({
           user: response.data.user,
           isAuthenticated: true,
@@ -63,6 +74,7 @@ export const useAuthStore = create((set, get) => ({
       if (status === 401) {
         console.warn('Session expired or invalid token');
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         set({
           user: null,
           token: null,
@@ -89,6 +101,7 @@ export const useAuthStore = create((set, get) => ({
       const { token, user } = response.data;
 
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
       set({
         user,
         token,
@@ -176,6 +189,7 @@ export const useAuthStore = create((set, get) => ({
       const { token, user } = response.data;
 
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
       set({
         user,
         token,
@@ -211,6 +225,7 @@ export const useAuthStore = create((set, get) => ({
       const { token, user } = response.data;
 
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
       set({
         user,
         token,
@@ -229,6 +244,7 @@ export const useAuthStore = create((set, get) => ({
   // Logout method
   logout: () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     try {
       sessionStorage.removeItem('dismissedGoogleOneTap');
     } catch (_) {}

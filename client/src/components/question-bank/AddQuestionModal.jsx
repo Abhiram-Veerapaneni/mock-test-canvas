@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MathRenderer from '../common/MathRenderer';
 import api from '../../services/api';
+import useAuthStore from '../../store/useAuthStore';
 import {
   X,
   Plus,
@@ -22,6 +23,7 @@ export default function AddQuestionModal({
   onClose,
   onSuccess
 }) {
+  const { user } = useAuthStore();
   const isEdit = Boolean(questionToEdit && questionToEdit._id);
 
   const [stream, setStream] = useState(questionToEdit?.stream || 'Mathematics');
@@ -103,20 +105,26 @@ export default function AddQuestionModal({
       (d.explanation && d.explanation.trim()) ||
       (Array.isArray(d.options) && d.options.some((o) => o.text && o.text.trim()))
     );
+    const uId = user?._id || 'guest';
+    const key = `pmt_draft_bank_question_${uId}`;
     if (!hasContent) {
-      try { localStorage.removeItem('pmt_draft_bank_question'); } catch (e) {}
+      try {
+        localStorage.removeItem(key);
+        localStorage.removeItem('pmt_draft_bank_question');
+      } catch (e) {}
       return;
     }
     try {
-      localStorage.setItem('pmt_draft_bank_question', JSON.stringify(d));
+      localStorage.setItem(key, JSON.stringify(d));
     } catch (e) {}
-  }, [isEdit]);
+  }, [isEdit, user?._id]);
 
   // Restore draft on open if not editing existing question
   useEffect(() => {
     if (isEdit) return;
     try {
-      const saved = localStorage.getItem('pmt_draft_bank_question');
+      const uId = user?._id || 'guest';
+      const saved = localStorage.getItem(`pmt_draft_bank_question_${uId}`) || localStorage.getItem('pmt_draft_bank_question');
       if (saved) {
         const q = JSON.parse(saved);
         if (q.questionText || (Array.isArray(q.options) && q.options.some((o) => o.text))) {

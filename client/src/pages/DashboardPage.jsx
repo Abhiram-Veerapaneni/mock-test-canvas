@@ -18,8 +18,10 @@ import {
   Award,
   Calendar,
   Compass,
+  Trash2,
   X
 } from 'lucide-react';
+import DiscardDraftModal from '../components/common/DiscardDraftModal';
 
 export default function DashboardPage() {
   const { user, isAuthenticated, loginWithGoogle } = useAuthStore();
@@ -32,6 +34,38 @@ export default function DashboardPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState(null);
   const searchDebounceRef = useRef(null);
+
+  // Cloud Draft Discard Modal state
+  const [discardDraftModalOpen, setDiscardDraftModalOpen] = useState(false);
+  const [draftToDiscard, setDraftToDiscard] = useState(null);
+  const [isDiscardingDraft, setIsDiscardingDraft] = useState(false);
+
+  const handlePromptDiscardDraft = (exam, e) => {
+    if (e) e.stopPropagation();
+    setDraftToDiscard(exam);
+    setDiscardDraftModalOpen(true);
+  };
+
+  const handleConfirmDiscardDraft = async () => {
+    if (!draftToDiscard?._id) return;
+    setIsDiscardingDraft(true);
+    try {
+      await api.delete(`/exams/${draftToDiscard._id}`);
+      const uId = user?._id || 'guest';
+      try {
+        localStorage.removeItem(`pmt_draft_exam_${uId}_${draftToDiscard._id}`);
+        localStorage.removeItem(`pmt_draft_exam_${draftToDiscard._id}`);
+      } catch (_) {}
+      setExams((prev) => prev.filter((ex) => ex._id !== draftToDiscard._id));
+      setDiscardDraftModalOpen(false);
+      setDraftToDiscard(null);
+    } catch (err) {
+      console.error('Failed to discard draft from dashboard:', err);
+      alert(err.response?.data?.message || 'Failed to discard draft.');
+    } finally {
+      setIsDiscardingDraft(false);
+    }
+  };
 
   const categories = ['ALL', 'JEE', 'NEET', 'GATE', 'APTITUDE', 'CUSTOM'];
 
@@ -526,17 +560,28 @@ export default function DashboardPage() {
 
                         {/* Primary Action */}
                         {isDraft ? (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/create-test?examId=${exam._id}`);
-                            }}
-                            className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm active:scale-[0.98] dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-xs py-1.5 px-3 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5"
-                          >
-                            <Edit3 className="w-3 h-3" />
-                            <span>Edit Draft</span>
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/create-test?examId=${exam._id}`);
+                              }}
+                              className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm active:scale-[0.98] dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-xs py-1.5 px-3 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5"
+                            >
+                              <Edit3 className="w-3 h-3" />
+                              <span>Edit Draft</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => handlePromptDiscardDraft(exam, e)}
+                              className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 shadow-sm active:scale-[0.98] dark:bg-rose-950/30 dark:hover:bg-rose-950/60 dark:text-rose-400 dark:border-rose-900/50 text-xs py-1.5 px-2.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1"
+                              title="Permanently discard draft"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>Discard</span>
+                            </button>
+                          </div>
                         ) : isExhausted ? (
                           <span className="text-xs text-slate-400 dark:text-slate-400 py-1.5 px-2 font-medium">Exhausted</span>
                         ) : hasAttempted ? (
@@ -573,6 +618,19 @@ export default function DashboardPage() {
           )}
         </section>
       </main>
+
+      {/* Cloud Draft Discard Modal (Requires typing DISCARD) */}
+      <DiscardDraftModal
+        isOpen={discardDraftModalOpen}
+        onClose={() => {
+          setDiscardDraftModalOpen(false);
+          setDraftToDiscard(null);
+        }}
+        onConfirm={handleConfirmDiscardDraft}
+        examTitle={draftToDiscard?.title || 'Untitled Assessment Draft'}
+        isDeleting={isDiscardingDraft}
+        isCloudDraft={true}
+      />
     </div>
   );
 }

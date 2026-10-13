@@ -3,6 +3,9 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import ThemeToggle from './ThemeToggle';
 import NotificationBell from './NotificationBell';
+import api from '../../services/api';
+import LogoutDraftModal from './LogoutDraftModal';
+import ConfirmLogoutModal from './ConfirmLogoutModal';
 import {
   LayoutDashboard,
   PlusCircle,
@@ -21,6 +24,14 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
 
+  // Default Sign Out Confirmation Modal state
+  const [confirmLogoutModalOpen, setConfirmLogoutModalOpen] = useState(false);
+
+  // Logout Draft Interception Modal state
+  const [logoutDraftModalOpen, setLogoutDraftModalOpen] = useState(false);
+  const [activeDraftInfo, setActiveDraftInfo] = useState(null);
+  const [isSavingLogoutDraft, setIsSavingLogoutDraft] = useState(false);
+
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
@@ -33,10 +44,138 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [userMenuOpen]);
 
-  const handleLogout = () => {
+  const getActiveUserUnsavedDraft = () => {
+    const uId = user?._id || 'guest';
+    const userDraftPrefix = `pmt_draft_exam_${uId}_`;
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+
+      const isUserExamDraft = key.startsWith(userDraftPrefix) || key === `pmt_draft_exam_${uId}_new` || key === 'pmt_draft_exam_new';
+      const isLegacyExamDraft = key.startsWith('pmt_draft_exam_') && !key.includes('_question_');
+
+      if (isUserExamDraft || isLegacyExamDraft) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) continue;
+          const parsed = JSON.parse(raw);
+
+          const hasContent = Boolean(
+            (parsed.title && parsed.title.trim()) ||
+            (parsed.description && parsed.description.trim()) ||
+            (Array.isArray(parsed.questions) && parsed.questions.length > 0)
+          );
+
+          if (!hasContent) continue;
+
+          // If it is a brand new draft, it has never been saved to the database
+          const isBrandNewDraft = !parsed.existingExamId || key.endsWith('_new');
+          if (isBrandNewDraft) {
+            return { key, data: parsed, isNew: true };
+          }
+
+          // If it is an existing database exam:
+          // Check if it has unsaved changes compared to the database version
+          if (parsed.hasUnsavedChanges === false || parsed.isSyncedWithServer === true) {
+            continue; // Already in sync with database, no need to ask!
+          }
+
+          // Has new changes to old database file:
+          return { key, data: parsed, isNew: false };
+        } catch (e) {
+          // ignore parsing error
+        }
+      }
+    }
+    return null;
+  };
+
+  const handleLogoutClick = () => {
     setUserMenuOpen(false);
+
+    // Flush any pending in-memory form edits to localStorage
+    window.dispatchEvent(new CustomEvent('pmt_flush_draft_before_logout'));
+
+    const unsavedDraft = getActiveUserUnsavedDraft();
+    if (unsavedDraft) {
+      setActiveDraftInfo(unsavedDraft);
+      setLogoutDraftModalOpen(true);
+    } else {
+      // Default: ask user for confirmation before signing out
+      setConfirmLogoutModalOpen(true);
+    }
+  };
+
+  const executeCompleteLogout = () => {
+    // Notify all active listeners to prevent unmount hooks from saving drafts back
+    window.dispatchEvent(new CustomEvent('pmt_logout_in_progress'));
+
+    // Clear all draft keys from localStorage so nothing persists on shared devices
+    try {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('pmt_draft_')) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+    } catch (_) {}
+
     logout();
     navigate('/login');
+  };
+
+  const handleSaveAndLogout = async () => {
+    if (!activeDraftInfo?.data) {
+      executeCompleteLogout();
+      return;
+    }
+    setIsSavingLogoutDraft(true);
+    try {
+      const d = activeDraftInfo.data;
+      const payload = {
+        title: (d.title || 'Untitled Assessment Draft').trim(),
+        description: (d.description || '').trim(),
+        category: d.category || 'JEE',
+        status: 'draft',
+        durationMinutes: Number(d.durationMinutes || 60),
+        markingScheme: {
+          correct: Number(d.correctMark || 4),
+          incorrect: Number(d.incorrectMark || -1)
+        },
+        maxAttempts: d.isUnlimitedAttempts ? null : Math.max(1, Number(d.maxAttemptsValue || 3)),
+        allowPracticeMode: Boolean(d.allowPracticeMode ?? true),
+        allowReviewResponses: Boolean(d.allowReviewResponses ?? true),
+        proctorSettings: {
+          faceCheck: d.faceCheck ?? true,
+          audioCheck: d.audioCheck ?? true,
+          fullScreenLock: d.fullScreenLock ?? true,
+          objectCheck: d.objectCheck ?? true,
+          liveNotifications: d.liveNotifications ?? false,
+          maxWarningsAllowed: 3
+        },
+        questions: Array.isArray(d.questions) ? d.questions : []
+      };
+
+      if (d.existingExamId) {
+        await api.put(`/exams/${d.existingExamId}`, payload);
+      } else {
+        await api.post('/exams', payload);
+      }
+    } catch (err) {
+      console.warn('Failed to save draft to database before logout:', err);
+    } finally {
+      setIsSavingLogoutDraft(false);
+      setLogoutDraftModalOpen(false);
+      executeCompleteLogout();
+    }
+  };
+
+  const handleDiscardAndLogout = () => {
+    setLogoutDraftModalOpen(false);
+    executeCompleteLogout();
   };
 
   const navItems = [
@@ -47,7 +186,8 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0C0F17]/95 backdrop-blur-sm">
+    <>
+      <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-[#0C0F17]/95 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between gap-6">
         {/* Brand */}
         <div className="flex items-center gap-8 h-full">
@@ -140,7 +280,7 @@ export default function Navbar() {
 
                     <button
                       type="button"
-                      onClick={handleLogout}
+                      onClick={handleLogoutClick}
                       className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer"
                     >
                       <LogOut className="w-3.5 h-3.5" />
@@ -164,5 +304,27 @@ export default function Navbar() {
         </div>
       </div>
     </header>
+
+      {/* Default Sign Out Confirmation Modal */}
+      <ConfirmLogoutModal
+        isOpen={confirmLogoutModalOpen}
+        onClose={() => setConfirmLogoutModalOpen(false)}
+        onConfirm={() => {
+          setConfirmLogoutModalOpen(false);
+          executeCompleteLogout();
+        }}
+      />
+
+      {/* Logout Unsaved Draft Interception Modal */}
+      <LogoutDraftModal
+        isOpen={logoutDraftModalOpen}
+        onClose={() => setLogoutDraftModalOpen(false)}
+        onSaveAndLogout={handleSaveAndLogout}
+        onDiscardAndLogout={handleDiscardAndLogout}
+        draftTitle={activeDraftInfo?.data?.title || 'Untitled Assessment Draft'}
+        questionCount={Array.isArray(activeDraftInfo?.data?.questions) ? activeDraftInfo.data.questions.length : 0}
+        isSaving={isSavingLogoutDraft}
+      />
+    </>
   );
 }
