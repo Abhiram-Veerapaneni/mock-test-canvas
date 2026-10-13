@@ -398,11 +398,21 @@ export default function ExamSessionPage() {
 
   useEffect(() => {
     const handleBeforeUnload = () => {
+      try {
+        useExamStore.getState().syncToLocalStorage();
+      } catch (e) {
+        console.warn('Failed to sync session to localStorage on unload:', e);
+      }
       stopProctoringMedia();
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      try {
+        useExamStore.getState().syncToLocalStorage();
+      } catch (e) {
+        console.warn('Failed to sync session to localStorage on unmount:', e);
+      }
       stopProctoringMedia();
     };
   }, [stopProctoringMedia]);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import BackButton from '../components/common/BackButton';
@@ -45,7 +45,8 @@ import {
   GripVertical,
   Settings,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Cloud
 } from 'lucide-react';
 
 export default function TestCreationPage() {
@@ -113,9 +114,328 @@ export default function TestCreationPage() {
   const [ingestedQuestions, setIngestedQuestions] = useState([]);
   const [uploadedFileName, setUploadedFileName] = useState('');
   const [dragActive, setDragActive] = useState(false);
-  const fileInputRef = React.useRef(null);
+  const fileInputRef = useRef(null);
 
-  // If examId is in URL, fetch existing exam for editing
+  // Local Storage Draft & Navigation Intercept states
+  const [autoSaveStatus, setAutoSaveStatus] = useState('idle'); // 'idle' | 'saving' | 'saved'
+  const [lastSavedTime, setLastSavedTime] = useState(null);
+  const [draftRestored, setDraftRestored] = useState(false);
+  const [draftRestoredTime, setDraftRestoredTime] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
+  const [leaveModalError, setLeaveModalError] = useState('');
+  const originalExamRef = useRef(null);
+  const isInitialMountRef = useRef(true);
+
+  // Keep draftDataRef updated on every render
+  const draftDataRef = useRef(null);
+  draftDataRef.current = {
+    existingExamId,
+    title,
+    description,
+    category,
+    durationMinutes,
+    correctMark,
+    incorrectMark,
+    isUnlimitedAttempts,
+    maxAttemptsValue,
+    allowPracticeMode,
+    allowReviewResponses,
+    isScheduled,
+    startTime,
+    endTime,
+    faceCheck,
+    audioCheck,
+    fullScreenLock,
+    objectCheck,
+    liveNotifications,
+    questions,
+    examStatus,
+    activeStudioTab
+  };
+
+  const getDraftStorageKey = useCallback((examId) => (examId ? `pmt_draft_exam_${examId}` : 'pmt_draft_exam_new'), []);
+
+  // Save current draft to local storage
+  const saveDraftToStorage = useCallback((customData = null) => {
+    const data = customData || draftDataRef.current;
+    if (!data) return false;
+
+    // Check if there is any real content
+    const hasContent = Boolean(
+      (data.title && data.title.trim()) ||
+      (data.description && data.description.trim()) ||
+      (Array.isArray(data.questions) && data.questions.length > 0)
+    );
+
+    if (!hasContent) return false;
+
+    const key = getDraftStorageKey(data.existingExamId);
+    const payload = {
+      ...data,
+      savedAt: new Date().toISOString()
+    };
+
+    try {
+      localStorage.setItem(key, JSON.stringify(payload));
+      setLastSavedTime(new Date());
+      setAutoSaveStatus('saved');
+      return true;
+    } catch (err) {
+      console.warn('Failed to save draft to localStorage:', err);
+      return false;
+    }
+  }, [getDraftStorageKey]);
+
+  // 1. Store draft in local storage after each change
+  useEffect(() => {
+    if (isLoadingExisting) return;
+
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      return;
+    }
+
+    const hasContent = Boolean(
+      (title && title.trim()) ||
+      (description && description.trim()) ||
+      (questions && questions.length > 0)
+    );
+
+    if (!hasContent) {
+      setAutoSaveStatus('idle');
+      return;
+    }
+
+    setAutoSaveStatus('saving');
+    setHasUnsavedChanges(true);
+
+    const timer = setTimeout(() => {
+      saveDraftToStorage();
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [
+    title,
+    description,
+    category,
+    durationMinutes,
+    correctMark,
+    incorrectMark,
+    isUnlimitedAttempts,
+    maxAttemptsValue,
+    allowPracticeMode,
+    allowReviewResponses,
+    isScheduled,
+    startTime,
+    endTime,
+    faceCheck,
+    audioCheck,
+    fullScreenLock,
+    objectCheck,
+    liveNotifications,
+    questions,
+    activeStudioTab,
+    isLoadingExisting,
+    saveDraftToStorage
+  ]);
+
+  // 2. Before leaving or refreshing: Save immediately and prompt the user if unsaved changes exist
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      saveDraftToStorage();
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    const handlePageHide = () => {
+      saveDraftToStorage();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        saveDraftToStorage();
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', handlePageHide);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      saveDraftToStorage();
+    };
+  }, [hasUnsavedChanges, saveDraftToStorage]);
+
+  // 3. Intercept in-app navigation (Navbar links, breadcrumbs, etc.) when user has unsaved changes
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handleDocumentClick = (e) => {
+      const anchor = e.target.closest('a[href]');
+      if (!anchor) return;
+      const href = anchor.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:')) return;
+      if (anchor.target === '_blank') return;
+      if (anchor.closest('[role="dialog"]') && !anchor.closest('header')) return;
+
+      try {
+        const destUrl = new URL(anchor.href, window.location.origin);
+        if (destUrl.origin === window.location.origin) {
+          const currentPath = window.location.pathname + window.location.search;
+          const targetPath = destUrl.pathname + destUrl.search;
+          if (currentPath !== targetPath) {
+            e.preventDefault();
+            e.stopPropagation();
+            setPendingNavigation(targetPath);
+            setShowLeaveModal(true);
+          }
+        }
+      } catch (err) {
+        // Ignore invalid URLs
+      }
+    };
+
+    document.addEventListener('click', handleDocumentClick, true);
+    return () => {
+      document.removeEventListener('click', handleDocumentClick, true);
+    };
+  }, [hasUnsavedChanges]);
+
+  // Handle in-app return navigation
+  const handleNavigateAway = useCallback((targetUrl, e) => {
+    if (e) e.preventDefault();
+    if (hasUnsavedChanges) {
+      setPendingNavigation(targetUrl);
+      setShowLeaveModal(true);
+    } else {
+      navigate(targetUrl);
+    }
+  }, [hasUnsavedChanges, navigate]);
+
+  // 4. Restore draft from local storage for new exams
+  useEffect(() => {
+    if (examIdParam) return; // Handled by existing exam fetch below
+
+    try {
+      const rawDraft = localStorage.getItem('pmt_draft_exam_new');
+      if (rawDraft) {
+        const draft = JSON.parse(rawDraft);
+        const hasContent = Boolean(
+          (draft.title && draft.title.trim()) ||
+          (draft.description && draft.description.trim()) ||
+          (Array.isArray(draft.questions) && draft.questions.length > 0)
+        );
+
+        if (hasContent) {
+          if (draft.title !== undefined) setTitle(draft.title);
+          if (draft.description !== undefined) setDescription(draft.description);
+          if (draft.category !== undefined) setCategory(draft.category);
+          if (draft.durationMinutes !== undefined) setDurationMinutes(draft.durationMinutes);
+          if (draft.correctMark !== undefined) setCorrectMark(draft.correctMark);
+          if (draft.incorrectMark !== undefined) setIncorrectMark(draft.incorrectMark);
+          if (draft.isUnlimitedAttempts !== undefined) setIsUnlimitedAttempts(draft.isUnlimitedAttempts);
+          if (draft.maxAttemptsValue !== undefined) setMaxAttemptsValue(draft.maxAttemptsValue);
+          if (draft.allowPracticeMode !== undefined) setAllowPracticeMode(draft.allowPracticeMode);
+          if (draft.allowReviewResponses !== undefined) setAllowReviewResponses(draft.allowReviewResponses);
+          if (draft.isScheduled !== undefined) setIsScheduled(draft.isScheduled);
+          if (draft.startTime !== undefined) setStartTime(draft.startTime);
+          if (draft.endTime !== undefined) setEndTime(draft.endTime);
+          if (draft.faceCheck !== undefined) setFaceCheck(draft.faceCheck);
+          if (draft.audioCheck !== undefined) setAudioCheck(draft.audioCheck);
+          if (draft.fullScreenLock !== undefined) setFullScreenLock(draft.fullScreenLock);
+          if (draft.objectCheck !== undefined) setObjectCheck(draft.objectCheck);
+          if (draft.liveNotifications !== undefined) setLiveNotifications(draft.liveNotifications);
+          if (Array.isArray(draft.questions)) setQuestions(draft.questions);
+          if (draft.activeStudioTab) setActiveStudioTab(draft.activeStudioTab);
+
+          setDraftRestored(true);
+          if (draft.savedAt) {
+            const d = new Date(draft.savedAt);
+            setDraftRestoredTime(d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+            setLastSavedTime(d);
+          }
+          setAutoSaveStatus('saved');
+          setHasUnsavedChanges(true);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to parse draft from localStorage:', err);
+    }
+  }, [examIdParam]);
+
+  // Discard draft and clear local storage
+  const handleDiscardDraft = () => {
+    const key = getDraftStorageKey(existingExamId);
+    try {
+      localStorage.removeItem(key);
+    } catch (e) {
+      console.warn('Error clearing draft:', e);
+    }
+
+    if (existingExamId && originalExamRef.current) {
+      const ex = originalExamRef.current;
+      setTitle(ex.title || '');
+      setDescription(ex.description || '');
+      setCategory(ex.category || 'JEE');
+      setDurationMinutes(ex.durationMinutes || 60);
+      setExamStatus(ex.status || 'published');
+      if (ex.markingScheme) {
+        setCorrectMark(ex.markingScheme.correct ?? 4);
+        setIncorrectMark(ex.markingScheme.incorrect ?? -1);
+      }
+      if (ex.maxAttempts === null || ex.maxAttempts === undefined) {
+        setIsUnlimitedAttempts(true);
+      } else {
+        setIsUnlimitedAttempts(false);
+        setMaxAttemptsValue(ex.maxAttempts);
+      }
+      if (ex.proctorSettings) {
+        setFaceCheck(ex.proctorSettings.faceCheck ?? true);
+        setAudioCheck(ex.proctorSettings.audioCheck ?? true);
+        setFullScreenLock(ex.proctorSettings.fullScreenLock ?? true);
+        setObjectCheck(ex.proctorSettings.objectCheck ?? true);
+        setLiveNotifications(ex.proctorSettings.liveNotifications ?? false);
+      }
+      if (ex.allowPracticeMode !== undefined) setAllowPracticeMode(Boolean(ex.allowPracticeMode));
+      if (ex.allowReviewResponses !== undefined) setAllowReviewResponses(Boolean(ex.allowReviewResponses));
+      if (Array.isArray(ex.questions)) setQuestions(ex.questions);
+    } else {
+      setTitle('');
+      setDescription('');
+      setCategory('JEE');
+      setDurationMinutes(60);
+      setCorrectMark(4);
+      setIncorrectMark(-1);
+      setIsUnlimitedAttempts(true);
+      setMaxAttemptsValue(3);
+      setAllowPracticeMode(true);
+      setAllowReviewResponses(true);
+      setIsScheduled(false);
+      setStartTime('');
+      setEndTime('');
+      setFaceCheck(true);
+      setAudioCheck(true);
+      setFullScreenLock(true);
+      setObjectCheck(true);
+      setLiveNotifications(false);
+      setQuestions([]);
+    }
+
+    setDraftRestored(false);
+    setAutoSaveStatus('idle');
+    setLastSavedTime(null);
+    setHasUnsavedChanges(false);
+  };
+
+  // If examId is in URL, fetch existing exam for editing (with offline fallback and local draft merge)
   useEffect(() => {
     if (!examIdParam) return;
     setIsLoadingExisting(true);
@@ -123,54 +443,125 @@ export default function TestCreationPage() {
       .then((res) => {
         if (res.data?.success && res.data.exam) {
           const ex = res.data.exam;
+          originalExamRef.current = ex;
           setExistingExamId(ex._id);
-          setTitle(ex.title || '');
-          setDescription(ex.description || '');
-          setCategory(ex.category || 'JEE');
-          setDurationMinutes(ex.durationMinutes || 60);
-          setExamStatus(ex.status || 'published');
-          if (ex.markingScheme) {
-            setCorrectMark(ex.markingScheme.correct ?? 4);
-            setIncorrectMark(ex.markingScheme.incorrect ?? -1);
-          }
-          if (ex.maxAttempts === null || ex.maxAttempts === undefined) {
-            setIsUnlimitedAttempts(true);
-          } else {
-            setIsUnlimitedAttempts(false);
-            setMaxAttemptsValue(ex.maxAttempts);
-          }
-          if (ex.proctorSettings) {
-            setFaceCheck(ex.proctorSettings.faceCheck ?? true);
-            setAudioCheck(ex.proctorSettings.audioCheck ?? true);
-            setFullScreenLock(ex.proctorSettings.fullScreenLock ?? true);
-            setObjectCheck(ex.proctorSettings.objectCheck ?? true);
-            setLiveNotifications(ex.proctorSettings.liveNotifications ?? false);
-          }
-          if (ex.allowPracticeMode !== undefined) {
-            setAllowPracticeMode(Boolean(ex.allowPracticeMode));
-          }
-          if (ex.allowReviewResponses !== undefined) {
-            setAllowReviewResponses(Boolean(ex.allowReviewResponses));
-          }
-          if (ex.schedule) {
-            setIsScheduled(Boolean(ex.schedule.isScheduled));
-            const pad = (n) => String(n).padStart(2, '0');
-            if (ex.schedule.startTime) {
-              const st = new Date(ex.schedule.startTime);
-              setStartTime(`${st.getFullYear()}-${pad(st.getMonth() + 1)}-${pad(st.getDate())}T${pad(st.getHours())}:${pad(st.getMinutes())}`);
+
+          // Check if local storage has a newer unsaved draft
+          let restoredFromLocal = false;
+          try {
+            const rawDraft = localStorage.getItem(`pmt_draft_exam_${ex._id}`);
+            if (rawDraft) {
+              const draft = JSON.parse(rawDraft);
+              const draftTime = draft.savedAt ? new Date(draft.savedAt).getTime() : 0;
+              const serverTime = ex.updatedAt ? new Date(ex.updatedAt).getTime() : 0;
+
+              if (draftTime > serverTime) {
+                if (draft.title !== undefined) setTitle(draft.title);
+                if (draft.description !== undefined) setDescription(draft.description);
+                if (draft.category !== undefined) setCategory(draft.category);
+                if (draft.durationMinutes !== undefined) setDurationMinutes(draft.durationMinutes);
+                if (draft.correctMark !== undefined) setCorrectMark(draft.correctMark);
+                if (draft.incorrectMark !== undefined) setIncorrectMark(draft.incorrectMark);
+                if (draft.isUnlimitedAttempts !== undefined) setIsUnlimitedAttempts(draft.isUnlimitedAttempts);
+                if (draft.maxAttemptsValue !== undefined) setMaxAttemptsValue(draft.maxAttemptsValue);
+                if (draft.allowPracticeMode !== undefined) setAllowPracticeMode(draft.allowPracticeMode);
+                if (draft.allowReviewResponses !== undefined) setAllowReviewResponses(draft.allowReviewResponses);
+                if (draft.isScheduled !== undefined) setIsScheduled(draft.isScheduled);
+                if (draft.startTime !== undefined) setStartTime(draft.startTime);
+                if (draft.endTime !== undefined) setEndTime(draft.endTime);
+                if (draft.faceCheck !== undefined) setFaceCheck(draft.faceCheck);
+                if (draft.audioCheck !== undefined) setAudioCheck(draft.audioCheck);
+                if (draft.fullScreenLock !== undefined) setFullScreenLock(draft.fullScreenLock);
+                if (draft.objectCheck !== undefined) setObjectCheck(draft.objectCheck);
+                if (draft.liveNotifications !== undefined) setLiveNotifications(draft.liveNotifications);
+                if (Array.isArray(draft.questions)) setQuestions(draft.questions);
+                if (draft.activeStudioTab) setActiveStudioTab(draft.activeStudioTab);
+
+                setDraftRestored(true);
+                const d = new Date(draft.savedAt);
+                setDraftRestoredTime(d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                setLastSavedTime(d);
+                setAutoSaveStatus('saved');
+                setHasUnsavedChanges(true);
+                restoredFromLocal = true;
+              }
             }
-            if (ex.schedule.endTime) {
-              const et = new Date(ex.schedule.endTime);
-              setEndTime(`${et.getFullYear()}-${pad(et.getMonth() + 1)}-${pad(et.getDate())}T${pad(et.getHours())}:${pad(et.getMinutes())}`);
-            }
+          } catch (e) {
+            console.warn('Error checking local draft for existing exam:', e);
           }
-          if (Array.isArray(ex.questions)) {
-            setQuestions(ex.questions);
+
+          if (!restoredFromLocal) {
+            setTitle(ex.title || '');
+            setDescription(ex.description || '');
+            setCategory(ex.category || 'JEE');
+            setDurationMinutes(ex.durationMinutes || 60);
+            setExamStatus(ex.status || 'published');
+            if (ex.markingScheme) {
+              setCorrectMark(ex.markingScheme.correct ?? 4);
+              setIncorrectMark(ex.markingScheme.incorrect ?? -1);
+            }
+            if (ex.maxAttempts === null || ex.maxAttempts === undefined) {
+              setIsUnlimitedAttempts(true);
+            } else {
+              setIsUnlimitedAttempts(false);
+              setMaxAttemptsValue(ex.maxAttempts);
+            }
+            if (ex.proctorSettings) {
+              setFaceCheck(ex.proctorSettings.faceCheck ?? true);
+              setAudioCheck(ex.proctorSettings.audioCheck ?? true);
+              setFullScreenLock(ex.proctorSettings.fullScreenLock ?? true);
+              setObjectCheck(ex.proctorSettings.objectCheck ?? true);
+              setLiveNotifications(ex.proctorSettings.liveNotifications ?? false);
+            }
+            if (ex.allowPracticeMode !== undefined) {
+              setAllowPracticeMode(Boolean(ex.allowPracticeMode));
+            }
+            if (ex.allowReviewResponses !== undefined) {
+              setAllowReviewResponses(Boolean(ex.allowReviewResponses));
+            }
+            if (ex.schedule) {
+              setIsScheduled(Boolean(ex.schedule.isScheduled));
+              const pad = (n) => String(n).padStart(2, '0');
+              if (ex.schedule.startTime) {
+                const st = new Date(ex.schedule.startTime);
+                setStartTime(`${st.getFullYear()}-${pad(st.getMonth() + 1)}-${pad(st.getDate())}T${pad(st.getHours())}:${pad(st.getMinutes())}`);
+              }
+              if (ex.schedule.endTime) {
+                const et = new Date(ex.schedule.endTime);
+                setEndTime(`${et.getFullYear()}-${pad(et.getMonth() + 1)}-${pad(et.getDate())}T${pad(et.getHours())}:${pad(et.getMinutes())}`);
+              }
+            }
+            if (Array.isArray(ex.questions)) {
+              setQuestions(ex.questions);
+            }
+            setHasUnsavedChanges(false);
           }
         }
       })
       .catch((err) => {
-        console.error('Failed to fetch existing exam:', err);
+        console.error('Failed to fetch existing exam (offline or network error):', err);
+        // Offline Fallback: Check local storage for offline draft
+        try {
+          const rawDraft = localStorage.getItem(`pmt_draft_exam_${examIdParam}`);
+          if (rawDraft) {
+            const draft = JSON.parse(rawDraft);
+            if (draft.title !== undefined) setTitle(draft.title);
+            if (draft.description !== undefined) setDescription(draft.description);
+            if (draft.category !== undefined) setCategory(draft.category);
+            if (draft.durationMinutes !== undefined) setDurationMinutes(draft.durationMinutes);
+            if (draft.correctMark !== undefined) setCorrectMark(draft.correctMark);
+            if (draft.incorrectMark !== undefined) setIncorrectMark(draft.incorrectMark);
+            if (Array.isArray(draft.questions)) setQuestions(draft.questions);
+            setExistingExamId(examIdParam);
+            setDraftRestored(true);
+            setDraftRestoredTime(draft.savedAt ? new Date(draft.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
+            setAutoSaveStatus('saved');
+            setError('Working offline: loaded cached draft from local storage.');
+            return;
+          }
+        } catch (e) {
+          console.warn('Offline draft load failed:', e);
+        }
         setError('Failed to load assessment: ' + (err.response?.data?.message || err.message));
       })
       .finally(() => setIsLoadingExisting(false));
@@ -441,7 +832,7 @@ export default function TestCreationPage() {
   };
 
   // Save / Publish execution
-  const executeSaveExam = async (targetStatus = 'published') => {
+  const executeSaveExam = async (targetStatus = 'published', skipRedirect = false) => {
     setError('');
     setSuccessMsg('');
 
@@ -449,20 +840,25 @@ export default function TestCreationPage() {
       openAuthModal({
         title: targetStatus === 'draft' ? 'Sign In to Save Draft' : 'Sign In to Publish Exam',
         subtitle: 'Log in or create a candidate account to save and publish your assessments.',
-        onSuccess: () => executeSaveExam(targetStatus)
+        onSuccess: () => executeSaveExam(targetStatus, skipRedirect)
       });
-      return;
-    }
-
-    if (!title.trim()) {
-      setError('Please provide an assessment title.');
-      return;
+      return false;
     }
 
     const isDraft = targetStatus === 'draft';
+    const effectiveTitle = title.trim() || (isDraft ? 'Untitled Assessment Draft' : '');
+
+    if (!effectiveTitle) {
+      setError('Please provide an assessment title.');
+      return false;
+    }
+    if (!title.trim() && isDraft) {
+      setTitle(effectiveTitle);
+    }
+
     if (!isDraft && questions.length === 0) {
       setError('Please add at least one question before publishing.');
-      return;
+      return false;
     }
 
     if (isDraft) {
@@ -473,14 +869,14 @@ export default function TestCreationPage() {
 
     try {
       const payload = {
-        title: title.trim(),
+        title: effectiveTitle,
         description: description.trim(),
         category,
         status: targetStatus,
-        durationMinutes: Number(durationMinutes),
+        durationMinutes: Number(durationMinutes) || 60,
         markingScheme: {
-          correct: Number(correctMark),
-          incorrect: Number(incorrectMark)
+          correct: Number(correctMark) || 4,
+          incorrect: Number(incorrectMark) || -1
         },
         maxAttempts: isUnlimitedAttempts ? null : Math.max(1, Number(maxAttemptsValue)),
         allowPracticeMode: Boolean(allowPracticeMode),
@@ -511,22 +907,101 @@ export default function TestCreationPage() {
       if (res.data?.success) {
         setExamStatus(targetStatus);
         const savedExam = res.data.exam;
+        const newExamId = savedExam?._id || existingExamId;
         if (savedExam?._id) setExistingExamId(savedExam._id);
 
+        setHasUnsavedChanges(false);
+
         if (isDraft) {
-          setSuccessMsg('Assessment draft saved successfully! You can continue editing.');
+          try {
+            localStorage.removeItem('pmt_draft_exam_new');
+            if (newExamId) {
+              localStorage.setItem(`pmt_draft_exam_${newExamId}`, JSON.stringify({
+                ...payload,
+                existingExamId: newExamId,
+                savedAt: new Date().toISOString()
+              }));
+              if (!skipRedirect) {
+                navigate(`/create-test?examId=${newExamId}`, { replace: true });
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to update local storage draft after server save:', e);
+          }
+          setLastSavedTime(new Date());
+          setAutoSaveStatus('saved');
+          setDraftRestored(false);
+          setSuccessMsg('Assessment draft saved successfully to your account! You can continue editing.');
+          return true;
         } else {
+          try {
+            if (newExamId) {
+              localStorage.removeItem(`pmt_draft_exam_${newExamId}`);
+            }
+            localStorage.removeItem('pmt_draft_exam_new');
+          } catch (e) {
+            console.warn('Failed to clear local storage draft after publish:', e);
+          }
+          setDraftRestored(false);
           setSuccessMsg('Examination published successfully! Redirecting to candidate dashboard...');
-          setTimeout(() => {
-            navigate('/dashboard');
-          }, 1200);
+          if (!skipRedirect) {
+            setTimeout(() => {
+              navigate('/dashboard');
+            }, 1200);
+          }
+          return true;
         }
       }
+      return false;
     } catch (err) {
       console.error('Failed to save exam:', err);
-      setError(err.response?.data?.message || 'Error saving examination. Please try again.');
+      const errMsg = err.response?.data?.message || 'Error saving examination. Please try again.';
+      setError(errMsg);
+      return false;
     } finally {
       setIsSaving(false);
+      setIsSavingDraft(false);
+    }
+  };
+
+  const handleSaveAndLeave = async () => {
+    setLeaveModalError('');
+    setIsSavingDraft(true);
+
+    if (!isAuthenticated) {
+      setLeaveModalError('Please sign in to save your draft to your account.');
+      setIsSavingDraft(false);
+      openAuthModal({
+        title: 'Sign In to Save Draft',
+        subtitle: 'Log in to save your assessment draft before leaving.',
+        onSuccess: async () => {
+          const ok = await executeSaveExam('draft', true);
+          if (ok) {
+            setShowLeaveModal(false);
+            const target = pendingNavigation || '/dashboard';
+            setPendingNavigation(null);
+            setHasUnsavedChanges(false);
+            navigate(target);
+          }
+        }
+      });
+      return;
+    }
+
+    try {
+      const ok = await executeSaveExam('draft', true);
+      if (ok) {
+        setShowLeaveModal(false);
+        const target = pendingNavigation || '/dashboard';
+        setPendingNavigation(null);
+        setHasUnsavedChanges(false);
+        navigate(target);
+      } else {
+        setLeaveModalError(error || 'Failed to save draft to database. Please try again.');
+      }
+    } catch (err) {
+      setLeaveModalError(err.response?.data?.message || err.message || 'Error saving draft to database');
+    } finally {
       setIsSavingDraft(false);
     }
   };
@@ -555,7 +1030,11 @@ export default function TestCreationPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Navigation & Breadcrumbs */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <BackButton to="/dashboard" label="Return to Dashboard" />
+          <BackButton
+            to="/dashboard"
+            label="Return to Dashboard"
+            onClick={(e) => handleNavigateAway('/dashboard', e)}
+          />
           <Breadcrumbs
             items={[
               { label: 'Assessments', to: '/dashboard' },
@@ -565,23 +1044,72 @@ export default function TestCreationPage() {
           />
         </div>
 
+        {/* Local Storage Draft Restored Banner */}
+        {draftRestored && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-900 dark:text-amber-200 animate-in fade-in slide-in-from-top-1">
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span>
+                <strong>Draft loaded from local storage:</strong> Recovered your in-progress assessment {draftRestoredTime ? `(${draftRestoredTime})` : ''} with {questions.length} question{questions.length !== 1 ? 's' : ''}.
+              </span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleDiscardDraft}
+                className="px-2.5 py-1 text-slate-600 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 border border-slate-200 dark:border-slate-800 rounded font-medium transition-colors cursor-pointer"
+              >
+                Discard Draft
+              </button>
+              <button
+                type="button"
+                onClick={() => setDraftRestored(false)}
+                className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded font-medium transition-colors shadow-xs cursor-pointer"
+              >
+                Keep Draft
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Top Header Action Bar with Inline Title Edit */}
         <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-none">
           <div className="flex-1 min-w-0 space-y-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
                 Examination Title
               </span>
               {existingExamId && (
                 <span className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
                   <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      examStatus === 'draft' ? 'bg-amber-500' : 'bg-emerald-500'
-                    }`}
+                    className={`w-1.5 h-1.5 rounded-full ${examStatus === 'draft' ? 'bg-amber-500' : 'bg-emerald-500'
+                      }`}
                   />
                   <span>{examStatus === 'draft' ? 'Draft' : 'Published'}</span>
                 </span>
               )}
+
+              {/* Local Storage Auto-save Status Indicator */}
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] bg-slate-100 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 transition-all">
+                {autoSaveStatus === 'saving' ? (
+                  <>
+                    <Loader2 className="w-3 h-3 animate-spin text-indigo-500" />
+                    <span className="text-slate-600 dark:text-slate-400">Saving draft locally...</span>
+                  </>
+                ) : autoSaveStatus === 'saved' ? (
+                  <>
+                    <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="text-slate-600 dark:text-slate-400">
+                      Draft saved in local storage {lastSavedTime ? `(${new Date(lastSavedTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ''}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Cloud className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="text-slate-500 dark:text-slate-400">Local storage sync enabled</span>
+                  </>
+                )}
+              </div>
             </div>
             <input
               type="text"
@@ -662,11 +1190,10 @@ export default function TestCreationPage() {
           <button
             type="button"
             onClick={() => setActiveStudioTab('questions')}
-            className={`flex items-center gap-2 py-3 text-sm font-medium transition-colors border-b-2 -mb-[1px] cursor-pointer ${
-              activeStudioTab === 'questions'
-                ? 'border-indigo-600 text-slate-900 dark:border-indigo-500 dark:text-white'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
+            className={`flex items-center gap-2 py-3 text-sm font-medium transition-colors border-b-2 -mb-[1px] cursor-pointer ${activeStudioTab === 'questions'
+              ? 'border-indigo-600 text-slate-900 dark:border-indigo-500 dark:text-white'
+              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
           >
             <BookOpen className="w-4 h-4" />
             <span>Questions & Content</span>
@@ -678,11 +1205,10 @@ export default function TestCreationPage() {
           <button
             type="button"
             onClick={() => setActiveStudioTab('settings')}
-            className={`flex items-center gap-2 py-3 text-sm font-medium transition-colors border-b-2 -mb-[1px] cursor-pointer ${
-              activeStudioTab === 'settings'
-                ? 'border-indigo-600 text-slate-900 dark:border-indigo-500 dark:text-white'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
+            className={`flex items-center gap-2 py-3 text-sm font-medium transition-colors border-b-2 -mb-[1px] cursor-pointer ${activeStudioTab === 'settings'
+              ? 'border-indigo-600 text-slate-900 dark:border-indigo-500 dark:text-white'
+              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
           >
             <Sliders className="w-4 h-4" />
             <span>Exam & Proctoring Settings</span>
@@ -819,11 +1345,10 @@ export default function TestCreationPage() {
                       setIsUnlimitedAttempts(false);
                       setMaxAttemptsValue(1);
                     }}
-                    className={`p-2.5 rounded-md border text-center transition-all cursor-pointer ${
-                      !isUnlimitedAttempts && Number(maxAttemptsValue) === 1
-                        ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40 border-indigo-600 dark:border-indigo-400 font-medium'
-                        : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030]/50'
-                    }`}
+                    className={`p-2.5 rounded-md border text-center transition-all cursor-pointer ${!isUnlimitedAttempts && Number(maxAttemptsValue) === 1
+                      ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40 border-indigo-600 dark:border-indigo-400 font-medium'
+                      : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030]/50'
+                      }`}
                   >
                     <span className="block text-xs font-medium">1 Attempt</span>
                     <span className="block text-[11px] text-slate-400 mt-0.5">Strict Test</span>
@@ -835,11 +1360,10 @@ export default function TestCreationPage() {
                       setIsUnlimitedAttempts(false);
                       if (Number(maxAttemptsValue) === 1) setMaxAttemptsValue(3);
                     }}
-                    className={`p-2.5 rounded-md border text-center transition-all cursor-pointer ${
-                      !isUnlimitedAttempts && Number(maxAttemptsValue) > 1
-                        ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40 border-indigo-600 dark:border-indigo-400 font-medium'
-                        : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030]/50'
-                    }`}
+                    className={`p-2.5 rounded-md border text-center transition-all cursor-pointer ${!isUnlimitedAttempts && Number(maxAttemptsValue) > 1
+                      ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40 border-indigo-600 dark:border-indigo-400 font-medium'
+                      : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030]/50'
+                      }`}
                   >
                     <span className="block text-xs font-medium">Multiple</span>
                     <span className="block text-[11px] text-slate-400 mt-0.5">Custom limit</span>
@@ -848,11 +1372,10 @@ export default function TestCreationPage() {
                   <button
                     type="button"
                     onClick={() => setIsUnlimitedAttempts(true)}
-                    className={`p-2.5 rounded-md border text-center transition-all cursor-pointer ${
-                      isUnlimitedAttempts
-                        ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40 border-indigo-600 dark:border-indigo-400 font-medium'
-                        : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030]/50'
-                    }`}
+                    className={`p-2.5 rounded-md border text-center transition-all cursor-pointer ${isUnlimitedAttempts
+                      ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40 border-indigo-600 dark:border-indigo-400 font-medium'
+                      : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030]/50'
+                      }`}
                   >
                     <span className="block text-xs font-medium">Unlimited</span>
                     <span className="block text-[11px] text-slate-400 mt-0.5">Practice (∞)</span>
@@ -898,11 +1421,10 @@ export default function TestCreationPage() {
                           key={preset}
                           type="button"
                           onClick={() => setMaxAttemptsValue(preset)}
-                          className={`px-2.5 py-0.5 rounded-md text-xs font-medium border transition-colors cursor-pointer ${
-                            Number(maxAttemptsValue) === preset
-                              ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40 border-indigo-600 dark:border-indigo-400'
-                              : 'bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#162030]'
-                          }`}
+                          className={`px-2.5 py-0.5 rounded-md text-xs font-medium border transition-colors cursor-pointer ${Number(maxAttemptsValue) === preset
+                            ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40 border-indigo-600 dark:border-indigo-400'
+                            : 'bg-white dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#162030]'
+                            }`}
                         >
                           {preset}
                         </button>
@@ -1165,19 +1687,18 @@ export default function TestCreationPage() {
                     <p className="text-xs text-slate-500 mt-0.5">Real-time candidate monitoring profile</p>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
-                    <span className={`w-1.5 h-1.5 rounded-full ${
-                      faceCheck && audioCheck && fullScreenLock && objectCheck
-                        ? 'bg-emerald-500'
-                        : (faceCheck || audioCheck || fullScreenLock)
+                    <span className={`w-1.5 h-1.5 rounded-full ${faceCheck && audioCheck && fullScreenLock && objectCheck
+                      ? 'bg-emerald-500'
+                      : (faceCheck || audioCheck || fullScreenLock)
                         ? 'bg-indigo-500'
                         : 'bg-amber-500'
-                    }`} />
+                      }`} />
                     <span>
                       {faceCheck && audioCheck && fullScreenLock && objectCheck
                         ? 'Maximum Lockdown'
                         : (faceCheck || audioCheck || fullScreenLock)
-                        ? 'Standard Monitoring'
-                        : 'Minimal Security'}
+                          ? 'Standard Monitoring'
+                          : 'Minimal Security'}
                     </span>
                   </div>
                 </div>
@@ -1314,13 +1835,12 @@ export default function TestCreationPage() {
                   }}
                   onDrop={handleFileDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  className={`relative border border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
-                    dragActive
-                      ? 'border-indigo-600 dark:border-indigo-400 bg-slate-100 dark:bg-slate-800/80'
-                      : isIngesting
+                  className={`relative border border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${dragActive
+                    ? 'border-indigo-600 dark:border-indigo-400 bg-slate-100 dark:bg-slate-800/80'
+                    : isIngesting
                       ? 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-[#131926] cursor-wait'
                       : 'border-slate-300 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 bg-slate-50/50 dark:bg-[#0C0F17]/40'
-                  }`}
+                    }`}
                 >
                   <input
                     ref={fileInputRef}
@@ -1397,11 +1917,10 @@ export default function TestCreationPage() {
                   <button
                     type="button"
                     onClick={() => setShowAnswerKey((prev) => !prev)}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-colors cursor-pointer border ${
-                      showAnswerKey
-                        ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700 font-medium'
-                        : 'bg-white dark:bg-[#131926] text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
-                    }`}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-colors cursor-pointer border ${showAnswerKey
+                      ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700 font-medium'
+                      : 'bg-white dark:bg-[#131926] text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
+                      }`}
                     title={showAnswerKey ? 'Hide answer key styling to preview test as candidate' : 'Show verified answer keys'}
                   >
                     {showAnswerKey ? <EyeOff className="w-3.5 h-3.5 text-slate-500" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
@@ -1554,18 +2073,16 @@ export default function TestCreationPage() {
                               return (
                                 <div
                                   key={optIdx}
-                                  className={`p-2.5 rounded-md border flex items-start gap-2.5 transition-colors text-xs ${
-                                    isCorrect
-                                      ? 'bg-emerald-50/50 border-emerald-200/80 dark:bg-emerald-950/20 dark:border-emerald-800/50 text-emerald-900 dark:text-emerald-200'
-                                      : 'bg-white dark:bg-[#162030] border-slate-200/80 dark:border-slate-700/60 text-slate-700 dark:text-slate-300'
-                                  }`}
+                                  className={`p-2.5 rounded-md border flex items-start gap-2.5 transition-colors text-xs ${isCorrect
+                                    ? 'bg-emerald-50/50 border-emerald-200/80 dark:bg-emerald-950/20 dark:border-emerald-800/50 text-emerald-900 dark:text-emerald-200'
+                                    : 'bg-white dark:bg-[#162030] border-slate-200/80 dark:border-slate-700/60 text-slate-700 dark:text-slate-300'
+                                    }`}
                                 >
                                   <div
-                                    className={`w-5 h-5 rounded flex items-center justify-center font-medium text-xs shrink-0 ${
-                                      isCorrect
-                                        ? 'bg-emerald-600 text-white'
-                                        : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'
-                                    }`}
+                                    className={`w-5 h-5 rounded flex items-center justify-center font-medium text-xs shrink-0 ${isCorrect
+                                      ? 'bg-emerald-600 text-white'
+                                      : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'
+                                      }`}
                                   >
                                     {isCorrect ? '✓' : getOptionLabel(optIdx)}
                                   </div>
@@ -1611,8 +2128,8 @@ export default function TestCreationPage() {
                               <span className="font-mono font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200/50 dark:border-emerald-800/40">
                                 {correctIndices[0] !== undefined
                                   ? correctIndices[0] === correctIndices[1] || correctIndices[1] === undefined
-                                  ? `${correctIndices[0]}`
-                                  : `[${correctIndices[0]}, ${correctIndices[1]}]`
+                                    ? `${correctIndices[0]}`
+                                    : `[${correctIndices[0]}, ${correctIndices[1]}]`
                                   : 'Not specified'}
                               </span>
                             </div>
@@ -1857,6 +2374,114 @@ export default function TestCreationPage() {
                   </>
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Leave Page / Navigation Confirmation Modal */}
+      {showLeaveModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <Bookmark className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                    Save Draft to Account?
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                    You have unsaved changes. Save this draft to your database account so you can continue editing from anywhere.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLeaveModal(false);
+                  setPendingNavigation(null);
+                  setLeaveModalError('');
+                }}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                title="Close and stay on page"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {leaveModalError && (
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-xs text-red-600 dark:text-red-400 flex items-start gap-2 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span className="leading-tight">{leaveModalError}</span>
+              </div>
+            )}
+
+            <div className="p-3.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-xs space-y-2 border border-slate-200/80 dark:border-slate-800">
+              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                <span>Assessment title:</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100 truncate max-w-[210px]">
+                  {title.trim() || 'Untitled Assessment Draft'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+                <span>Questions in draft:</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{questions.length} questions</span>
+              </div>
+              <div className="flex justify-between items-center pt-1.5 border-t border-slate-200/60 dark:border-slate-800/80">
+                <span className="text-slate-500 dark:text-slate-400">Local device backup:</span>
+                <span className="inline-flex items-center gap-1.5 font-medium text-emerald-600 dark:text-emerald-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Auto-saved on device
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLeaveModal(false);
+                    setPendingNavigation(null);
+                    setLeaveModalError('');
+                  }}
+                  className="btn-secondary text-xs py-2.5 px-4 flex-1 cursor-pointer font-medium"
+                >
+                  Stay & Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveAndLeave}
+                  disabled={isSavingDraft}
+                  className="btn-primary text-xs py-2.5 px-4 flex-1 flex items-center justify-center gap-1.5 cursor-pointer font-medium shadow-sm"
+                >
+                  {isSavingDraft ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Cloud className="w-3.5 h-3.5" />
+                  )}
+                  <span>{isSavingDraft ? 'Saving Draft...' : 'Save & Leave'}</span>
+                </button>
+              </div>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLeaveModal(false);
+                    const target = pendingNavigation || '/dashboard';
+                    setPendingNavigation(null);
+                    setHasUnsavedChanges(false);
+                    setLeaveModalError('');
+                    navigate(target);
+                  }}
+                  className="text-xs text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 transition-colors cursor-pointer py-1 px-2 rounded hover:underline underline-offset-2"
+                >
+                  Leave without saving to database
+                </button>
+              </div>
             </div>
           </div>
         </div>

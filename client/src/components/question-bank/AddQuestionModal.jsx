@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MathRenderer from '../common/MathRenderer';
 import api from '../../services/api';
 import {
@@ -22,8 +22,6 @@ export default function AddQuestionModal({
   onClose,
   onSuccess
 }) {
-  if (!isOpen) return null;
-
   const isEdit = Boolean(questionToEdit && questionToEdit._id);
 
   const [stream, setStream] = useState(questionToEdit?.stream || 'Mathematics');
@@ -74,10 +72,109 @@ export default function AddQuestionModal({
   const [error, setError] = useState('');
 
   // Image Upload States & Refs
-  const diagramFileRef = React.useRef(null);
-  const optionFileRefs = React.useRef([]);
+  const diagramFileRef = useRef(null);
+  const optionFileRefs = useRef([]);
   const [isUploadingDiagram, setIsUploadingDiagram] = useState(false);
   const [uploadingOptIndex, setUploadingOptIndex] = useState(null);
+
+  // Auto-save in-progress bank question draft to local storage
+  const isInitialBankMount = useRef(true);
+  const bankQDraftRef = useRef(null);
+  bankQDraftRef.current = {
+    stream,
+    tags,
+    questionText,
+    questionType,
+    imageAttachment,
+    options,
+    correctAnswers,
+    natMin,
+    natMax,
+    explanation
+  };
+
+  const saveBankQDraft = useCallback(() => {
+    if (isEdit) return;
+    const d = bankQDraftRef.current;
+    if (!d) return;
+    const hasContent = Boolean(
+      (d.questionText && d.questionText.trim()) ||
+      (d.imageAttachment && d.imageAttachment.trim()) ||
+      (d.explanation && d.explanation.trim()) ||
+      (Array.isArray(d.options) && d.options.some((o) => o.text && o.text.trim()))
+    );
+    if (!hasContent) {
+      try { localStorage.removeItem('pmt_draft_bank_question'); } catch (e) {}
+      return;
+    }
+    try {
+      localStorage.setItem('pmt_draft_bank_question', JSON.stringify(d));
+    } catch (e) {}
+  }, [isEdit]);
+
+  // Restore draft on open if not editing existing question
+  useEffect(() => {
+    if (isEdit) return;
+    try {
+      const saved = localStorage.getItem('pmt_draft_bank_question');
+      if (saved) {
+        const q = JSON.parse(saved);
+        if (q.questionText || (Array.isArray(q.options) && q.options.some((o) => o.text))) {
+          if (q.stream !== undefined) setStream(q.stream);
+          if (Array.isArray(q.tags)) setTags(q.tags);
+          if (q.questionText !== undefined) setQuestionText(q.questionText);
+          if (q.questionType !== undefined) setQuestionType(q.questionType);
+          if (q.imageAttachment !== undefined) setImageAttachment(q.imageAttachment);
+          if (Array.isArray(q.options)) setOptions(q.options);
+          if (Array.isArray(q.correctAnswers)) setCorrectAnswers(q.correctAnswers);
+          if (q.natMin !== undefined) setNatMin(q.natMin);
+          if (q.natMax !== undefined) setNatMax(q.natMax);
+          if (q.explanation !== undefined) setExplanation(q.explanation);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to restore bank question draft:', e);
+    }
+  }, [isEdit]);
+
+  // Auto-save on every change
+  useEffect(() => {
+    if (isEdit) return;
+    if (isInitialBankMount.current) {
+      isInitialBankMount.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      saveBankQDraft();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [
+    isEdit,
+    stream,
+    tags,
+    questionText,
+    questionType,
+    imageAttachment,
+    options,
+    correctAnswers,
+    natMin,
+    natMax,
+    explanation,
+    saveBankQDraft
+  ]);
+
+  // Save on unload / unmount
+  useEffect(() => {
+    if (isEdit) return;
+    const handleUnload = () => saveBankQDraft();
+    window.addEventListener('beforeunload', handleUnload);
+    window.addEventListener('pagehide', handleUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      window.removeEventListener('pagehide', handleUnload);
+      saveBankQDraft();
+    };
+  }, [isEdit, saveBankQDraft]);
 
   const handleDiagramUpload = async (file) => {
     if (!file) return;
@@ -258,6 +355,9 @@ export default function AddQuestionModal({
       }
 
       if (res.data?.success) {
+        try {
+          localStorage.removeItem('pmt_draft_bank_question');
+        } catch (e) {}
         onSuccess(res.data.question, isEdit);
         onClose();
       } else {
@@ -270,6 +370,8 @@ export default function AddQuestionModal({
       setIsSubmitting(false);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
