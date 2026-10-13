@@ -3,21 +3,19 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import useExamStore from '../store/useExamStore';
 import useProctorStore from '../store/useProctorStore';
 import api from '../services/api';
-import { formatTime12h } from '../utils/dateUtils';
 import ExamHeader from '../components/exam-player/ExamHeader';
 import QuestionCanvas from '../components/exam-player/QuestionCanvas';
 import QuestionPalette from '../components/exam-player/QuestionPalette';
-import Modal from '../components/common/Modal';
+import ExamFullscreenGate from '../components/exam-player/ExamFullscreenGate';
+import ExamSubmissionResult from '../components/exam-player/ExamSubmissionResult';
+import ExamLockdownOverlays from '../components/exam-player/ExamLockdownOverlays';
+import ExamSubmitConfirmModal from '../components/exam-player/ExamSubmitConfirmModal';
 import CameraMonitor from '../components/proctoring/CameraMonitor';
 import StrikeModal from '../components/proctoring/StrikeModal';
 import ProctoringCheckGate from '../components/proctoring/ProctoringCheckGate';
 import useExamTimer from '../hooks/useExamTimer';
 import useBrowserLockdown from '../hooks/useBrowserLockdown';
-import {
-  Loader2, AlertCircle, CheckCircle2, ArrowRight,
-  Maximize, ShieldAlert, Trophy, Target, XCircle, MinusCircle,
-  AlertTriangle, ShieldOff, Clock as ClockIcon, FlaskConical, CheckCheck
-} from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 // Bug #3 fix: moved outside component so it's not re-created on every render
 const VIOLATION_LABELS = {
@@ -621,185 +619,22 @@ export default function ExamSessionPage() {
 
   // ── Submitted / Results Screen ────────────────────────────────────────────────
   if (isSubmitted || isSubmitting) {
-    const snap = submittedSnapshot;
-    const result = gradedResult;
-
-    if (isSubmitting) {
-      return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-600 mb-2" />
-          <p className="text-xs text-slate-500">Grading your answers...</p>
-        </div>
-      );
-    }
-
     return (
-      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0C0F17] flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100 font-sans">
-        <div className="max-w-md w-full bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-2xl p-5 sm:p-6 space-y-4">
-
-          {/* Header row: Left icon + text, Right badge */}
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-base font-semibold text-slate-900 dark:text-slate-100 tracking-tight truncate">
-                  Examination Submitted
-                </h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                  {snap?.title || 'Your responses have been recorded.'}
-                </p>
-              </div>
-            </div>
-
-            {isPreview ? (
-              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-200/80 dark:border-slate-700/80 shrink-0">
-                <FlaskConical className="w-3 h-3 text-slate-500 dark:text-slate-400" />
-                <span>Preview</span>
-              </span>
-            ) : isPractice ? (
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-2.5 py-1 rounded-full border border-slate-200/80 dark:border-slate-700/80 shrink-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                <span>Practice</span>
-              </span>
-            ) : null}
-          </div>
-
-          {/* Unified Score Board */}
-          {result ? (
-            <div className="bg-slate-50 dark:bg-[#0C0F17] rounded-xl p-4 border border-slate-200/70 dark:border-slate-800/70 space-y-3.5">
-              {/* Score & Accuracy in a balanced top row */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
-                    Final Score
-                  </span>
-                  <div className="flex items-baseline gap-1 mt-0.5">
-                    <span className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tabular-nums">
-                      {result.score}
-                    </span>
-                    <span className="text-xs text-slate-400 font-medium">
-                      / {result.totalMarks ?? snap?.totalMarks ?? 0}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
-                    Accuracy
-                  </span>
-                  <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 tabular-nums mt-0.5 block">
-                    {result.accuracy}%
-                  </span>
-                </div>
-              </div>
-
-              {/* 3-Column Performance Breakdown (Correct / Wrong / Unanswered) */}
-              <div className="grid grid-cols-3 divide-x divide-slate-200/80 dark:divide-slate-800/80 border-t border-slate-200/70 dark:border-slate-800/70 pt-3 text-center">
-                <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Correct</div>
-                  <div className="text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums mt-0.5">
-                    {result.correct}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Wrong</div>
-                  <div className="text-base font-bold text-rose-600 dark:text-rose-400 tabular-nums mt-0.5">
-                    {result.incorrect}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Unanswered</div>
-                  <div className="text-base font-bold text-slate-700 dark:text-slate-300 tabular-nums mt-0.5">
-                    {result.unanswered ?? Math.max(0, (snap?.totalQuestions ?? 0) - answeredCount)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-slate-50 dark:bg-[#0C0F17] rounded-xl p-4 border border-slate-200/70 dark:border-slate-800/70 grid grid-cols-2 gap-3 text-center">
-              <div>
-                <div className="text-[10px] text-slate-400 uppercase font-semibold">Total Questions</div>
-                <div className="text-xl font-bold text-slate-900 dark:text-slate-100 tabular-nums mt-0.5">
-                  {snap?.totalQuestions ?? 0}
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] text-slate-400 uppercase font-semibold">Answered</div>
-                <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums mt-0.5">
-                  {answeredCount}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* S3: Violation log or Clean session badge */}
-          {submittedViolations.length > 0 ? (
-            <div className="rounded-xl bg-rose-50/50 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900/40 p-3 space-y-2">
-              <div className="flex items-center justify-between text-xs text-rose-700 dark:text-rose-400 font-medium">
-                <div className="flex items-center gap-1.5">
-                  <ShieldAlert className="w-3.5 h-3.5" />
-                  <span>{submittedViolations.length} Proctoring Infraction{submittedViolations.length !== 1 ? 's' : ''}</span>
-                </div>
-                <span className="text-[10px] uppercase font-mono">Logged</span>
-              </div>
-              <ul className="divide-y divide-rose-100 dark:divide-rose-900/30 max-h-32 overflow-y-auto">
-                {submittedViolations.map((v, i) => (
-                  <li key={i} className="flex items-center justify-between py-1.5 text-[11px]">
-                    <span className="text-slate-700 dark:text-slate-300">
-                      {VIOLATION_LABELS[v.type] ?? v.type}
-                    </span>
-                    <span className="text-slate-400 font-mono text-[10px]">
-                      {formatTime12h(v.timestamp, { includeSeconds: true })}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between px-3.5 py-2 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-900/30 text-xs text-emerald-700 dark:text-emerald-400">
-              <div className="flex items-center gap-1.5 font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Session Verified</span>
-              </div>
-              <span className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80 font-medium">0 Infractions</span>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="space-y-2 pt-1">
-            {(result?.attemptId || savedResultData?.result?.attemptId || attemptId) && (
-              <button
-                type="button"
-                onClick={() => navigate(`/test/${submittedExamId || examId}/review/${result?.attemptId || savedResultData?.result?.attemptId || attemptId}`)}
-                className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs flex items-center justify-center gap-1.5 shadow-sm shadow-indigo-600/20 active:scale-[0.98] transition-all cursor-pointer"
-              >
-                <CheckCheck className="w-4 h-4" />
-                <span>Review Responses & Solutions</span>
-              </button>
-            )}
-            <div className="flex gap-2.5">
-              <button
-                type="button"
-                onClick={() => navigate(`/test/${submittedExamId || examId}`)}
-                className="flex-1 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm active:scale-[0.98] dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-xs font-medium transition cursor-pointer"
-              >
-                View Attempts
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard')}
-                className="flex-1 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm active:scale-[0.98] dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-xs font-medium transition cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <span>Dashboard</span>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </div>
+      <ExamSubmissionResult
+        isSubmitting={isSubmitting}
+        snap={submittedSnapshot}
+        result={gradedResult}
+        isPreview={isPreview}
+        isPractice={isPractice}
+        answeredCount={answeredCount}
+        submittedViolations={submittedViolations}
+        attemptId={attemptId}
+        savedResultData={savedResultData}
+        submittedExamId={submittedExamId}
+        examId={examId}
+        violationLabels={VIOLATION_LABELS}
+        navigate={navigate}
+      />
     );
   }
 
@@ -848,30 +683,12 @@ export default function ExamSessionPage() {
   // Show a click-to-enter-fullscreen screen so the user initiates it themselves (official exams only).
   if (!isPractice && needsFullscreenGate && !isSubmitted) {
     return (
-      <div className="h-screen w-screen bg-[#F8FAFC] dark:bg-[#0C0F17] flex flex-col items-center justify-center p-6 text-center transition-colors duration-200">
-        <div className="max-w-md w-full bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg p-7 sm:p-8 shadow-sm space-y-4">
-          <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-center mx-auto">
-            <Maximize className="w-6 h-6 text-slate-700 dark:text-slate-300" />
-          </div>
-          <div className="space-y-1.5">
-            <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white">Fullscreen Required</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
-              This examination must be completed in a secured fullscreen environment. Click the button below to initiate full lockdown mode.
-            </p>
-          </div>
-          <button
-            onClick={() => {
-              dismissBlocker();
-              setNeedsFullscreenGate(false);
-            }}
-            className="w-full py-2.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white shadow-sm shadow-indigo-600/20 active:scale-[0.98] font-medium text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
-          >
-            <Maximize className="w-4 h-4" />
-            <span>Enter Fullscreen Assessment</span>
-          </button>
-          <p className="text-[11px] text-slate-400">Your questions and answers are saved automatically.</p>
-        </div>
-      </div>
+      <ExamFullscreenGate
+        onEnterFullscreen={() => {
+          dismissBlocker();
+          setNeedsFullscreenGate(false);
+        }}
+      />
     );
   }
 
@@ -927,220 +744,36 @@ export default function ExamSessionPage() {
         />
       )}
 
-      {/* S6: Fullscreen not supported warning banner (official exams only) */}
-      {!isPractice && isFullscreenUnsupported && (
-        <div className="fixed top-0 inset-x-0 z-50 bg-amber-500 text-white text-xs font-semibold text-center py-2 px-4 shadow-sm">
-          ⚠️ Fullscreen mode is not supported in this browser. Proctoring may be limited.
-        </div>
-      )}
+      {/* Proctoring & Lockdown Overlays */}
+      <ExamLockdownOverlays
+        isPractice={isPractice}
+        isFullscreenUnsupported={isFullscreenUnsupported}
+        isFullscreenBlocked={isFullscreenBlocked}
+        isWindowBlurred={isWindowBlurred}
+        violationWarning={violationWarning}
+        violationCount={violationCount}
+        trustScore={trustScore}
+        finalWarningModal={finalWarningModal}
+        trustZeroModal={trustZeroModal}
+        trustZeroCountdown={trustZeroCountdown}
+        violationLabels={VIOLATION_LABELS}
+        onDismissBlocker={dismissBlocker}
+        onDismissWindowBlur={() => setIsWindowBlurred(false)}
+        onDismissViolationWarning={() => {
+          clearTimeout(violationTimerRef.current);
+          setViolationWarning({ open: false, type: null });
+        }}
+        onDismissFinalWarning={() => setFinalWarningModal(false)}
+      />
 
-      {/* 3a. Fullscreen Blocked Overlay (strictly disabled in practice mode) */}
-      {!isPractice && isFullscreenBlocked && (
-        <div className="fixed inset-0 z-[9999] bg-slate-950/70 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-150">
-          <div className="max-w-md w-full bg-white dark:bg-[#131926] border border-slate-100 dark:border-slate-800/80 rounded-lg p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100">
-            <div className="bg-red-50 text-red-600 border border-red-100/50 dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ShieldAlert className="w-6 h-6 stroke-[1.75]" />
-            </div>
-            <h2 className="text-slate-900 dark:text-slate-100 font-semibold tracking-tight text-lg text-center mb-2">
-              Fullscreen Mode Exited
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed text-center mb-5 max-w-sm mx-auto">
-              Exiting fullscreen during an examination is a recorded proctoring infraction. Your answers and timer have been paused until re-entry.
-            </p>
-            <div className="w-full text-center bg-red-50/70 border border-red-100 py-2.5 px-4 rounded-md text-[12px] font-semibold text-red-700 tracking-wide mb-6 dark:bg-red-950/40 dark:border-red-900/40 dark:text-red-400 tabular-nums">
-              Total Infractions Recorded: {violationCount}
-            </div>
-            <button
-              onClick={dismissBlocker}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white shadow-sm shadow-indigo-600/20 active:scale-[0.98] text-sm font-medium py-2.5 rounded-md transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-            >
-              <Maximize className="w-4 h-4 text-slate-300 dark:text-slate-600" />
-              <span>Re-enter Fullscreen to Continue Exam</span>
-            </button>
-            <p className="text-slate-400 text-[11px] text-center mt-4">All progress is safely preserved in real-time.</p>
-          </div>
-        </div>
-      )}
-
-      {/* 3b. Alt+Tab / Window Blur Overlay (strictly disabled in practice mode) */}
-      {!isPractice && isWindowBlurred && !isFullscreenBlocked && (
-        <div className="fixed inset-0 z-[9997] bg-slate-950/70 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-150">
-          <div className="max-w-md w-full bg-white dark:bg-[#131926] border border-slate-100 dark:border-slate-800/80 rounded-lg p-6 md:p-8 shadow-2xl text-slate-900 dark:text-slate-100">
-            <div className="bg-amber-50 text-amber-600 border border-amber-100/50 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-6 h-6 stroke-[1.75]" />
-            </div>
-            <h2 className="text-slate-900 dark:text-slate-100 font-semibold tracking-tight text-lg text-center mb-2">
-              Window Focus Lost
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed text-center mb-5 max-w-sm mx-auto">
-              You switched away from the exam window. This event has been recorded in your candidate proctoring audit log.
-            </p>
-            <button
-              onClick={() => setIsWindowBlurred(false)}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white shadow-sm shadow-indigo-600/20 active:scale-[0.98] text-sm font-medium py-2.5 rounded-md transition flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-            >
-              <span>Click to Return to Exam</span>
-            </button>
-            <p className="text-slate-400 text-[11px] text-center mt-4">All progress is safely preserved in real-time.</p>
-          </div>
-        </div>
-      )}
-
-      {/* 4a. Per-violation warning popup (strictly disabled in practice mode) */}
-      {!isPractice && violationWarning.open && (
-        <div className="fixed inset-0 z-[9998] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-6">
-          <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-sm w-full max-w-sm overflow-hidden">
-            <div className="h-1 bg-rose-500" />
-            <div className="p-6">
-              {/* Icon + title */}
-              <div className="flex items-start gap-3 mb-5">
-                <div className="shrink-0 w-9 h-9 rounded-md bg-rose-50 dark:bg-rose-950/50 border border-rose-200/60 dark:border-rose-900/60 flex items-center justify-center">
-                  <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white mb-0.5">
-                    Proctoring Infraction
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {VIOLATION_LABELS[violationWarning.type] ?? violationWarning.type}
-                  </p>
-                </div>
-              </div>
-
-              {/* Stats row */}
-              <div className="grid grid-cols-2 gap-2.5 mb-5">
-                <div className="bg-rose-50/60 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/60 rounded-md p-3 text-center">
-                  <p className="text-[10px] uppercase font-medium text-rose-700 dark:text-rose-400 mb-0.5">Violations</p>
-                  <p className="text-xl font-semibold text-rose-700 dark:text-rose-300 tabular-nums">{violationCount}</p>
-                </div>
-                <div className={`border rounded-md p-3 text-center ${
-                  trustScore >= 70
-                    ? 'bg-amber-50/60 dark:bg-amber-950/40 border-amber-200/60 dark:border-amber-900/60'
-                    : trustScore >= 40
-                    ? 'bg-orange-50/60 dark:bg-orange-950/40 border-orange-200/60 dark:border-orange-900/60'
-                    : 'bg-rose-50/60 dark:bg-rose-950/40 border-rose-200/60 dark:border-rose-900/60'
-                }`}>
-                  <p className="text-[10px] uppercase font-medium text-slate-500 dark:text-slate-400 mb-0.5">Trust Score</p>
-                  <p className={`text-xl font-semibold tabular-nums ${
-                    trustScore >= 70 ? 'text-amber-700 dark:text-amber-400'
-                    : trustScore >= 40 ? 'text-orange-700 dark:text-orange-400'
-                    : 'text-rose-700 dark:text-rose-400'
-                  }`}>{trustScore}<span className="text-xs font-normal opacity-60">/100</span></p>
-                </div>
-              </div>
-
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center mb-5">
-                Repeated infractions will result in immediate examination termination.
-              </p>
-
-              <button
-                onClick={() => {
-                  clearTimeout(violationTimerRef.current);
-                  setViolationWarning({ open: false, type: null });
-                }}
-                className="w-full py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white shadow-sm shadow-indigo-600/20 active:scale-[0.98] text-xs font-medium transition-all cursor-pointer shadow-sm"
-              >
-                I Acknowledge & Understand
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 4b. S4: Final warning modal — shown once when trust score ≤ 30 (official exams only) */}
-      {!isPractice && finalWarningModal && (
-        <div className="fixed inset-0 z-[9998] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-6">
-          <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-sm w-full max-w-sm overflow-hidden">
-            <div className="h-1 bg-amber-500" />
-            <div className="p-6 text-center space-y-4">
-              <div className="w-12 h-12 rounded-lg bg-amber-50 dark:bg-amber-950/50 border border-amber-200/60 dark:border-amber-800/60 flex items-center justify-center mx-auto">
-                <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-              </div>
-              <div className="space-y-1">
-                <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white">Critical Final Warning</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Your candidate trust score has dropped to{' '}
-                  <strong className="text-amber-600 dark:text-amber-400 tabular-nums">{trustScore}/100</strong>.{' '}
-                  Any further violation will trigger automatic termination.
-                </p>
-              </div>
-              <button
-                onClick={() => setFinalWarningModal(false)}
-                className="w-full py-2.5 rounded-md bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium transition-all cursor-pointer shadow-sm"
-              >
-                I Understand — Resume Assessment
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 4c. Trust-score-zero termination modal (official exams only) */}
-      {!isPractice && trustZeroModal && (
-        <div className="fixed inset-0 z-[10000] bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-6">
-          <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-sm w-full max-w-sm overflow-hidden">
-            <div className="h-1 bg-rose-600" />
-            <div className="p-6 text-center space-y-4">
-              <div className="w-12 h-12 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200/60 dark:border-rose-800/60 flex items-center justify-center mx-auto">
-                <ShieldOff className="w-6 h-6 text-rose-600 dark:text-rose-400" />
-              </div>
-              <div className="space-y-1">
-                <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-white">Assessment Terminated</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Your trust score reached <strong className="text-rose-600 dark:text-rose-400">zero</strong> due to persistent infractions.
-                  The test session is being finalized.
-                </p>
-              </div>
-              <div className="bg-rose-50/60 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/60 rounded-md p-3.5">
-                <p className="text-[10px] uppercase font-medium text-rose-700 dark:text-rose-400 mb-1">Total Violations</p>
-                <p className="text-3xl font-semibold text-rose-700 dark:text-rose-300 tabular-nums">{violationCount}</p>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Submitting answers in <span className="font-mono font-medium text-rose-600 dark:text-rose-400 tabular-nums">{trustZeroCountdown}s</span>…
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 5. Submit Confirmation Modal */}
-      <Modal
+      {/* Submit Confirmation Modal */}
+      <ExamSubmitConfirmModal
         isOpen={isSubmitModalOpen}
         onClose={() => setIsSubmitModalOpen(false)}
-        title="Confirm Examination Submission"
-      >
-        <div className="space-y-4 text-xs">
-          <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-            Are you sure you wish to submit? Once submitted, answers cannot be modified.
-          </p>
-          <div className="grid grid-cols-2 gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-            <div>
-              <span className="text-slate-400 block text-[10px] uppercase font-medium">Answered</span>
-              <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm tabular-nums">{answeredCount}</span>
-            </div>
-            <div>
-              <span className="text-slate-400 block text-[10px] uppercase font-medium">Unanswered</span>
-              <span className="text-rose-600 dark:text-rose-400 font-bold text-sm tabular-nums">{remainingCount}</span>
-            </div>
-          </div>
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-            <button
-              type="button"
-              onClick={() => setIsSubmitModalOpen(false)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleConfirmSubmit}
-              className="px-3.5 py-1.5 rounded-md text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 shadow-sm transition-colors"
-            >
-              Submit Exam
-            </button>
-          </div>
-        </div>
-      </Modal>
+        onConfirm={handleConfirmSubmit}
+        answeredCount={answeredCount}
+        remainingCount={remainingCount}
+      />
     </div>
   );
 }
