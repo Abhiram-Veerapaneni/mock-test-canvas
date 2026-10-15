@@ -117,7 +117,9 @@ export const createExam = async (req, res) => {
     if (questionsArray.length > 0) {
       // Validate and format questions for insertion
       const questionDocs = questionsArray.map((q) => {
-        const contribute = Boolean(q.contributeToBank || q.isInBank);
+        const contribute = req.body.contributeAllToBank !== undefined
+          ? Boolean(req.body.contributeAllToBank)
+          : Boolean(q.contributeToBank !== undefined ? q.contributeToBank : q.isInBank);
         const streamVal = q.stream || q.subject || 'General';
         const tagsVal = Array.isArray(q.tags)
           ? q.tags
@@ -175,6 +177,7 @@ export const createExam = async (req, res) => {
       },
       allowPracticeMode: allowPracticeMode !== undefined ? Boolean(allowPracticeMode) : true,
       allowReviewResponses: allowReviewResponses !== undefined ? Boolean(allowReviewResponses) : true,
+      contributeAllToBank: req.body.contributeAllToBank !== undefined ? Boolean(req.body.contributeAllToBank) : false,
       schedule: {
         isScheduled: Boolean(schedule?.isScheduled),
         startTime: schedule?.startTime ? new Date(schedule.startTime) : null,
@@ -475,6 +478,9 @@ export const updateExam = async (req, res) => {
     if (allowReviewResponses !== undefined) {
       existingExam.allowReviewResponses = Boolean(allowReviewResponses);
     }
+    if (req.body.contributeAllToBank !== undefined) {
+      existingExam.contributeAllToBank = Boolean(req.body.contributeAllToBank);
+    }
     if (req.body.isPublic !== undefined) {
       existingExam.isPublic = Boolean(req.body.isPublic);
     }
@@ -533,9 +539,13 @@ export const updateExam = async (req, res) => {
           existingQ.subject = q.subject || 'General';
           if (q.stream) existingQ.stream = q.stream;
           if (Array.isArray(q.tags)) existingQ.tags = q.tags;
-          if (q.contributeToBank || q.isInBank) {
-            existingQ.isInBank = true;
-            if (!existingQ.bankAddedBy) existingQ.bankAddedBy = userId;
+          const contribute = req.body.contributeAllToBank !== undefined
+            ? Boolean(req.body.contributeAllToBank)
+            : Boolean(q.contributeToBank !== undefined ? q.contributeToBank : q.isInBank);
+
+          existingQ.isInBank = contribute;
+          if (contribute && !existingQ.bankAddedBy) {
+            existingQ.bankAddedBy = userId;
           }
 
           if (shouldTagEdited) {
@@ -548,7 +558,9 @@ export const updateExam = async (req, res) => {
         } else {
           // Brand new question added during edit
           const isNewEdited = wasPublished || q.isEdited;
-          const contribute = Boolean(q.contributeToBank || q.isInBank);
+          const contribute = req.body.contributeAllToBank !== undefined
+            ? Boolean(req.body.contributeAllToBank)
+            : Boolean(q.contributeToBank !== undefined ? q.contributeToBank : q.isInBank);
           const streamVal = q.stream || q.subject || 'General';
           const tagsVal = Array.isArray(q.tags)
             ? q.tags

@@ -7,7 +7,8 @@ import {
   Clock,
   AlertCircle,
   ShieldCheck,
-  BookOpen
+  BookOpen,
+  Database
 } from 'lucide-react';
 
 export default function TestSettingsTab({
@@ -46,8 +47,19 @@ export default function TestSettingsTab({
   objectCheck,
   setObjectCheck,
   liveNotifications,
-  setLiveNotifications
+  setLiveNotifications,
+  contributeAllToBank,
+  setContributeAllToBank,
+  onToggleContributeAll,
+  questions = []
 }) {
+  const contributedCount = questions.filter((q) =>
+    Boolean(q.contributeToBank !== undefined ? q.contributeToBank : q.isInBank)
+  ).length;
+  const allContributed = questions.length > 0
+    ? contributedCount === questions.length
+    : Boolean(contributeAllToBank);
+  const isIndeterminate = questions.length > 0 && contributedCount > 0 && contributedCount < questions.length;
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
       {/* COLUMN 1: Assessment Details, Marking & Scheduling */}
@@ -505,6 +517,53 @@ export default function TestSettingsTab({
                 <span className="font-medium text-slate-900 dark:text-slate-100 block">Allow View Responses & Solutions</span>
                 <span className="text-xs text-slate-500 dark:text-slate-400 leading-normal mt-0.5 block">
                   Candidates can view their submission responses and comprehensive solutions after completing their test. {isScheduled ? 'For scheduled exams, solutions are released strictly after the scheduled window closes to prevent leaks.' : ''}
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Card: Question Bank & Community Sharing */}
+        <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg p-5 sm:p-6 space-y-4">
+          <div className="border-b border-slate-100 dark:border-slate-800/80 pb-3 flex items-center justify-between flex-wrap gap-2">
+            <h2 className="text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Database className="w-4 h-4 text-slate-500" />
+              <span>Question Bank & Community Sharing</span>
+            </h2>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium font-mono">
+              {contributedCount} of {questions.length} Contributed
+            </span>
+          </div>
+
+          <div className="space-y-3 text-xs text-slate-600 dark:text-slate-400">
+            <label className="flex items-start gap-3 p-3.5 rounded-md bg-slate-50 dark:bg-[#162030] border border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-colors cursor-pointer select-none">
+              <input
+                type="checkbox"
+                ref={(el) => {
+                  if (el) el.indeterminate = isIndeterminate;
+                }}
+                checked={allContributed}
+                onChange={(e) => {
+                  if (onToggleContributeAll) {
+                    onToggleContributeAll(e.target.checked);
+                  } else if (setContributeAllToBank) {
+                    setContributeAllToBank(e.target.checked);
+                  }
+                }}
+                className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer accent-indigo-600"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-slate-900 dark:text-slate-100">
+                    Contribute All Questions to Question Bank
+                  </span>
+                  <span className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                    <span className={`w-1.5 h-1.5 rounded-full ${allContributed ? 'bg-emerald-500' : isIndeterminate ? 'bg-indigo-500' : 'bg-slate-400'}`} />
+                    {allContributed ? 'All Contributed' : isIndeterminate ? 'Partial' : 'Disabled'}
+                  </span>
+                </div>
+                <span className="text-xs text-slate-500 dark:text-slate-400 leading-normal block mt-1">
+                  When enabled, all questions composed or ingested in this assessment are contributed to the shared global Question Bank so other educators and candidates can discover, filter, and practice them.
                 </span>
               </div>
             </label>

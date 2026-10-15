@@ -14,6 +14,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Database,
 } from 'lucide-react';
 
 const SUBJECT_OPTIONS = ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'Computer Science', 'Aptitude', 'General'];
@@ -22,10 +23,12 @@ export default function IngestionReviewModal({
   isOpen,
   fileName,
   initialQuestions = [],
+  defaultContributeToBank = false,
   onConfirm,
   onClose,
 }) {
   const [questions, setQuestions] = useState(initialQuestions);
+  const [contributeAllToBank, setContributeAllToBank] = useState(defaultContributeToBank);
   const [expandedIndex, setExpandedIndex] = useState(0); // auto-expand first item
   const [previewMode, setPreviewMode] = useState({}); // { [index]: true/false }
 
@@ -108,8 +111,12 @@ export default function IngestionReviewModal({
   };
 
   const handleConfirmAll = () => {
-    // Strip client IDs before adding to draft
-    const cleanQuestions = questions.map(({ id, ...rest }) => rest);
+    // Strip client IDs and attach contributeToBank flag before adding to draft
+    const cleanQuestions = questions.map(({ id, ...rest }) => ({
+      ...rest,
+      contributeToBank: contributeAllToBank,
+      isInBank: contributeAllToBank
+    }));
     onConfirm(cleanQuestions);
   };
 
@@ -461,7 +468,20 @@ export default function IngestionReviewModal({
             Cancel & Discard
           </button>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3 flex-wrap justify-end">
+            <label className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-[#162030] transition-colors">
+              <input
+                type="checkbox"
+                checked={contributeAllToBank}
+                onChange={(e) => setContributeAllToBank(e.target.checked)}
+                className="w-3.5 h-3.5 rounded text-indigo-600 border-slate-300 dark:border-slate-700 focus:ring-0 cursor-pointer accent-indigo-600"
+              />
+              <span className="flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300 text-xs">
+                <Database className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                <span>Contribute all to Question Bank</span>
+              </span>
+            </label>
+
             <span className="text-xs text-slate-500 hidden sm:inline">
               Ready to import {questions.length} questions
             </span>

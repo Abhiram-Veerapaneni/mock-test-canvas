@@ -56,6 +56,7 @@ export default function TestCreationPage() {
 
   // Added questions array
   const [questions, setQuestions] = useState([]);
+  const [contributeAllToBank, setContributeAllToBank] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [error, setError] = useState('');
@@ -147,6 +148,7 @@ export default function TestCreationPage() {
       objectCheck,
       liveNotifications,
       questions,
+      contributeAllToBank,
       activeStudioTab
     },
     formSetters: {
@@ -169,6 +171,7 @@ export default function TestCreationPage() {
       setObjectCheck,
       setLiveNotifications,
       setQuestions,
+      setContributeAllToBank,
       setActiveStudioTab
     },
     originalExamRef,
@@ -223,6 +226,7 @@ export default function TestCreationPage() {
                 if (draft.objectCheck !== undefined) setObjectCheck(draft.objectCheck);
                 if (draft.liveNotifications !== undefined) setLiveNotifications(draft.liveNotifications);
                 if (Array.isArray(draft.questions)) setQuestions(draft.questions);
+                if (draft.contributeAllToBank !== undefined) setContributeAllToBank(draft.contributeAllToBank);
                 if (draft.activeStudioTab) setActiveStudioTab(draft.activeStudioTab);
 
                 setDraftRestored(true);
@@ -284,6 +288,11 @@ export default function TestCreationPage() {
             if (Array.isArray(ex.questions)) {
               setQuestions(ex.questions);
             }
+            if (ex.contributeAllToBank !== undefined) {
+              setContributeAllToBank(Boolean(ex.contributeAllToBank));
+            } else if (Array.isArray(ex.questions) && ex.questions.length > 0) {
+              setContributeAllToBank(ex.questions.every((q) => Boolean(q.isInBank)));
+            }
             setHasUnsavedChanges(false);
             hasUnsavedChangesRef.current = false;
             isInitialLoadFinishedRef.current = true;
@@ -303,6 +312,7 @@ export default function TestCreationPage() {
             if (draft.correctMark !== undefined) setCorrectMark(draft.correctMark);
             if (draft.incorrectMark !== undefined) setIncorrectMark(draft.incorrectMark);
             if (Array.isArray(draft.questions)) setQuestions(draft.questions);
+            if (draft.contributeAllToBank !== undefined) setContributeAllToBank(draft.contributeAllToBank);
             setExistingExamId(examIdParam);
             setDraftRestored(true);
             setDraftRestoredTime(draft.savedAt ? new Date(draft.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
@@ -371,7 +381,12 @@ export default function TestCreationPage() {
   };
 
   const handleConfirmIngestedQuestions = (approvedQuestions) => {
-    const updated = [...questions, ...approvedQuestions];
+    const formatted = approvedQuestions.map((q) => ({
+      ...q,
+      contributeToBank: q.contributeToBank !== undefined ? q.contributeToBank : contributeAllToBank,
+      isInBank: q.isInBank !== undefined ? q.isInBank : contributeAllToBank
+    }));
+    const updated = [...questions, ...formatted];
     setQuestions(updated);
     setHasUnsavedChanges(true);
     hasUnsavedChangesRef.current = true;
@@ -382,7 +397,12 @@ export default function TestCreationPage() {
   };
 
   const handleAddQuestion = (newQuestion) => {
-    const updated = [...questions, newQuestion];
+    const formatted = {
+      ...newQuestion,
+      contributeToBank: newQuestion.contributeToBank !== undefined ? newQuestion.contributeToBank : contributeAllToBank,
+      isInBank: newQuestion.isInBank !== undefined ? newQuestion.isInBank : contributeAllToBank
+    };
+    const updated = [...questions, formatted];
     setQuestions(updated);
     setHasUnsavedChanges(true);
     hasUnsavedChangesRef.current = true;
@@ -426,10 +446,54 @@ export default function TestCreationPage() {
     const copy = [...questions];
     copy[index] = updatedQ;
     setQuestions(copy);
+    const allChecked = copy.length > 0 && copy.every((q) => Boolean(q.contributeToBank !== undefined ? q.contributeToBank : q.isInBank));
+    setContributeAllToBank(allChecked);
     setHasUnsavedChanges(true);
     hasUnsavedChangesRef.current = true;
     setSuccessMsg(`Question #${index + 1} updated successfully.`);
-    saveDraftToStorage({ ...draftDataRef.current, questions: copy, hasUnsavedChanges: true, isSyncedWithServer: false });
+    saveDraftToStorage({ ...draftDataRef.current, questions: copy, contributeAllToBank: allChecked, hasUnsavedChanges: true, isSyncedWithServer: false });
+  };
+
+  const handleToggleContribute = (idx, checked) => {
+    const updated = [...questions];
+    updated[idx] = { ...updated[idx], contributeToBank: checked, isInBank: checked };
+    setQuestions(updated);
+    const allChecked = updated.length > 0 && updated.every((q) => Boolean(q.contributeToBank !== undefined ? q.contributeToBank : q.isInBank));
+    setContributeAllToBank(allChecked);
+    setHasUnsavedChanges(true);
+    hasUnsavedChangesRef.current = true;
+    saveDraftToStorage({
+      ...draftDataRef.current,
+      contributeAllToBank: allChecked,
+      questions: updated,
+      hasUnsavedChanges: true,
+      isSyncedWithServer: false
+    });
+  };
+
+  const handleToggleContributeAll = (checked) => {
+    setContributeAllToBank(checked);
+    const updated = questions.map((q) => ({
+      ...q,
+      contributeToBank: checked,
+      isInBank: checked
+    }));
+    setQuestions(updated);
+    setHasUnsavedChanges(true);
+    hasUnsavedChangesRef.current = true;
+    saveDraftToStorage({
+      ...draftDataRef.current,
+      contributeAllToBank: checked,
+      questions: updated,
+      hasUnsavedChanges: true,
+      isSyncedWithServer: false
+    });
+    setSuccessMsg(
+      checked
+        ? `Marked all ${questions.length} questions to be contributed to the Question Bank!`
+        : `Removed Question Bank contribution flag from all questions.`
+    );
+    setTimeout(() => setSuccessMsg(''), 4000);
   };
 
   // Pre-publish validation & modal trigger
@@ -510,6 +574,7 @@ export default function TestCreationPage() {
         maxAttempts: isUnlimitedAttempts ? null : Math.max(1, Number(maxAttemptsValue)),
         allowPracticeMode: Boolean(allowPracticeMode),
         allowReviewResponses: Boolean(allowReviewResponses),
+        contributeAllToBank: Boolean(contributeAllToBank),
         schedule: {
           isScheduled: Boolean(isScheduled),
           startTime: isScheduled && startTime ? new Date(startTime).toISOString() : null,
@@ -802,6 +867,10 @@ export default function TestCreationPage() {
             setObjectCheck={setObjectCheck}
             liveNotifications={liveNotifications}
             setLiveNotifications={setLiveNotifications}
+            contributeAllToBank={contributeAllToBank}
+            setContributeAllToBank={setContributeAllToBank}
+            onToggleContributeAll={handleToggleContributeAll}
+            questions={questions}
           />
         )}
 
@@ -846,6 +915,7 @@ export default function TestCreationPage() {
               onAddQuestion={handleAddQuestion}
               examId={existingExamId || tempExamId}
               examTitle={title}
+              defaultContributeToBank={contributeAllToBank}
             />
 
             <QuestionListSection
@@ -858,11 +928,8 @@ export default function TestCreationPage() {
               onMoveDown={handleMoveQuestionDown}
               onEdit={(idx) => setEditingQuestionIndex(idx)}
               onRemove={handleRemoveQuestion}
-              onToggleContribute={(idx, checked) => {
-                const updated = [...questions];
-                updated[idx] = { ...updated[idx], contributeToBank: checked };
-                setQuestions(updated);
-              }}
+              onToggleContribute={handleToggleContribute}
+              onToggleContributeAll={handleToggleContributeAll}
               onPreviewImage={(url) => setLightboxImage(url)}
             />
           </div>
@@ -893,6 +960,8 @@ export default function TestCreationPage() {
         objectCheck={objectCheck}
         liveNotifications={liveNotifications}
         examStatus={examStatus}
+        contributeAllToBank={contributeAllToBank}
+        onToggleContributeAll={handleToggleContributeAll}
         onSaveEditedQuestion={handleUpdateQuestion}
         onCloseEditModal={() => setEditingQuestionIndex(null)}
         lightboxImage={lightboxImage}

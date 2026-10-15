@@ -11,11 +11,18 @@ import {
   Plus,
   Eye,
   Edit3,
-  AlertCircle
+  AlertCircle,
+  Database
 } from 'lucide-react';
 
-export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', examTitle = 'exam' }) {
+export default function ManualQuestionForm({
+  onAddQuestion,
+  examId = 'draft',
+  examTitle = 'exam',
+  defaultContributeToBank = false
+}) {
   const { user } = useAuthStore();
+  const [contributeToBank, setContributeToBank] = useState(defaultContributeToBank);
   const [questionText, setQuestionText] = useState('');
   const [questionType, setQuestionType] = useState('MCQ');
   const [imageAttachment, setImageAttachment] = useState('');
@@ -78,6 +85,11 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
       setExplanation
     }
   });
+
+  // Sync defaultContributeToBank prop
+  useEffect(() => {
+    setContributeToBank(defaultContributeToBank);
+  }, [defaultContributeToBank]);
 
   // Fetch streams for datalist
   useEffect(() => {
@@ -279,7 +291,9 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
         image: o.image || ''
       })),
       correctAnswers: finalCorrectAnswers,
-      explanation: explanation.trim()
+      explanation: explanation.trim(),
+      contributeToBank,
+      isInBank: contributeToBank
     };
 
     onAddQuestion(newQuestion);
@@ -435,10 +449,22 @@ export default function ManualQuestionForm({ onAddQuestion, examId = 'draft', ex
         />
 
         {/* Sticky Action Bar for "Add to Question Paper" */}
-        <div className="sticky bottom-0 pt-3 pb-1 bg-white/95 dark:bg-[#131926]/95 backdrop-blur-sm border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-3">
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            {questionType} · {subject}
-          </span>
+        <div className="sticky bottom-0 pt-3 pb-1 bg-white/95 dark:bg-[#131926]/95 backdrop-blur-sm border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              {questionType} · {subject}
+            </span>
+            <label className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer select-none hover:bg-slate-100 dark:hover:bg-[#162030] transition-colors">
+              <input
+                type="checkbox"
+                checked={contributeToBank}
+                onChange={(e) => setContributeToBank(e.target.checked)}
+                className="w-3.5 h-3.5 rounded text-indigo-600 border-slate-300 dark:border-slate-700 focus:ring-0 cursor-pointer accent-indigo-600"
+              />
+              <Database className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+              <span>Contribute to Bank</span>
+            </label>
+          </div>
           <button
             type="submit"
             className="px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium shadow-sm shadow-indigo-600/20 active:scale-[0.98] transition-all flex items-center gap-1.5 cursor-pointer"

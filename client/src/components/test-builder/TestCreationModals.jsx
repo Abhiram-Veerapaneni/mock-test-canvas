@@ -30,6 +30,8 @@ export default function TestCreationModals({
   fullScreenLock,
   objectCheck,
   liveNotifications,
+  contributeAllToBank,
+  onToggleContributeAll,
   examStatus,
   onSaveEditedQuestion,
   onCloseEditModal,
@@ -92,6 +94,7 @@ export default function TestCreationModals({
           isOpen={ingestionModalOpen}
           fileName={uploadedFileName}
           initialQuestions={ingestedQuestions}
+          defaultContributeToBank={contributeAllToBank}
           onConfirm={onConfirmIngestedQuestions}
           onClose={onCloseIngestionModal}
         />
@@ -121,6 +124,8 @@ export default function TestCreationModals({
         fullScreenLock={fullScreenLock}
         objectCheck={objectCheck}
         liveNotifications={liveNotifications}
+        contributeAllToBank={contributeAllToBank}
+        onToggleContributeAll={onToggleContributeAll}
       />
 
       {/* Leave Page / Navigation Confirmation Modal */}

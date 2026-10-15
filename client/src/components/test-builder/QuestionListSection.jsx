@@ -33,8 +33,14 @@ export default function QuestionListSection({
   onEdit,
   onRemove,
   onToggleContribute,
+  onToggleContributeAll,
   onPreviewImage
 }) {
+  const contributedCount = questions.filter((q) =>
+    Boolean(q.contributeToBank !== undefined ? q.contributeToBank : q.isInBank)
+  ).length;
+  const allContributed = questions.length > 0 && contributedCount === questions.length;
+  const isIndeterminate = contributedCount > 0 && contributedCount < questions.length;
   return (
     <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg p-5 sm:p-6 space-y-4">
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3 flex-wrap gap-2">
@@ -46,7 +52,41 @@ export default function QuestionListSection({
             • Re-order or edit questions
           </span>
         </div>
-        <div className="flex items-center gap-3">
+
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Contribute All to Bank Option */}
+          {questions.length > 0 && (
+            <label
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-colors cursor-pointer border select-none ${
+                allContributed
+                  ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700 font-medium'
+                  : 'bg-white dark:bg-[#131926] text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100 hover:border-slate-300 dark:hover:border-slate-700'
+              }`}
+              title={
+                allContributed
+                  ? 'All questions are contributed to the bank. Click to remove all.'
+                  : isIndeterminate
+                  ? `${contributedCount} of ${questions.length} questions contributed. Click to contribute all.`
+                  : 'Contribute all questions to the shared Question Bank'
+              }
+            >
+              <input
+                type="checkbox"
+                ref={(el) => {
+                  if (el) el.indeterminate = isIndeterminate;
+                }}
+                checked={allContributed}
+                onChange={(e) => onToggleContributeAll?.(e.target.checked)}
+                className="w-3.5 h-3.5 rounded text-indigo-600 border-slate-300 dark:border-slate-700 focus:ring-0 cursor-pointer accent-indigo-600"
+              />
+              <Database className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+              <span>Contribute All to Bank</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 tabular-nums">
+                {contributedCount}/{questions.length}
+              </span>
+            </label>
+          )}
+
           {/* Client-Side View Adjustment: Answer Key Toggle */}
           <button
             type="button"
@@ -112,12 +152,12 @@ export default function QuestionListSection({
                     <label className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer select-none hover:bg-slate-50 dark:hover:bg-[#162030] transition-colors">
                       <input
                         type="checkbox"
-                        checked={Boolean(q.contributeToBank || q.isInBank)}
+                        checked={Boolean(q.contributeToBank !== undefined ? q.contributeToBank : q.isInBank)}
                         onChange={(e) => onToggleContribute(idx, e.target.checked)}
-                        className="w-3.5 h-3.5 rounded text-slate-900 border-slate-300 focus:ring-0 cursor-pointer"
+                        className="w-3.5 h-3.5 rounded text-indigo-600 border-slate-300 dark:border-slate-700 focus:ring-0 cursor-pointer accent-indigo-600"
                       />
                       <span className="flex items-center gap-1">
-                        <Database className="w-3 h-3 text-amber-500" />
+                        <Database className="w-3 h-3 text-slate-500" />
                         <span>Contribute to Bank</span>
                       </span>
                     </label>

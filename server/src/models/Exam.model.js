@@ -65,6 +65,10 @@ const examSchema = new mongoose.Schema(
       type: Boolean,
       default: true
     },
+    contributeAllToBank: {
+      type: Boolean,
+      default: false
+    },
     isGenerated: {
       type: Boolean,
       default: false

@@ -37,6 +37,7 @@ export default function useTestCreationDraft({
     objectCheck,
     liveNotifications,
     questions,
+    contributeAllToBank,
     activeStudioTab
   } = formData;
 
@@ -60,6 +61,7 @@ export default function useTestCreationDraft({
     setObjectCheck,
     setLiveNotifications,
     setQuestions,
+    setContributeAllToBank,
     setActiveStudioTab
   } = formSetters;
 
@@ -103,6 +105,7 @@ export default function useTestCreationDraft({
     objectCheck,
     liveNotifications,
     questions,
+    contributeAllToBank,
     examStatus,
     activeStudioTab
   };
@@ -287,6 +290,7 @@ export default function useTestCreationDraft({
     objectCheck,
     liveNotifications,
     questions,
+    contributeAllToBank,
     activeStudioTab,
     isLoadingExisting,
     saveDraftToStorage,
@@ -406,6 +410,7 @@ export default function useTestCreationDraft({
           if (draft.objectCheck !== undefined) setObjectCheck(draft.objectCheck);
           if (draft.liveNotifications !== undefined) setLiveNotifications(draft.liveNotifications);
           if (Array.isArray(draft.questions)) setQuestions(draft.questions);
+          if (draft.contributeAllToBank !== undefined) setContributeAllToBank(draft.contributeAllToBank);
           if (draft.activeStudioTab) setActiveStudioTab(draft.activeStudioTab);
 
           setDraftRestored(true);

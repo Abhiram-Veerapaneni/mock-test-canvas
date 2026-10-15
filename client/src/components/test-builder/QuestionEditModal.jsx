@@ -3,7 +3,7 @@ import api from '../../services/api';
 import EditQuestionMetaFields from './EditQuestionMetaFields';
 import EditQuestionStatementEditor from './EditQuestionStatementEditor';
 import EditQuestionOptionsEditor from './EditQuestionOptionsEditor';
-import { X, AlertCircle, Check } from 'lucide-react';
+import { X, AlertCircle, Check, Database } from 'lucide-react';
 
 export default function QuestionEditModal({
   isOpen,
@@ -18,6 +18,9 @@ export default function QuestionEditModal({
   if (!isOpen || !question) return null;
 
   const [questionText, setQuestionText] = useState(question.questionText || '');
+  const [contributeToBank, setContributeToBank] = useState(
+    Boolean(question.contributeToBank !== undefined ? question.contributeToBank : question.isInBank)
+  );
   const [questionType, setQuestionType] = useState(question.questionType || 'MCQ');
   const [imageAttachment, setImageAttachment] = useState(question.imageAttachment || '');
   const [subject, setSubject] = useState(question.subject || 'Mathematics');
@@ -265,6 +268,8 @@ export default function QuestionEditModal({
       })),
       correctAnswers: finalCorrectAnswers,
       explanation: explanation.trim(),
+      contributeToBank,
+      isInBank: contributeToBank,
       isEdited: isPublishedExam ? true : Boolean(question.isEdited),
       editedAt: isPublishedExam ? new Date() : question.editedAt
     };
@@ -428,7 +433,7 @@ export default function QuestionEditModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between bg-[#F8FAFC] dark:bg-[#0C0F17] shrink-0">
+        <div className="px-6 py-3 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between bg-[#F8FAFC] dark:bg-[#0C0F17] shrink-0 flex-wrap gap-2">
           <button
             type="button"
             onClick={onClose}
@@ -437,14 +442,27 @@ export default function QuestionEditModal({
             Cancel
           </button>
 
-          <button
-            type="submit"
-            form="edit-question-form"
-            className="btn-primary text-xs py-1.5 px-4 flex items-center gap-1.5"
-          >
-            <Check className="w-3.5 h-3.5" />
-            <span>Save Question Changes</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer select-none hover:bg-slate-100 dark:hover:bg-[#162030] transition-colors">
+              <input
+                type="checkbox"
+                checked={contributeToBank}
+                onChange={(e) => setContributeToBank(e.target.checked)}
+                className="w-3.5 h-3.5 rounded text-indigo-600 border-slate-300 dark:border-slate-700 focus:ring-0 cursor-pointer accent-indigo-600"
+              />
+              <Database className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+              <span>Contribute to Bank</span>
+            </label>
+
+            <button
+              type="submit"
+              form="edit-question-form"
+              className="btn-primary text-xs py-1.5 px-4 flex items-center gap-1.5"
+            >
+              <Check className="w-3.5 h-3.5" />
+              <span>Save Question Changes</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
