@@ -56,3 +56,107 @@ export function formatDateTime12h(date, { includeYear = false, includeSeconds = 
 
   return `${month} ${day}${yearStr}, ${timeStr}`;
 }
+
+/**
+ * Format a Date object or timestamp as HTML datetime-local input string (YYYY-MM-DDTHH:mm)
+ *
+ * @param {Date|string|number} date
+ * @returns {string}
+ */
+export function toDateTimeLocalValue(date) {
+  if (!date) return '';
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  const YYYY = d.getFullYear();
+  const MM = pad(d.getMonth() + 1);
+  const DD = pad(d.getDate());
+  const HH = pad(d.getHours());
+  const mm = pad(d.getMinutes());
+  return `${YYYY}-${MM}-${DD}T${HH}:${mm}`;
+}
+
+/**
+ * Format a start and end date range in 12-hour AM/PM format
+ *
+ * @param {Date|string|number} start
+ * @param {Date|string|number} end
+ * @returns {string}
+ */
+export function formatDateRange12h(start, end) {
+  if (!start && !end) return '';
+  if (start && !end) return `From ${formatDateTime12h(start)}`;
+  if (!start && end) return `Until ${formatDateTime12h(end)}`;
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  const isSameDay =
+    startDate.getFullYear() === endDate.getFullYear() &&
+    startDate.getMonth() === endDate.getMonth() &&
+    startDate.getDate() === endDate.getDate();
+
+  if (isSameDay) {
+    const month = MONTH_NAMES[startDate.getMonth()];
+    const day = startDate.getDate();
+    return `${month} ${day}, ${formatTime12h(startDate)} – ${formatTime12h(endDate)}`;
+  }
+
+  return `${formatDateTime12h(startDate)} – ${formatDateTime12h(endDate)}`;
+}
+
+/**
+ * Check if a timestamp falls within a selected time filter
+ *
+ * @param {Date|string|number} timestamp
+ * @param {Object} options
+ * @param {'ALL'|'15M'|'1H'|'TODAY'|'CUSTOM'} [options.timePreset='ALL']
+ * @param {string} [options.customStart='']
+ * @param {string} [options.customEnd='']
+ * @param {number} [options.referenceNow=Date.now()]
+ * @returns {boolean}
+ */
+export function isTimestampInFilter(timestamp, { timePreset = 'ALL', customStart = '', customEnd = '', referenceNow = Date.now() } = {}) {
+  if (!timestamp) return false;
+  const itemMs = new Date(timestamp).getTime();
+  if (isNaN(itemMs)) return false;
+
+  if (timePreset === 'ALL') {
+    return true;
+  }
+
+  if (timePreset === '15M') {
+    return itemMs >= referenceNow - 15 * 60 * 1000;
+  }
+
+  if (timePreset === '1H') {
+    return itemMs >= referenceNow - 60 * 60 * 1000;
+  }
+
+  if (timePreset === 'TODAY') {
+    const itemDate = new Date(itemMs);
+    const today = new Date(referenceNow);
+    return (
+      itemDate.getFullYear() === today.getFullYear() &&
+      itemDate.getMonth() === today.getMonth() &&
+      itemDate.getDate() === today.getDate()
+    );
+  }
+
+  if (timePreset === 'CUSTOM') {
+    if (customStart) {
+      const startMs = new Date(customStart).getTime();
+      if (!isNaN(startMs) && itemMs < startMs) {
+        return false;
+      }
+    }
+    if (customEnd) {
+      const endMs = new Date(customEnd).getTime();
+      if (!isNaN(endMs) && itemMs > endMs) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  return true;
+}

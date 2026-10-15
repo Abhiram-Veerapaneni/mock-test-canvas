@@ -618,6 +618,7 @@ export const updateExam = async (req, res) => {
 export const getExamViolations = async (req, res) => {
   try {
     const { id } = req.params;
+    const { startDate, endDate } = req.query;
     const userId = req.user._id;
 
     const exam = await Exam.findById(id).select('title creatorId proctorSettings');
@@ -640,7 +641,7 @@ export const getExamViolations = async (req, res) => {
       .sort({ createdAt: -1 });
 
     // Flatten all violations for the violation logs table (filter out practice attempts)
-    const allViolations = [];
+    let allViolations = [];
     attempts.forEach((att) => {
       if (att.isPractice) return; // Do not display practice violations in examiner audit
       const userTotalViolations = att.violations?.length || 0;
@@ -660,6 +661,20 @@ export const getExamViolations = async (req, res) => {
         });
       });
     });
+
+    // Optional query date/time range filtering on server side
+    if (startDate) {
+      const startMs = new Date(startDate).getTime();
+      if (!isNaN(startMs)) {
+        allViolations = allViolations.filter((v) => new Date(v.timestamp).getTime() >= startMs);
+      }
+    }
+    if (endDate) {
+      const endMs = new Date(endDate).getTime();
+      if (!isNaN(endMs)) {
+        allViolations = allViolations.filter((v) => new Date(v.timestamp).getTime() <= endMs);
+      }
+    }
 
     // Sort violations by timestamp newest first
     allViolations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
