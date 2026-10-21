@@ -206,16 +206,16 @@ export default function GenerateExamModal({
         {/* Content Area */}
         <div className="p-5 sm:p-6 space-y-5">
           {error && (
-            <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
-              <span>{error}</span>
+            <div className="p-3 rounded-lg bg-white dark:bg-[#131926] border-l-4 border-l-rose-600 border border-slate-200 dark:border-slate-800 text-xs flex items-center gap-2.5 shadow-xs">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+              <span className="font-medium text-slate-900 dark:text-slate-100">{error}</span>
             </div>
           )}
 
           {warningMsg && (
-            <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 text-xs flex items-center gap-2">
+            <div className="p-3 rounded-lg bg-white dark:bg-[#131926] border-l-4 border-l-amber-500 border border-slate-200 dark:border-slate-800 text-xs flex items-center gap-2.5 shadow-xs">
               <Info className="w-4 h-4 shrink-0 text-amber-500" />
-              <span>{warningMsg} Redirecting to exam...</span>
+              <span className="font-medium text-slate-900 dark:text-slate-100">{warningMsg} Redirecting to exam...</span>
             </div>
           )}
 

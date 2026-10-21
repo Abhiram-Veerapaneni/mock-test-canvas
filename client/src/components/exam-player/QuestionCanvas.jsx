@@ -180,21 +180,21 @@ export default function QuestionCanvas() {
                     onClick={() => setAnswer(currentQ._id, optIdx, 'MCQ')}
                     className={`w-full text-left p-3.5 rounded-lg border flex items-start gap-3 transition-colors cursor-pointer text-sm ${
                       isSelected
-                        ? 'border-indigo-600 dark:border-indigo-400 ring-1 ring-indigo-500/30 dark:ring-indigo-400/30 bg-indigo-50/40 dark:bg-[#162030] text-slate-900 dark:text-slate-100 shadow-sm'
-                        : 'bg-white dark:bg-[#131926] border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-[#162030]/50'
+                        ? 'border-indigo-600 dark:border-indigo-500 ring-2 ring-indigo-600/20 bg-white dark:bg-[#151f32] text-slate-900 dark:text-slate-100 shadow-xs'
+                        : 'bg-white dark:bg-[#131926] border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#162030]'
                     }`}
                   >
                     <div
-                      className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-mono font-medium shrink-0 transition-colors ${
+                      className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-semibold shrink-0 transition-colors ${
                         isSelected
-                          ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40'
-                          : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                       }`}
                     >
                       {optionLabels[optIdx] || optIdx + 1}
                     </div>
                     <div className="flex-1 pt-0.5 text-slate-800 dark:text-slate-200 leading-relaxed space-y-2">
-                      {optText && <MathRenderer text={optText} />}
+                      {optText && <MathRenderer text={optText} inline />}
                       {optImage && (
                         <img
                           src={optImage}
@@ -227,21 +227,21 @@ export default function QuestionCanvas() {
                     onClick={() => setAnswer(currentQ._id, optIdx, 'MSQ')}
                     className={`w-full text-left p-3.5 rounded-lg border flex items-start gap-3 transition-colors cursor-pointer text-sm ${
                       isSelected
-                        ? 'border-indigo-600 dark:border-indigo-400 ring-1 ring-indigo-500/30 dark:ring-indigo-400/30 bg-indigo-50/40 dark:bg-[#162030] text-slate-900 dark:text-slate-100 shadow-sm'
-                        : 'bg-white dark:bg-[#131926] border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/60 dark:hover:bg-[#162030]/50'
+                        ? 'border-indigo-600 dark:border-indigo-500 ring-2 ring-indigo-600/20 bg-white dark:bg-[#151f32] text-slate-900 dark:text-slate-100 shadow-xs'
+                        : 'bg-white dark:bg-[#131926] border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-[#162030]'
                     }`}
                   >
                     <div
-                      className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-mono font-medium shrink-0 transition-colors ${
+                      className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-semibold shrink-0 transition-colors ${
                         isSelected
-                          ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40'
-                          : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                       }`}
                     >
-                      {isSelected ? <Check className="w-3.5 h-3.5" /> : optionLabels[optIdx] || optIdx + 1}
+                      {isSelected ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : optionLabels[optIdx] || optIdx + 1}
                     </div>
                     <div className="flex-1 pt-0.5 text-slate-800 dark:text-slate-200 leading-relaxed space-y-2">
-                      {optText && <MathRenderer text={optText} />}
+                      {optText && <MathRenderer text={optText} inline />}
                       {optImage && (
                         <img
                           src={optImage}

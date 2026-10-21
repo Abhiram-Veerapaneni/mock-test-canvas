@@ -124,18 +124,16 @@ export default function ExamQuestionsTab({
                   return (
                     <div
                       key={optIdx}
-                      className={`p-3 rounded-lg border flex items-start gap-2.5 transition-colors ${
-                        isCorrect
+                      className={`p-3 rounded-lg border flex items-start gap-2.5 transition-colors ${isCorrect
                           ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/60'
                           : 'bg-white dark:bg-[#131926] border-slate-200/80 dark:border-slate-800/80'
-                      }`}
+                        }`}
                     >
                       <span
-                        className={`w-5 h-5 rounded text-xs font-medium flex items-center justify-center shrink-0 ${
-                          isCorrect
+                        className={`w-5 h-5 rounded text-xs font-medium flex items-center justify-center shrink-0 ${isCorrect
                             ? 'bg-emerald-600 text-white'
                             : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'
-                        }`}
+                          }`}
                       >
                         {String.fromCharCode(65 + optIdx)}
                       </span>
@@ -143,7 +141,7 @@ export default function ExamQuestionsTab({
                       <div className="flex-1 min-w-0 space-y-1.5">
                         {optText && (
                           <div className="text-xs text-slate-800 dark:text-slate-200 leading-snug">
-                            <MathRenderer text={optText} />
+                            <MathRenderer text={optText} inline />
                           </div>
                         )}
                         {optImg && (

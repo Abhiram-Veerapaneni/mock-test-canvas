@@ -265,20 +265,20 @@ export default function AuthModal() {
 
           {/* Cold Start Indicator */}
           {isWaking && !localError && !error && (
-            <div className="p-2.5 rounded-md bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            <div className="p-2.5 rounded-md bg-white dark:bg-[#162030] border-l-4 border-l-amber-500 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs flex items-center justify-between gap-2 shadow-xs">
+              <div className="flex items-center gap-2 font-medium">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                 <span>Backend booting up...</span>
               </div>
-              <span className="font-mono text-[11px]">{elapsedSeconds}s</span>
+              <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 font-semibold">{elapsedSeconds}s</span>
             </div>
           )}
 
           {/* Error Message */}
           {(localError || error) && (
-            <div className="p-2.5 rounded-md bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/50 dark:border-rose-800/40 text-rose-700 dark:text-rose-400 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{localError || error}</span>
+            <div className="p-2.5 rounded-md bg-white dark:bg-[#162030] border-l-4 border-l-rose-600 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs flex items-center gap-2 shadow-xs">
+              <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+              <span className="font-medium">{localError || error}</span>
             </div>
           )}
 

@@ -6,7 +6,7 @@ import 'katex/dist/katex.min.css';
  * LatexRenderer Component
  * Dynamic KaTeX math parser supporting inline ($...$) and block ($$...$$) LaTeX expressions
  */
-export default function LatexRenderer({ content = '', className = '' }) {
+export default function LatexRenderer({ content = '', className = '', inline = false }) {
   const renderedElements = useMemo(() => {
     if (!content) return null;
 
@@ -16,15 +16,33 @@ export default function LatexRenderer({ content = '', className = '' }) {
     return parts.map((part, index) => {
       if (part.startsWith('$$') && part.endsWith('$$')) {
         const math = part.slice(2, -2).trim();
+
+        const prevPart = index > 0 ? parts[index - 1] : '';
+        const nextPart = index < parts.length - 1 ? parts[index + 1] : '';
+        const isPrevNewline = !prevPart || prevPart.trim() === '' || /[\r\n]\s*$/.test(prevPart);
+        const isNextNewline = !nextPart || nextPart.trim() === '' || /^\s*[\r\n]/.test(nextPart);
+        const isStandaloneBlock = !inline && isPrevNewline && isNextNewline;
+
         try {
           const html = katex.renderToString(math, {
-            displayMode: true,
+            displayMode: isStandaloneBlock,
             throwOnError: false
           });
+
+          if (isStandaloneBlock) {
+            return (
+              <span
+                key={index}
+                className="my-3 block text-center overflow-x-auto text-blue-600 dark:text-blue-300 font-semibold"
+                dangerouslySetInnerHTML={{ __html: html }}
+              />
+            );
+          }
+
           return (
             <span
               key={index}
-              className="my-3 block text-center overflow-x-auto text-blue-600 dark:text-blue-300 font-semibold"
+              className="inline-block px-1 text-blue-700 dark:text-blue-300 font-semibold"
               dangerouslySetInnerHTML={{ __html: html }}
             />
           );

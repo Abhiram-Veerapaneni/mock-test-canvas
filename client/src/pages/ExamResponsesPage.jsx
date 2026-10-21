@@ -116,7 +116,7 @@ export default function ExamResponsesPage() {
         <Navbar />
         <main className="flex-1 max-w-2xl w-full mx-auto px-4 py-16 flex flex-col items-center justify-center text-center">
           <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg p-8 space-y-4 shadow-none w-full">
-            <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/50 flex items-center justify-center mx-auto">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400 border border-slate-200 dark:border-slate-700 flex items-center justify-center mx-auto shadow-xs">
               <AlertCircle className="w-5 h-5" />
             </div>
             <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">Response Sheet Unavailable</h2>
@@ -234,44 +234,40 @@ export default function ExamResponsesPage() {
                 <button
                   type="button"
                   onClick={() => setFilterType('ALL')}
-                  className={`p-2 rounded-md font-medium text-center border transition-colors cursor-pointer ${
-                    filterType === 'ALL'
-                      ? 'bg-indigo-600 text-white border-indigo-600 dark:bg-indigo-500 dark:text-white dark:border-indigo-500 shadow-sm'
-                      : 'bg-white dark:bg-[#131926] text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-[#162030]'
-                  }`}
+                  className={`p-2 rounded-md font-medium text-center border transition-colors cursor-pointer ${filterType === 'ALL'
+                      ? 'bg-indigo-600 text-white dark:bg-indigo-500 border-indigo-600 dark:border-indigo-500 shadow-xs'
+                      : 'bg-white dark:bg-[#131926] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:text-indigo-600 dark:hover:text-indigo-400'
+                    }`}
                 >
                   All ({questions.length})
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterType('CORRECT')}
-                  className={`p-2 rounded-md font-medium text-center border transition-colors cursor-pointer ${
-                    filterType === 'CORRECT'
-                      ? 'bg-emerald-600 text-white border-emerald-600'
-                      : 'bg-emerald-50/60 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200/50 dark:border-emerald-900/50 hover:bg-emerald-100/50'
-                  }`}
+                  className={`p-2 rounded-md font-medium text-center border transition-colors cursor-pointer ${filterType === 'CORRECT'
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                      : 'bg-white dark:bg-[#131926] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-emerald-500 hover:text-emerald-600'
+                    }`}
                 >
                   Correct ({attempt.correct})
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterType('INCORRECT')}
-                  className={`p-2 rounded-md font-medium text-center border transition-colors cursor-pointer ${
-                    filterType === 'INCORRECT'
-                      ? 'bg-rose-600 text-white border-rose-600'
-                      : 'bg-rose-50/60 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200/50 dark:border-rose-900/50 hover:bg-rose-100/50'
-                  }`}
+                  className={`p-2 rounded-md font-medium text-center border transition-colors cursor-pointer ${filterType === 'INCORRECT'
+                      ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                      : 'bg-white dark:bg-[#131926] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-rose-500 hover:text-rose-600'
+                    }`}
                 >
                   Incorrect ({attempt.incorrect})
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterType('UNANSWERED')}
-                  className={`p-2 rounded-md font-medium text-center border transition-colors cursor-pointer ${
-                    filterType === 'UNANSWERED'
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                      : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-200/60'
-                  }`}
+                  className={`p-2 rounded-md font-medium text-center border transition-colors cursor-pointer ${filterType === 'UNANSWERED'
+                      ? 'bg-slate-600 text-white dark:bg-slate-600 border-slate-600 dark:border-slate-600 shadow-xs'
+                      : 'bg-white dark:bg-[#131926] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
                 >
                   Skipped ({attempt.unanswered})
                 </button>
@@ -313,11 +309,10 @@ export default function ExamResponsesPage() {
                       <span>{qNum}</span>
                       {isCurrent && (
                         <span
-                          className={`absolute top-1 left-1/2 -translate-x-1/2 h-0.5 w-3.5 rounded-full ${
-                            q.isCorrect || (q.isAnswered && !q.isCorrect) || isMarked
+                          className={`absolute top-1 left-1/2 -translate-x-1/2 h-0.5 w-3.5 rounded-full ${q.isCorrect || (q.isAnswered && !q.isCorrect) || isMarked
                               ? 'bg-white/90'
                               : 'bg-slate-500 dark:bg-slate-400'
-                          }`}
+                            }`}
                         />
                       )}
                     </button>
@@ -372,7 +367,7 @@ export default function ExamResponsesPage() {
                     {/* Question Header */}
                     <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3">
                       <div className="flex items-center gap-2.5">
-                        <span className="w-6 h-6 rounded-md bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40 text-xs font-semibold flex items-center justify-center">
+                        <span className="w-6 h-6 rounded-md bg-indigo-600 dark:bg-indigo-500 text-white text-xs font-semibold flex items-center justify-center shadow-xs">
                           {q.questionIndex}
                         </span>
                         <div className="flex items-center gap-2 flex-wrap">
@@ -441,24 +436,24 @@ export default function ExamResponsesPage() {
                           let badgeEl = null;
 
                           if (isUserSelected && isCorrectAnswer) {
-                            borderStyle = 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 text-slate-900 dark:text-slate-100';
+                            borderStyle = 'border-emerald-500 dark:border-emerald-500 ring-1 ring-emerald-500/20 bg-white dark:bg-[#131926] text-slate-900 dark:text-slate-100 shadow-xs';
                             badgeEl = (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-900/50 px-2 py-0.5 rounded-md shrink-0">
-                                <Check className="w-3 h-3" /> Your Answer (Correct)
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">
+                                <Check className="w-3.5 h-3.5 stroke-[2.5]" /> Your Answer (Correct)
                               </span>
                             );
                           } else if (isUserSelected && !isCorrectAnswer) {
-                            borderStyle = 'border-rose-300 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/20 text-slate-900 dark:text-slate-100';
+                            borderStyle = 'border-rose-500 dark:border-rose-500 ring-1 ring-rose-500/20 bg-white dark:bg-[#131926] text-slate-900 dark:text-slate-100 shadow-xs';
                             badgeEl = (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 dark:text-rose-300 bg-rose-100/70 dark:bg-rose-900/50 px-2 py-0.5 rounded-md shrink-0">
-                                <X className="w-3 h-3" /> Your Answer (Incorrect)
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 shrink-0">
+                                <X className="w-3.5 h-3.5 stroke-[2.5]" /> Your Answer (Incorrect)
                               </span>
                             );
                           } else if (isCorrectAnswer) {
-                            borderStyle = 'border-emerald-300/70 dark:border-emerald-800/70 bg-emerald-50/25 dark:bg-emerald-950/10 text-slate-900 dark:text-slate-100';
+                            borderStyle = 'border-emerald-500/80 dark:border-emerald-500/80 bg-white dark:bg-[#131926] text-slate-900 dark:text-slate-100';
                             badgeEl = (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-100/50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-md shrink-0">
-                                <Check className="w-3 h-3" /> Correct Solution
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">
+                                <Check className="w-3.5 h-3.5 stroke-[2.5]" /> Correct Solution
                               </span>
                             );
                           }
@@ -469,8 +464,13 @@ export default function ExamResponsesPage() {
                               className={`p-3 rounded-md border flex items-start justify-between gap-3 text-xs transition-colors ${borderStyle}`}
                             >
                               <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                                <span className="font-medium text-slate-400 shrink-0 mt-0.5">
-                                  ({letter})
+                                <span className={`w-5 h-5 rounded flex items-center justify-center font-medium text-xs shrink-0 ${isCorrectAnswer
+                                    ? 'bg-emerald-600 text-white'
+                                    : isUserSelected
+                                      ? 'bg-rose-600 text-white'
+                                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                                  }`}>
+                                  {letter}
                                 </span>
                                 <div className="space-y-1">
                                   <MathRenderer text={optText} />

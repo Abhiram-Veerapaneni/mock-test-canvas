@@ -218,15 +218,15 @@ export default function QuestionBankPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Banner / Success Toast */}
         {notificationMsg && (
-          <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>{notificationMsg}</span>
+          <div className="p-3.5 rounded-lg bg-white dark:bg-[#131926] border-l-4 border-l-emerald-600 border border-slate-200 dark:border-slate-800 text-xs flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="font-medium text-slate-900 dark:text-slate-100">{notificationMsg}</span>
             </div>
             <button
               type="button"
               onClick={() => setNotificationMsg('')}
-              className="text-emerald-600 hover:text-emerald-900 dark:hover:text-emerald-100 font-semibold"
+              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-semibold cursor-pointer"
             >
               ✕
             </button>
@@ -296,14 +296,14 @@ export default function QuestionBankPage() {
             <button
               type="button"
               onClick={() => setShowAllDetails((prev) => !prev)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-colors cursor-pointer border shrink-0 ${showAllDetails
-                  ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700 font-medium shadow-xs'
-                  : 'bg-white dark:bg-[#131926] text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer border shrink-0 ${showAllDetails
+                  ? 'bg-indigo-600 text-white dark:bg-indigo-500 dark:text-white border-indigo-600 dark:border-indigo-500 font-semibold shadow-xs'
+                  : 'bg-white dark:bg-[#131926] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               title={showAllDetails ? 'Hide details across all question cards' : 'Show details across all question cards'}
             >
               {showAllDetails ? (
-                <ChevronUp className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                <ChevronUp className="w-3.5 h-3.5 text-white" />
               ) : (
                 <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
               )}
@@ -314,13 +314,13 @@ export default function QuestionBankPage() {
             <button
               type="button"
               onClick={handleToggleAnswerKeys}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-colors cursor-pointer border shrink-0 ${showAnswerKeys
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 font-medium shadow-xs'
-                  : 'bg-white dark:bg-[#131926] text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors cursor-pointer border shrink-0 ${showAnswerKeys
+                  ? 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-white border-emerald-600 dark:border-emerald-500 font-semibold shadow-xs'
+                  : 'bg-white dark:bg-[#131926] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               title={showAnswerKeys ? 'Hide verified answers across cards for practice' : 'Display verified answers across question cards'}
             >
-              {showAnswerKeys ? <EyeOff className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
+              {showAnswerKeys ? <EyeOff className="w-3.5 h-3.5 text-white" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
               <span>{showAnswerKeys ? 'Hide Answers' : 'Show Answers'}</span>
             </button>
 
@@ -332,7 +332,7 @@ export default function QuestionBankPage() {
                 value={searchQuery}
                 onChange={handleSearchChange}
                 placeholder="Search problem text..."
-                className="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-1 focus:ring-indigo-500/20 shadow-sm"
+                className="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 shadow-xs dark:bg-[#131926] dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 focus:ring-1 focus:ring-indigo-500/20"
               />
             </div>
           </div>
@@ -357,20 +357,20 @@ export default function QuestionBankPage() {
                 <span className="text-xs">Loading Question Bank...</span>
               </div>
             ) : error ? (
-              <div className="p-6 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 text-center space-y-3">
-                <AlertCircle className="w-6 h-6 text-rose-500 mx-auto" />
-                <p className="text-xs text-rose-700 dark:text-rose-300">{error}</p>
+              <div className="p-6 rounded-xl bg-white dark:bg-[#131926] border-l-4 border-l-rose-600 border border-slate-200 dark:border-slate-800 text-center space-y-3 shadow-xs">
+                <AlertCircle className="w-6 h-6 text-rose-600 dark:text-rose-400 mx-auto" />
+                <p className="text-xs font-medium text-slate-900 dark:text-slate-100">{error}</p>
                 <button
                   type="button"
                   onClick={fetchQuestions}
-                  className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#131926] text-xs font-medium border text-slate-700 dark:text-slate-300"
+                  className="btn-primary text-xs py-1.5 px-3.5 shadow-xs"
                 >
                   Retry
                 </button>
               </div>
             ) : questions.length === 0 ? (
-              <div className="py-16 text-center bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-2xl p-8 space-y-4 shadow-sm">
-                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center mx-auto text-slate-400">
+              <div className="py-16 text-center bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-xl p-8 space-y-4 shadow-sm">
+                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
                   <Database className="w-6 h-6" />
                 </div>
                 <div>
@@ -389,7 +389,7 @@ export default function QuestionBankPage() {
                     <button
                       type="button"
                       onClick={handleClearFilters}
-                      className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030] cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030] cursor-pointer"
                     >
                       Clear Filters
                     </button>
@@ -397,7 +397,7 @@ export default function QuestionBankPage() {
                   <button
                     type="button"
                     onClick={handleOpenAddModal}
-                    className="px-3.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40 text-xs font-medium hover:bg-slate-800 dark:hover:bg-white cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium shadow-xs cursor-pointer transition-colors"
                   >
                     + Add New Question
                   </button>

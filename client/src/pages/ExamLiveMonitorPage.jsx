@@ -33,30 +33,30 @@ const getViolationDetails = (type) => {
 
 const getViolationBadgeStyle = (tone) => {
   if (tone === 'critical') {
-    return 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60';
+    return 'bg-white dark:bg-[#131926] text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-800 shadow-xs font-semibold';
   }
   if (tone === 'warning') {
-    return 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60';
+    return 'bg-white dark:bg-[#131926] text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800 shadow-xs font-semibold';
   }
-  return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700';
+  return 'bg-white dark:bg-[#131926] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-xs font-semibold';
 };
 
 const getTrustScoreStyle = (score) => {
   const val = score ?? 100;
   if (val >= 80) {
     return {
-      badgeClass: 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60',
+      badgeClass: 'text-emerald-700 dark:text-emerald-400 bg-white dark:bg-[#131926] border border-emerald-300 dark:border-emerald-800 shadow-xs font-semibold',
       label: 'Good'
     };
   }
   if (val >= 50) {
     return {
-      badgeClass: 'text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60',
+      badgeClass: 'text-amber-700 dark:text-amber-400 bg-white dark:bg-[#131926] border border-amber-300 dark:border-amber-800 shadow-xs font-semibold',
       label: 'Review'
     };
   }
   return {
-    badgeClass: 'text-rose-700 bg-rose-50 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60',
+    badgeClass: 'text-rose-700 dark:text-rose-400 bg-white dark:bg-[#131926] border border-rose-300 dark:border-rose-800 shadow-xs font-semibold',
     label: 'High Risk'
   };
 };
@@ -277,8 +277,8 @@ export default function ExamLiveMonitorPage() {
                 Live Proctoring Console
               </h1>
 
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/80 shrink-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-semibold bg-emerald-600 text-white shadow-xs shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                 Live Feed
               </span>
 
@@ -455,10 +455,10 @@ export default function ExamLiveMonitorPage() {
 
         {/* Subtle Live Notice (when events arrive outside filtered time window) */}
         {missedLiveCount > 0 && (
-          <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/80 dark:border-indigo-800/60 text-xs text-indigo-900 dark:text-indigo-200 shadow-sm">
+          <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-lg bg-white dark:bg-[#131926] border-l-4 border-l-indigo-600 border border-slate-200 dark:border-slate-800 text-xs shadow-xs">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0 animate-pulse" />
-              <span className="truncate">
+              <span className="truncate text-slate-700 dark:text-slate-300">
                 <strong className="font-semibold text-slate-900 dark:text-slate-100">{missedLiveCount}</strong> new live violation{missedLiveCount > 1 ? 's' : ''} occurred outside the active time window.
               </span>
             </div>
@@ -466,7 +466,7 @@ export default function ExamLiveMonitorPage() {
               <button
                 type="button"
                 onClick={handleResetTimeFilter}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs px-2.5 py-1 rounded-lg shadow-sm shadow-indigo-600/20 transition-all cursor-pointer"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs px-2.5 py-1 rounded-md shadow-xs transition-all cursor-pointer"
               >
                 View live feed
               </button>
@@ -489,19 +489,19 @@ export default function ExamLiveMonitorPage() {
             <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Synchronizing live proctoring stream...</span>
           </div>
         ) : error ? (
-          <div className="p-4 rounded-xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs flex items-center justify-between shadow-sm">
-            <span>{error}</span>
+          <div className="p-4 rounded-lg bg-white dark:bg-[#131926] border-l-4 border-l-rose-600 border border-slate-200 dark:border-slate-800 text-xs flex items-center justify-between shadow-xs">
+            <span className="font-medium text-slate-900 dark:text-slate-100">{error}</span>
             <button
               type="button"
               onClick={fetchViolations}
-              className="px-3 py-1 bg-white hover:bg-slate-50 border border-rose-200 rounded-lg text-xs font-medium text-rose-700 shadow-sm cursor-pointer"
+              className="px-3 py-1 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-700 shadow-xs cursor-pointer"
             >
               Retry
             </button>
           </div>
         ) : filteredViolations.length === 0 ? (
           <div className="py-20 bg-white dark:bg-[#131926] border border-slate-200/80 dark:border-slate-800/80 rounded-xl text-center space-y-2 p-8 shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mx-auto">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mx-auto">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Clean Session • No Infractions</h3>

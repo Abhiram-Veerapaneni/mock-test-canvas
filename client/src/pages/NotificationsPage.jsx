@@ -355,7 +355,7 @@ export default function NotificationsPage() {
                   {/* Status Indicator Dot & Icon */}
                   <div className="flex items-center gap-2 shrink-0 mt-0.5">
                     {!notification.read ? (
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-900 dark:bg-slate-100 shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400 shrink-0" />
                     ) : (
                       <span className="w-1.5 h-1.5 rounded-full bg-transparent shrink-0" />
                     )}

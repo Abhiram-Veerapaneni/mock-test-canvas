@@ -14,7 +14,17 @@ import ExamLiveMonitorModal from '../components/proctoring/ExamLiveMonitorModal'
 import api from '../services/api';
 import useExamStore from '../store/useExamStore';
 import useAuthStore from '../store/useAuthStore';
-import { Loader2, AlertCircle, Eye, EyeOff, Lock, Edit3 } from 'lucide-react';
+import {
+  Loader2,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Lock,
+  Edit3,
+  FileQuestion,
+  ShieldCheck,
+  History
+} from 'lucide-react';
 
 export default function ExamDetailPage() {
   const { testId, examId: routeExamId } = useParams();
@@ -417,10 +427,20 @@ export default function ExamDetailPage() {
                       ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700 font-medium'
                       : 'bg-white dark:bg-[#131926] text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100'
                   }`}
-                  title={showAnswerKey ? 'Hide answers for unassisted self-testing' : 'Display answer key and solutions'}
+                  title={
+                    showAnswerKey
+                      ? 'Hide answers for unassisted self-testing'
+                      : 'Display answer key and solutions'
+                  }
                 >
-                  {showAnswerKey ? <EyeOff className="w-3.5 h-3.5 text-slate-500" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
-                  <span>{showAnswerKey ? 'Hide Answer Key' : 'Show Answer Key'}</span>
+                  {showAnswerKey ? (
+                    <EyeOff className="w-3.5 h-3.5 text-slate-500" />
+                  ) : (
+                    <Eye className="w-3.5 h-3.5 text-slate-500" />
+                  )}
+                  <span>
+                    {showAnswerKey ? 'Hide Answer Key' : 'Show Answer Key'}
+                  </span>
                 </button>
 
                 {exam.isGenerated && (

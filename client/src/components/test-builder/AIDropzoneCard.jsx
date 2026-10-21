@@ -129,11 +129,11 @@ export default function AIDropzoneCard({
       )}
 
       {ingestionError && (
-        <div className="p-3 rounded-md bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/50 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
+        <div className="p-3 rounded-lg bg-slate-50 dark:bg-[#162030] border border-slate-200/80 dark:border-slate-800/80 border-l-4 border-l-rose-500 text-xs flex items-start gap-2.5">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
           <div className="flex-1 min-w-0">
-            <p className="font-medium">Document Ingestion Failed</p>
-            <p className="text-xs mt-0.5">{ingestionError}</p>
+            <p className="font-semibold text-slate-900 dark:text-slate-100">Document Ingestion Failed</p>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{ingestionError}</p>
           </div>
         </div>
       )}

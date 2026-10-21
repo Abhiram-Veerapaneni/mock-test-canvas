@@ -173,18 +173,18 @@ export default function QuestionBankCard({
                   <div
                     key={oIdx}
                     className={`p-2 rounded-lg border flex items-start gap-2 ${isCorrect
-                        ? 'bg-emerald-50/70 border-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-700/80 text-emerald-900 dark:text-emerald-100 shadow-xs'
-                        : 'bg-slate-50 dark:bg-[#162030] border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300'
+                      ? 'bg-emerald-50/70 border-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-700/80 text-emerald-900 dark:text-emerald-100 shadow-xs'
+                      : 'bg-slate-50 dark:bg-[#162030] border-slate-200/80 dark:border-slate-800/80 text-slate-700 dark:text-slate-300'
                       }`}
                   >
                     <span className={`w-5 h-5 rounded flex items-center justify-center font-mono text-[11px] font-semibold shrink-0 ${isCorrect
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-slate-200 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-slate-200 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300'
                       }`}>
                       {String.fromCharCode(65 + oIdx)}
                     </span>
                     <div className="flex-1 min-w-0">
-                      {optText && <MathRenderer text={optText} />}
+                      {optText && <MathRenderer text={optText} inline />}
                       {optImg && (
                         <img
                           src={optImg}
@@ -252,11 +252,10 @@ export default function QuestionBankCard({
             <button
               type="button"
               onClick={handleToggleAnswer}
-              className={`flex items-center gap-1 font-medium text-[11px] cursor-pointer transition-colors ${
-                isAnswerVisible
+              className={`flex items-center gap-1 font-medium text-[11px] cursor-pointer transition-colors ${isAnswerVisible
                   ? 'text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300'
                   : 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline'
-              }`}
+                }`}
               title={isAnswerVisible ? 'Hide answer for this question' : 'Show answer for this question'}
             >
               {isAnswerVisible ? (
@@ -286,19 +285,19 @@ export default function QuestionBankCard({
 
       {/* Inline Delete Confirmation Dialog */}
       {showDeleteConfirm && (
-        <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs space-y-2">
-          <div className="flex items-center gap-2 text-rose-800 dark:text-rose-300 font-medium">
-            <AlertTriangle className="w-4 h-4 text-rose-600" />
+        <div className="p-3.5 rounded-lg bg-white dark:bg-[#131926] border-l-4 border-l-rose-600 border border-slate-200 dark:border-slate-800 text-xs space-y-2 shadow-xs">
+          <div className="flex items-center gap-2 text-slate-900 dark:text-slate-100 font-semibold">
+            <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
             <span>Are you sure you want to remove this question from the Question Bank?</span>
           </div>
-          <p className="text-[11px] text-rose-700 dark:text-rose-400">
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">
             This action cannot be undone. Active tests using this question may retain references.
           </p>
           <div className="flex items-center justify-end gap-2 pt-1">
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(false)}
-              className="px-2.5 py-1 rounded bg-white dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 cursor-pointer"
+              className="px-2.5 py-1 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer font-medium text-xs"
             >
               Cancel
             </button>

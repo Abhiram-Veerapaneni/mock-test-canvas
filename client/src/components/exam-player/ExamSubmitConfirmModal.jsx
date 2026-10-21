@@ -39,7 +39,7 @@ export default function ExamSubmitConfirmModal({
           <button
             type="button"
             onClick={onConfirm}
-            className="px-3.5 py-1.5 rounded-md text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200 shadow-sm transition-colors cursor-pointer"
+            className="btn-primary text-xs py-1.5 px-3.5 shadow-xs"
           >
             Submit Exam
           </button>

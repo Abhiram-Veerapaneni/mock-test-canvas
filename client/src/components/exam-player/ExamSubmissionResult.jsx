@@ -138,8 +138,8 @@ export default function ExamSubmissionResult({
 
         {/* Violation log or Clean session badge */}
         {submittedViolations.length > 0 ? (
-          <div className="rounded-xl bg-rose-50/50 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900/40 p-3 space-y-2">
-            <div className="flex items-center justify-between text-xs text-rose-700 dark:text-rose-400 font-medium">
+          <div className="rounded-lg bg-slate-50 dark:bg-[#162030] border border-slate-200/80 dark:border-slate-800/80 border-l-4 border-l-rose-500 p-3 space-y-2">
+            <div className="flex items-center justify-between text-xs text-rose-600 dark:text-rose-400 font-semibold">
               <div className="flex items-center gap-1.5">
                 <ShieldAlert className="w-3.5 h-3.5" />
                 <span>
@@ -147,9 +147,9 @@ export default function ExamSubmissionResult({
                   {submittedViolations.length !== 1 ? 's' : ''}
                 </span>
               </div>
-              <span className="text-[10px] uppercase font-mono">Logged</span>
+              <span className="text-[10px] uppercase font-semibold text-rose-600 dark:text-rose-400">Logged</span>
             </div>
-            <ul className="divide-y divide-rose-100 dark:divide-rose-900/30 max-h-32 overflow-y-auto">
+            <ul className="divide-y divide-slate-200/60 dark:divide-slate-800/60 max-h-32 overflow-y-auto">
               {submittedViolations.map((v, i) => (
                 <li key={i} className="flex items-center justify-between py-1.5 text-[11px]">
                   <span className="text-slate-700 dark:text-slate-300">
@@ -163,12 +163,12 @@ export default function ExamSubmissionResult({
             </ul>
           </div>
         ) : (
-          <div className="flex items-center justify-between px-3.5 py-2 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-900/30 text-xs text-emerald-700 dark:text-emerald-400">
-            <div className="flex items-center gap-1.5 font-medium">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Session Verified</span>
+          <div className="flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-slate-50 dark:bg-[#162030] border border-slate-200/80 dark:border-slate-800/80 border-l-4 border-l-emerald-500 text-xs">
+            <div className="flex items-center gap-2 font-medium text-slate-800 dark:text-slate-200">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              <span className="font-semibold">Session Verified</span>
             </div>
-            <span className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80 font-medium">
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
               0 Infractions
             </span>
           </div>

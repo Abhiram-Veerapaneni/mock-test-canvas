@@ -80,7 +80,7 @@ export default function BankQuestionOptionsEditor({
               key={idx}
               className={`p-2.5 rounded-lg border transition-colors space-y-2 ${
                 isCorrect
-                  ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800'
+                  ? 'bg-white dark:bg-[#131926] border-emerald-500 dark:border-emerald-500 ring-1 ring-emerald-500/20 shadow-xs'
                   : 'bg-white dark:bg-[#162030] border-slate-200 dark:border-slate-700'
               }`}
             >

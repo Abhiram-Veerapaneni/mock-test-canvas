@@ -353,7 +353,7 @@ export default function IngestionReviewModal({
                                   key={optIndex}
                                   className={`flex items-center gap-2.5 p-2 rounded-md border transition-colors ${
                                     isCorrect
-                                      ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30'
+                                      ? 'border-emerald-500 dark:border-emerald-500 ring-1 ring-emerald-500/20 bg-white dark:bg-[#131926] shadow-xs'
                                       : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-[#131926]'
                                   }`}
                                 >
@@ -386,7 +386,7 @@ export default function IngestionReviewModal({
 
                                   {/* Rendered Preview Snippet */}
                                   <div className="hidden sm:block max-w-[200px] truncate text-xs text-slate-500 dark:text-slate-400 px-2 py-0.5 border-l border-slate-200 dark:border-slate-700">
-                                    <MathRenderer text={opt} />
+                                    <MathRenderer text={opt} inline />
                                   </div>
 
                                   {/* Remove Option Button */}

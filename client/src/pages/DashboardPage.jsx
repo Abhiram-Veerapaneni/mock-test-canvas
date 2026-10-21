@@ -3,25 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import useAuthStore from '../store/useAuthStore';
 import api from '../services/api';
-import { formatDateTime12h } from '../utils/dateUtils';
 import {
   BookOpen,
   Search,
   PlusCircle,
-  Play,
-  RotateCcw,
   Loader2,
   AlertCircle,
-  Edit3,
-  Clock,
-  FileText,
-  Award,
-  Calendar,
   Compass,
-  Trash2,
   X
 } from 'lucide-react';
 import DiscardDraftModal from '../components/common/DiscardDraftModal';
+import ExamCard from '../components/exam/ExamCard';
 
 export default function DashboardPage() {
   const { user, isAuthenticated, loginWithGoogle } = useAuthStore();
@@ -213,31 +205,6 @@ export default function DashboardPage() {
     navigate('/create-test');
   };
 
-  const getScheduleMeta = (schedule) => {
-    if (!schedule?.isScheduled) {
-      return 'Flexible · Anytime';
-    }
-    const now = Date.now();
-    const start = schedule.startTime ? new Date(schedule.startTime) : null;
-    const end = schedule.endTime ? new Date(schedule.endTime) : null;
-    const startMs = start?.getTime();
-    const endMs = end?.getTime();
-
-    if (startMs && now < startMs) {
-      return `Opens ${formatDateTime12h(start)}`;
-    }
-    if (endMs && now > endMs) {
-      return `Ended ${formatDateTime12h(end)}`;
-    }
-    if (endMs) {
-      return `Closes ${formatDateTime12h(end)}`;
-    }
-    if (startMs) {
-      return `Live since ${formatDateTime12h(start)}`;
-    }
-    return 'Schedule open';
-  };
-
   const [questionBankCount, setQuestionBankCount] = useState(null);
 
   // Fetch true Question Bank count from question repository
@@ -259,20 +226,6 @@ export default function DashboardPage() {
 
   const totalQuestions = questionBankCount !== null ? questionBankCount : totalExamQuestions;
   const completedAttempts = user?.attemptedTests?.length || 0;
-
-  const getCategoryEyebrowClass = (category) => {
-    const cat = (category || '').toUpperCase();
-    if (cat === 'JEE' || cat === 'NEET') {
-      return 'text-indigo-600 dark:text-indigo-400';
-    }
-    if (cat === 'GATE') {
-      return 'text-blue-600 dark:text-sky-400';
-    }
-    if (cat === 'APTITUDE') {
-      return 'text-amber-600 dark:text-amber-400';
-    }
-    return 'text-slate-500 dark:text-slate-400';
-  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0C0F17] text-slate-900 dark:text-slate-300 flex flex-col">
@@ -400,14 +353,14 @@ export default function DashboardPage() {
               <p className="text-xs">Loading tests...</p>
             </div>
           ) : error ? (
-            <div className="p-3.5 rounded-lg bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/50 dark:border-rose-800/40 text-rose-700 dark:text-rose-400 text-xs flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{error}</span>
+            <div className="p-3.5 rounded-lg bg-white dark:bg-[#131926] border-l-4 border-l-rose-600 border border-slate-200 dark:border-slate-800 text-xs flex items-center justify-between shadow-xs">
+              <div className="flex items-center gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                <span className="font-medium text-slate-900 dark:text-slate-100">{error}</span>
               </div>
               <button
                 onClick={fetchExams}
-                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm active:scale-[0.98] dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700 py-1 px-2.5 text-xs rounded-lg font-medium transition cursor-pointer"
+                className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-xs active:scale-[0.98] dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 py-1 px-2.5 text-xs rounded-md font-medium transition cursor-pointer"
               >
                 Retry
               </button>
@@ -451,167 +404,55 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
               {displayExams.map((exam) => {
-                const attemptsUsed = exam.userAttemptCount || 0;
-                const maxAttempts = exam.maxAttempts;
-                const isUnlimited = maxAttempts === null || maxAttempts === undefined;
-                const attemptsLeft = isUnlimited ? Infinity : Math.max(0, maxAttempts - attemptsUsed);
-                const hasAttempted = attemptsUsed > 0;
-                const isExhausted = !isUnlimited && attemptsLeft === 0;
-                const isDraft = exam.status === 'draft';
                 const questionCount = exam.questionCount || exam.questions?.length || 0;
-                const scheduleMeta = getScheduleMeta(exam.schedule);
+                const attemptsUsed = exam.userAttemptCount || 0;
+                const isDraft = exam.status === 'draft';
 
                 return (
-                  <div
+                  <ExamCard
                     key={exam._id}
-                    onClick={() => navigate(`/test/${exam._id}`)}
-                    className="rounded-xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:shadow-md transition-all duration-150 dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none dark:hover:border-slate-700 dark:hover:bg-[#162030] p-5 flex flex-col justify-between group cursor-pointer"
-                  >
-                    <div>
-                      {/* Header: Upper-left subtle eyebrow + Conditional status indicator only */}
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className={`text-[11px] font-semibold uppercase tracking-wider ${getCategoryEyebrowClass(exam.category)}`}>
-                          {exam.category || 'Standard'}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          {exam.isGenerated && !exam.isPublic && (
-                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Private</span>
-                          )}
-                          {/* Status: ONLY show if draft or exhausted. Published/Live is default so do not label. */}
-                          {isDraft ? (
-                            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-slate-700/80">
-                              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                              Draft
-                            </span>
-                          ) : isExhausted ? (
-                            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-200/80 dark:border-slate-700/80">
-                              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                              Exhausted
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-
-                      {/* Body: Card title */}
-                      <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100 line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                        {exam.title}
-                      </h2>
-
-                      {exam.description && (
-                        <p className="text-xs text-slate-500 dark:text-slate-300 mt-1 line-clamp-2">
-                          {exam.description}
-                        </p>
-                      )}
-
-                      {/* Clean Schema Data Grid: Duration, Questions, Marks with Ratio, Schedule */}
-                      <div className="border-y border-slate-100 dark:border-slate-800/80 py-3 my-3 grid grid-cols-2 gap-y-2.5 gap-x-3 text-xs text-slate-600 dark:text-slate-400">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <Clock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400 shrink-0" />
-                          <span className="truncate tabular-nums">{exam.durationMinutes} mins</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <FileText className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400 shrink-0" />
-                          <span className="truncate tabular-nums">{questionCount} Questions</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <Award className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400 shrink-0" />
-                          <span className="truncate tabular-nums">
-                            {exam.totalMarks || (questionCount * (exam.markingScheme?.correct || 4))} Marks
-                            {exam.markingScheme?.correct !== undefined && (
-                              <span className="text-[10px] text-slate-400 dark:text-slate-400 ml-1">
-                                (+{exam.markingScheme.correct}/{exam.markingScheme.incorrect ?? 0})
-                              </span>
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400 shrink-0" />
-                          <span className="truncate text-[11px]">{scheduleMeta}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Footer: Dual-Action Hierarchy & Attempts counter */}
-                    <div className="border-t border-slate-100 dark:border-slate-800/80 pt-3 mt-1 flex items-center justify-between">
-                      <span className="text-xs text-slate-400 dark:text-slate-400 tabular-nums">
-                        {isUnlimited
-                          ? `${attemptsUsed} attempts`
-                          : `${attemptsUsed}/${maxAttempts} attempts`}
-                      </span>
-
-                      <div className="flex items-center gap-2">
-                        {/* Practice Mode Action (if allowPracticeMode === true and not draft and not exhausted) */}
-                        {exam.allowPracticeMode && !isDraft && !isExhausted && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              sessionStorage.setItem('active_exam_mode', 'PRACTICE');
-                              localStorage.setItem('active_exam_id', exam._id);
-                              navigate('/test', { state: { examId: exam._id, isPractice: true } });
-                            }}
-                            className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm active:scale-[0.98] dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-xs py-1.5 px-2.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5"
-                            title="Start unproctored practice session"
-                          >
-                            <Compass className="w-3.5 h-3.5 text-slate-400 dark:text-slate-400" />
-                            <span>Practice</span>
-                          </button>
-                        )}
-
-                        {/* Primary Action */}
-                        {isDraft ? (
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/create-test?examId=${exam._id}`);
-                              }}
-                              className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm active:scale-[0.98] dark:bg-slate-800/80 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700 text-xs py-1.5 px-3 rounded-lg font-medium transition cursor-pointer flex items-center gap-1.5"
-                            >
-                              <Edit3 className="w-3 h-3" />
-                              <span>Edit Draft</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => handlePromptDiscardDraft(exam, e)}
-                              className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 shadow-sm active:scale-[0.98] dark:bg-rose-950/30 dark:hover:bg-rose-950/60 dark:text-rose-400 dark:border-rose-900/50 text-xs py-1.5 px-2.5 rounded-lg font-medium transition cursor-pointer flex items-center gap-1"
-                              title="Permanently discard draft"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              <span>Discard</span>
-                            </button>
-                          </div>
-                        ) : isExhausted ? (
-                          <span className="text-xs text-slate-400 dark:text-slate-400 py-1.5 px-2 font-medium">Exhausted</span>
-                        ) : hasAttempted ? (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/test/${exam._id}`);
-                            }}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-sm shadow-indigo-600/20 active:scale-[0.98] dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white dark:shadow-indigo-500/10 text-xs py-1.5 px-3 rounded-lg transition cursor-pointer flex items-center gap-1.5"
-                          >
-                            <RotateCcw className="w-3 h-3" />
-                            <span>Retake</span>
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/test/${exam._id}`);
-                            }}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-sm shadow-indigo-600/20 active:scale-[0.98] dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white dark:shadow-indigo-500/10 text-xs py-1.5 px-3 rounded-lg transition cursor-pointer flex items-center gap-1.5"
-                          >
-                            <Play className="w-3 h-3 fill-current" />
-                            <span>Start</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                    category={exam.category}
+                    title={exam.title}
+                    description={exam.description}
+                    status={exam.status}
+                    durationMinutes={exam.durationMinutes}
+                    totalMarks={exam.totalMarks || (questionCount * (exam.markingScheme?.correct || 4))}
+                    markingScheme={exam.markingScheme}
+                    questionsCount={questionCount}
+                    maxAttempts={exam.maxAttempts}
+                    userAttemptsCount={attemptsUsed}
+                    schedule={exam.schedule}
+                    proctorSettings={exam.proctorSettings}
+                    allowReviewResponses={exam.allowReviewResponses}
+                    onClick={() => {
+                      if (isDraft) {
+                        navigate(`/create-test?examId=${exam._id}`);
+                      } else {
+                        navigate(`/test/${exam._id}`);
+                      }
+                    }}
+                    onStart={() => {
+                      navigate(`/test/${exam._id}`);
+                    }}
+                    onPractice={
+                      exam.allowPracticeMode
+                        ? () => {
+                            sessionStorage.setItem('active_exam_mode', 'PRACTICE');
+                            localStorage.setItem('active_exam_id', exam._id);
+                            navigate('/test', { state: { examId: exam._id, isPractice: true } });
+                          }
+                        : undefined
+                    }
+                    onReview={() => {
+                      navigate(`/test/${exam._id}`);
+                    }}
+                    onEditDraft={() => {
+                      navigate(`/create-test?examId=${exam._id}`);
+                    }}
+                    onDiscardDraft={() => {
+                      handlePromptDiscardDraft(exam);
+                    }}
+                  />
                 );
               })}
             </div>

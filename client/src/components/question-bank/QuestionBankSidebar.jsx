@@ -77,7 +77,7 @@ export default function QuestionBankSidebar({
               Filters
             </h3>
             {activeFilterCount > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/40">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-600 text-white">
                 {activeFilterCount}
               </span>
             )}
@@ -107,9 +107,9 @@ export default function QuestionBankSidebar({
             <button
               type="button"
               onClick={() => onSelectStream('ALL')}
-              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer text-left ${
+              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors cursor-pointer text-left ${
                 !selectedStream || selectedStream === 'ALL'
-                  ? 'bg-indigo-50/80 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 font-semibold'
+                  ? 'bg-slate-100 dark:bg-[#1a2333] text-slate-900 dark:text-white font-semibold border-l-2 border-indigo-600'
                   : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#162030] hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
@@ -129,9 +129,9 @@ export default function QuestionBankSidebar({
                     key={st}
                     type="button"
                     onClick={() => onSelectStream(st)}
-                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer text-left ${
+                    className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors cursor-pointer text-left ${
                       isSelected
-                        ? 'bg-indigo-50/80 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300 font-semibold'
+                        ? 'bg-slate-100 dark:bg-[#1a2333] text-slate-900 dark:text-white font-semibold border-l-2 border-indigo-600'
                         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#162030] hover:text-slate-900 dark:hover:text-slate-200'
                     }`}
                   >
@@ -193,7 +193,7 @@ export default function QuestionBankSidebar({
                       onClick={() => onToggleTag(t)}
                       className={`text-[11px] px-2.5 py-1 rounded-md transition-all cursor-pointer font-medium inline-flex items-center gap-1.5 select-none ${
                         isChecked
-                          ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xs'
+                          ? 'bg-indigo-600 text-white dark:bg-indigo-500 dark:text-white shadow-xs'
                           : 'bg-slate-100 dark:bg-slate-800/70 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/50 hover:border-slate-300 dark:hover:border-slate-600 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >

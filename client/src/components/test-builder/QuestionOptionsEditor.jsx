@@ -92,7 +92,7 @@ export default function QuestionOptionsEditor({
               key={optIdx}
               className={`space-y-1.5 p-2 rounded-xl border transition-colors ${
                 isSelected
-                  ? 'bg-emerald-50/40 border-emerald-300/80 dark:bg-emerald-950/20 dark:border-emerald-800/70'
+                  ? 'bg-white dark:bg-[#131926] border-emerald-500 dark:border-emerald-500 ring-1 ring-emerald-500/20 shadow-xs'
                   : 'bg-white dark:bg-[#162030] border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700'
               }`}
             >

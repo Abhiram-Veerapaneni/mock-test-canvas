@@ -740,15 +740,15 @@ export default function TestCreationPage() {
 
         {/* Global Feedback Toasts/Banners */}
         {error && (
-          <div className="p-3.5 rounded-lg bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200/80 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs flex items-center justify-between gap-2 animate-in fade-in">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
-              <span>{error}</span>
+          <div className="p-3.5 rounded-lg bg-white dark:bg-[#131926] border-l-4 border-l-rose-600 border border-slate-200 dark:border-slate-800 text-xs flex items-center justify-between gap-2 shadow-xs animate-in fade-in">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />
+              <span className="font-medium text-slate-900 dark:text-slate-100">{error}</span>
             </div>
             <button
               type="button"
               onClick={() => setError('')}
-              className="text-rose-400 hover:text-rose-600 dark:hover:text-rose-200 text-xs font-semibold ml-2"
+              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs font-semibold ml-2 cursor-pointer"
             >
               Dismiss
             </button>
@@ -756,15 +756,15 @@ export default function TestCreationPage() {
         )}
 
         {successMsg && (
-          <div className="p-3.5 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-xs flex items-center justify-between gap-2 animate-in fade-in">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
-              <span>{successMsg}</span>
+          <div className="p-3.5 rounded-lg bg-white dark:bg-[#131926] border-l-4 border-l-emerald-600 border border-slate-200 dark:border-slate-800 text-xs flex items-center justify-between gap-2 shadow-xs animate-in fade-in">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              <span className="font-medium text-slate-900 dark:text-slate-100">{successMsg}</span>
             </div>
             <button
               type="button"
               onClick={() => setSuccessMsg('')}
-              className="text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-200 text-xs font-semibold ml-2"
+              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-xs font-semibold ml-2 cursor-pointer"
             >
               Dismiss
             </button>
@@ -890,21 +890,21 @@ export default function TestCreationPage() {
               onFileDrop={handleFileDrop}
               onLoadSampleQuestion={() => {
                 handleAddQuestion({
-                  questionText: "A particle moves along the x-axis such that its position is given by $$x(t) = 3t^2 - 12t + 9$$. At what time $t$ does the particle momentarily come to rest?",
+                  questionText: "A particle moves along the x-axis such that its position is given by $x(t) = 3t^2 - 12t + 9$. At what time $t$ does the particle momentarily come to rest?",
                   questionType: "MCQ",
                   subject: "Physics",
                   topic: "Kinematics",
                   difficulty: "Medium",
                   options: [
-                    { text: "$$t = 1\\text{ s}$$", image: "" },
-                    { text: "$$t = 2\\text{ s}$$", image: "" },
-                    { text: "$$t = 3\\text{ s}$$", image: "" },
-                    { text: "$$t = 4\\text{ s}$$", image: "" }
+                    { text: "$t = 1\\text{ s}$", image: "" },
+                    { text: "$t = 2\\text{ s}$", image: "" },
+                    { text: "$t = 3\\text{ s}$", image: "" },
+                    { text: "$t = 4\\text{ s}$", image: "" }
                   ],
                   correctAnswers: [1],
                   marks: correctMark,
                   negativeMarks: incorrectMark,
-                  explanation: "The velocity is the derivative of position: $$v(t) = \\frac{dx}{dt} = 6t - 12$$. Setting $$v(t) = 0 \\implies 6t = 12 \\implies t = 2\\text{ s}$$."
+                  explanation: "The velocity is the derivative of position: $v(t) = \\frac{dx}{dt} = 6t - 12$. Setting $v(t) = 0 \\implies 6t = 12 \\implies t = 2\\text{ s}$."
                 });
                 setSuccessMsg('Sample competitive exam question loaded into paper!');
                 setTimeout(() => setSuccessMsg(''), 3000);

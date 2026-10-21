@@ -57,17 +57,16 @@ export default function QuestionListSection({
           {/* Contribute All to Bank Option */}
           {questions.length > 0 && (
             <label
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-colors cursor-pointer border select-none ${
-                allContributed
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-colors cursor-pointer border select-none ${allContributed
                   ? 'bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700 font-medium'
                   : 'bg-white dark:bg-[#131926] text-slate-600 dark:text-slate-400 border-slate-200/80 dark:border-slate-800/80 hover:text-slate-900 dark:hover:text-slate-100 hover:border-slate-300 dark:hover:border-slate-700'
-              }`}
+                }`}
               title={
                 allContributed
                   ? 'All questions are contributed to the bank. Click to remove all.'
                   : isIndeterminate
-                  ? `${contributedCount} of ${questions.length} questions contributed. Click to contribute all.`
-                  : 'Contribute all questions to the shared Question Bank'
+                    ? `${contributedCount} of ${questions.length} questions contributed. Click to contribute all.`
+                    : 'Contribute all questions to the shared Question Bank'
               }
             >
               <input
@@ -260,7 +259,7 @@ export default function QuestionListSection({
                           <div className="flex-1 min-w-0 space-y-1 pt-0.5">
                             {opt.text && (
                               <div className="leading-relaxed">
-                                <MathRenderer text={opt.text} />
+                                <MathRenderer text={opt.text} inline />
                               </div>
                             )}
 
