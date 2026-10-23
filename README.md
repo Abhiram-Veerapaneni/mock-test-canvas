@@ -210,81 +210,221 @@ graph TD
 
 ```plaintext
 mock-test-canvas/
-├── client/                                # React 19 Frontend Application
+├── client/                                # React 19 Frontend Application (Vite + Tailwind CSS v4)
+│   ├── public/                            # Static public assets
+│   │   ├── icons.svg                      # Sprite iconography sheet
+│   │   └── _redirects                     # SPA routing redirect rule for static hosts
 │   ├── index.html                         # SPA Entry HTML
-│   ├── package.json                       # Frontend dependencies & scripts
-│   ├── vite.config.js                     # Vite + Tailwind plugin setup
-│   ├── vercel.json                        # SPA routing & Cross-Origin header rewrites
+│   ├── package.json                       # Frontend dependencies & build scripts
+│   ├── vite.config.js                     # Vite build configuration with Tailwind plugin
+│   ├── vercel.json                        # Frontend SPA rewrites & security headers
 │   ├── .env.example                       # Client environment template
 │   └── src/
-│       ├── main.jsx                       # Application bootstrapping
-│       ├── App.jsx                        # React Router layout & protected routes
-│       ├── index.css                      # Tailwind CSS v4 entry & theme directives
-│       ├── components/
-│       │   ├── common/
-│       │   │   ├── Navbar.jsx             # Top navigation bar with user profile & logout
-│       │   │   ├── MathRenderer.jsx       # KaTeX equation parser & inline math renderer
-│       │   │   ├── ProtectedRoute.jsx     # Auth guard redirecting unauthenticated users
-│       │   │   └── Modal.jsx              # Reusable accessible dialog modal
-│       │   ├── exam-player/               # Canonical testing player components
-│       │   │   ├── ExamHeader.jsx         # Test title, section tabs, and countdown timer
-│       │   │   ├── QuestionCanvas.jsx     # Active question statement, options & action buttons
-│       │   │   └── QuestionPalette.jsx    # Question navigation grid
-│       │   └── test-builder/
-│       │       └── ManualQuestionForm.jsx # Question builder with live KaTeX preview
-│       ├── hooks/
+│       ├── main.jsx                       # Application bootstrapping & root React render
+│       ├── App.jsx                        # React Router layout, routes & route guards
+│       ├── App.css                        # App-level styling & animations
+│       ├── index.css                      # Tailwind CSS v4 theme tokens & glassmorphism utilities
+│       ├── assets/                        # Static UI illustrations, icons & brand logos
+│       │   ├── hero.png                   # Hero banner image for landing/dashboard
+│       │   ├── react.svg                  # React brand logo asset
+│       │   └── vite.svg                   # Vite brand logo asset
+│       ├── components/                    # Modular, reusable component library
+│       │   ├── common/                    # Shared global UI widgets & modal dialogs
+│       │   │   ├── Navbar.jsx             # Top navigation bar with profile, status & theme toggles
+│       │   │   ├── NotificationBell.jsx   # Real-time notification indicator & dropdown list
+│       │   │   ├── MathRenderer.jsx       # KaTeX LaTeX equation parser & inline math renderer
+│       │   │   ├── ThemeToggle.jsx        # Dark/light mode switcher with persistent state
+│       │   │   ├── ServerBootIndicator.jsx# Backend health / Render cold-start status banner
+│       │   │   ├── ProtectedRoute.jsx     # Auth guard route wrapper redirecting guests
+│       │   │   ├── Breadcrumbs.jsx        # Contextual hierarchy navigation breadcrumbs
+│       │   │   ├── BackButton.jsx         # Styled back navigation button
+│       │   │   ├── Modal.jsx              # Reusable accessible dialog modal base
+│       │   │   ├── AuthModal.jsx          # Quick-access login/signup modal dialog
+│       │   │   ├── ConfirmLogoutModal.jsx # User logout confirmation dialog
+│       │   │   ├── DiscardDraftModal.jsx  # Confirmation dialog for discarding draft work
+│       │   │   └── LogoutDraftModal.jsx   # Warning dialog when logging out with unsaved drafts
+│       │   ├── exam/                      # Assessment cards & exam-level dialogs
+│       │   │   ├── AssessmentCard.jsx     # Exam summary card with metadata & status badges
+│       │   │   ├── ExamCard.jsx           # Interactive exam card in catalog & dashboard
+│       │   │   ├── ExamHeader.jsx         # Test session top header with timer and section tabs
+│       │   │   ├── ExamFooter.jsx         # Session bottom action bar (Clear, Mark, Next)
+│       │   │   ├── QuestionWindow.jsx     # Active question layout & LaTeX renderer container
+│       │   │   ├── SidebarPalette.jsx     # Question number matrix with status color codes
+│       │   │   ├── ExamInstructionsModal.jsx # Test instructions & marking rules dialog
+│       │   │   ├── ExamQuestionPaperModal.jsx # Full question paper view modal for candidates
+│       │   │   ├── ExamSubmitModal.jsx    # Candidate exam submission review & confirmation modal
+│       │   │   ├── ExamScoreReport.jsx    # Graded score summary card & accuracy report
+│       │   │   └── inputs/                # Dedicated question answer input widgets
+│       │   │       ├── McqInput.jsx       # Single-Choice Question (MCQ) radio selector
+│       │   │       ├── MsqInput.jsx       # Multiple-Choice Question (MSQ) checkbox selector
+│       │   │       └── NatInput.jsx       # Numerical Answer Type (NAT) on-screen numeric keypad
+│       │   ├── exam-detail/               # Exam overview & pre-test configuration tabs
+│       │   │   ├── ExamHeroSection.jsx    # Exam hero header with title, subject badges & CTA
+│       │   │   ├── ExamQuestionsTab.jsx   # Question syllabus overview & format breakdown
+│       │   │   ├── ExamAttemptsTab.jsx    # Historical student attempt table & performance metrics
+│       │   │   ├── ExamProctoringTab.jsx  # Configured integrity rules & proctoring constraints
+│       │   │   ├── ExamPreviewModal.jsx   # Test preview dialog for educators/admins
+│       │   │   └── RevealQuestionsModal.jsx # Administrative modal to inspect test questions
+│       │   ├── exam-player/               # Live exam canvas & anti-cheat enforcement
+│       │   │   ├── ExamHeader.jsx         # Live test timer bar & section navigation
+│       │   │   ├── QuestionCanvas.jsx     # Core question display, KaTeX math & option selections
+│       │   │   ├── QuestionPalette.jsx    # Question status navigation grid (answered, marked, review)
+│       │   │   ├── ExamFullscreenGate.jsx # User-gesture gate requesting and enforcing fullscreen
+│       │   │   ├── ExamLockdownOverlays.jsx # Fullscreen exit & window blur blocking warning overlays
+│       │   │   ├── ExamSubmitConfirmModal.jsx # Pre-submission confirmation with answered summary
+│       │   │   └── ExamSubmissionResult.jsx # Post-submission scorecard and integrity outcome
+│       │   ├── proctoring/                # Automated AI integrity & webcam monitoring
+│       │   │   ├── CameraMonitor.jsx      # Live webcam feed, face detection & gaze tracker
+│       │   │   ├── ProctoringCheckGate.jsx# Pre-exam hardware permissions & environment check
+│       │   │   ├── StrikeModal.jsx        # Warning strike overlay on integrity violations
+│       │   │   ├── LiveViolationToast.jsx # Non-blocking violation penalty toast notification
+│       │   │   ├── SnapshotPreviewModal.jsx # High-resolution modal view of captured violation photo
+│       │   │   ├── ExamLiveMonitorModal.jsx # Proctor live supervision view modal
+│       │   │   └── LiveConsoleTimeFilter.jsx # Time-based violation log filter widget
+│       │   ├── audit/                     # Post-exam audit logs & integrity reports
+│       │   │   ├── AuditHeaderMetrics.jsx # High-level audit indicators (Trust Score, Violations)
+│       │   │   ├── AuditViolationLogsTable.jsx # Timestamped infraction trail with penalty points
+│       │   │   ├── AuditCompletionReportTable.jsx # Comprehensive attempt outcome & scoring matrix
+│       │   │   └── AuditSnapshotModal.jsx # Proctoring webcam snapshots review modal
+│       │   ├── question-bank/             # Question repository management & test generator
+│       │   │   ├── QuestionBankSidebar.jsx# Subject, topic, and difficulty filter sidebar
+│       │   │   ├── QuestionBankCard.jsx   # Question bank card with preview, tags & metadata
+│       │   │   ├── AddQuestionModal.jsx   # Modal form to author and add questions to the bank
+│       │   │   ├── GenerateExamModal.jsx  # Automated test paper generator from question repository
+│       │   │   ├── BankQuestionMetaFields.jsx # Metadata inputs (Subject, Topic, Difficulty, Marks)
+│       │   │   ├── BankQuestionStatementEditor.jsx # Live KaTeX statement editor for question bank
+│       │   │   └── BankQuestionOptionsEditor.jsx # Option management & correct answer selector
+│       │   └── test-builder/              # Interactive test creation & AI question authoring
+│       │       ├── TestCreationHeader.jsx # Studio top navigation, draft status & publish button
+│       │       ├── TestSettingsTab.jsx    # Exam configuration (Duration, Marking, Proctor rules)
+│       │       ├── QuestionListSection.jsx# Reorderable question deck with status indicators
+│       │       ├── ManualQuestionForm.jsx # Question builder with live KaTeX preview
+│       │       ├── QuestionEditModal.jsx  # Modal dialog for editing existing questions
+│       │       ├── QuestionStatementEditor.jsx # Rich LaTeX statement input with equation toolbar
+│       │       ├── QuestionOptionsEditor.jsx # Dynamic option cards, LaTeX options & correct answer keys
+│       │       ├── QuestionExplanationEditor.jsx # Step-by-step solution & explanation editor
+│       │       ├── QuestionMetaFields.jsx # Question-level subject, difficulty & marks settings
+│       │       ├── AIDropzoneCard.jsx     # AI drag-and-drop document upload (PDF/Word/Images)
+│       │       ├── IngestionReviewModal.jsx # AI-extracted question review, correction & batch import
+│       │       ├── QuestionPaperPDFModal.jsx # Print / PDF preview modal for authoring review
+│       │       ├── ImageLightboxModal.jsx # Zoomable lightbox modal for question diagram images
+│       │       ├── ConfirmPublishModal.jsx# Final publishing confirmation dialog
+│       │       ├── LeaveDraftModal.jsx    # Warning modal when leaving test studio with unsaved work
+│       │       ├── DraftRestoredToast.jsx # Auto-save recovery notification toast
+│       │       ├── TestCreationModals.jsx # Centralized wrapper for test authoring dialogs
+│       │       ├── EditQuestionMetaFields.jsx # Edit-mode question metadata fields
+│       │       ├── EditQuestionOptionsEditor.jsx # Edit-mode option manager
+│       │       └── EditQuestionStatementEditor.jsx # Edit-mode statement editor
+│       ├── context/                       # React context providers
+│       │   └── AuthContext.jsx            # User authentication state context provider
+│       ├── hooks/                         # Custom React hooks
 │       │   ├── useBrowserLockdown.js      # Fullscreen, tab visibility, blur & shortcut traps
-│       │   └── useExamTimer.js            # Web Worker countdown timer interface
-│       ├── pages/
-│       │   ├── AuthPage.jsx               # Sign In / Sign Up with Google OAuth
-│       │   ├── DashboardPage.jsx          # User overview, metrics & exam listings
-│       │   ├── ExamCatalog.jsx            # Filterable test library with search
-│       │   ├── ExamDetailPage.jsx         # Exam rules, syllabus & past attempt history
-│       │   ├── ExamSessionPage.jsx        # Live exam testing canvas & proctored session
-│       │   └── TestCreationPage.jsx       # Exam authoring studio with marking schemes
-│       ├── services/
-│       │   └── api.js                     # Axios instance with JWT interceptor & 401 handling
-│       ├── store/
-│       │   ├── useAuthStore.js            # Auth state, login/register/logout & me
-│       │   ├── useExamStore.js            # Active question, answers map & local sync
-│       │   └── useProctorStore.js         # Violations log, trust score & cooldowns
-│       └── workers/
-│           └── timer.worker.js            # Drift-free background Web Worker timer
+│       │   ├── useExamTimer.js            # Zero-drift Web Worker countdown timer interface
+│       │   ├── useVisionProctor.js        # MediaPipe webcam face detection & gaze deviation hook
+│       │   ├── useAudioProctor.js         # Web Audio API microphone volume & noise anomaly hook
+│       │   ├── useTestCreationDraft.js    # LocalStorage auto-save & draft restoration for exams
+│       │   ├── useManualQuestionDraft.js  # Auto-save draft hook for question authoring
+│       │   └── useBankQuestionDraft.js    # Auto-save draft hook for question bank items
+│       ├── pages/                         # Top-level view routes
+│       │   ├── AuthPage.jsx               # Candidate authentication (Email/Password & Google OAuth)
+│       │   ├── DashboardPage.jsx          # Candidate dashboard with metrics, quick actions & exams
+│       │   ├── Dashboard.jsx              # Alternate dashboard view / redirect wrapper
+│       │   ├── ExamCatalog.jsx            # Searchable & filterable assessment catalog
+│       │   ├── ExamDetailPage.jsx         # Exam overview, syllabus, rules & attempt history
+│       │   ├── ExamSessionPage.jsx        # Canonical proctored testing environment
+│       │   ├── ExamPlayer.jsx             # Alternative live player entry wrapper
+│       │   ├── ExamResponsesPage.jsx      # Post-exam question-by-question review & explanations
+│       │   ├── ExamAuditReportPage.jsx    # Detailed proctoring audit log & violation report
+│       │   ├── ExamLiveMonitorPage.jsx    # Real-time administrator proctoring console
+│       │   ├── QuestionBankPage.jsx       # Centralized question repository & search portal
+│       │   ├── TestCreationPage.jsx       # Test authoring studio with AI ingestion & live preview
+│       │   ├── NotificationsPage.jsx      # User notifications center & system alerts
+│       │   └── UnderDevelopmentPage.jsx   # Feature under development placeholder page
+│       ├── services/                      # External network & API communication
+│       │   ├── api.js                     # Pre-configured Axios client with JWT interceptor
+│       │   └── socket.js                  # Socket.io client for real-time proctoring events
+│       ├── store/                         # Global state management (Zustand)
+│       │   ├── useAuthStore.js            # User session, JWT tokens, profile & authentication
+│       │   ├── useExamStore.js            # Active exam session, answer map & local persistence
+│       │   ├── useProctorStore.js         # Trust score (100-0), violation audit trail & strikes
+│       │   ├── useNotificationStore.js    # Real-time alerts, unread counts & notification actions
+│       │   ├── useServerStatusStore.js    # Backend service health check & cold-start tracking
+│       │   └── useThemeStore.js           # Dark mode / light mode theme preference state
+│       ├── styles/                        # Modular stylesheet definitions
+│       │   ├── Auth.css                   # Authentication form styles & transitions
+│       │   ├── ExamPlayer.css             # Fullscreen exam canvas layout & question palette styles
+│       │   └── index.css                  # Global utility classes & theme variables
+│       ├── utils/                         # Reusable client helpers & business logic
+│       │   ├── auditConstants.js          # Violation penalty points, trust thresholds & codes
+│       │   ├── dateUtils.js               # Date formatting, relative time & countdown helpers
+│       │   ├── examScoring.js             # Score calculation & accuracy percentage utilities
+│       │   ├── fallbackExamPaper.js       # Default offline backup exam dataset
+│       │   └── printPreview.js            # Print styling & paper preview generation helpers
+│       └── workers/                       # Dedicated Web Workers
+│           └── timer.worker.js            # High-precision performance.now() countdown clock
 │
-├── server/                                # Node.js Express REST API
-│   ├── package.json                       # Backend dependencies & scripts
-│   ├── .env.example                       # Server environment template
+├── server/                                # Node.js Express REST API & Proctoring Server
+│   ├── package.json                       # Backend dependencies & runtime scripts
+│   ├── .env.example                       # Backend environment template
 │   └── src/
-│       ├── server.js                      # Express initialization, CORS & route registry
-│       ├── config/
-│       │   └── db.js                      # MongoDB Atlas Mongoose connection
-│       ├── models/
-│       │   ├── User.model.js              # User profile, bcrypt hash, attempts tracking
-│       │   ├── Question.model.js          # Question statement, type, options, answer key
-│       │   ├── Exam.model.js              # Exam configuration, marking scheme, proctor toggles
-│       │   └── Attempt.model.js           # Attempt submission, score, accuracy, violations
-│       ├── middleware/
-│       │   ├── auth.middleware.js         # JWT verification & req.user injection
-│       │   └── rateLimiter.middleware.js  # Express rate limiting
-│       ├── controllers/
-│       │   ├── auth.controller.js         # Register, Login, Me, and Google OAuth
-│       │   ├── exam.controller.js         # Create exam, List exams, Get sanitized exam
-│       │   └── submission.controller.js   # Deterministic grading & user attempts query
-│       ├── routes/
+│       ├── server.js                      # Express app, Socket.io setup, CORS & route registry
+│       ├── config/                        # Infrastructure & cloud service configurations
+│       │   ├── db.js                      # MongoDB Atlas Mongoose connection & retry logic
+│       │   └── cloudinary.js              # Cloudinary SDK config for violation snapshots & media
+│       ├── models/                        # Mongoose data schemas & validation models
+│       │   ├── User.model.js              # User profiles, bcrypt credentials & attempt counts
+│       │   ├── Exam.model.js              # Exam metadata, marking scheme & proctoring toggles
+│       │   ├── Question.model.js          # Question statement, type, options & answer keys
+│       │   ├── Attempt.model.js           # Attempt submission, score, answers & violation logs
+│       │   ├── Notification.model.js      # User notification schema & read receipts
+│       │   └── Otp.model.js               # One-time verification codes with TTL expiration
+│       ├── middleware/                    # Express request processing middleware
+│       │   ├── auth.middleware.js         # JWT verification & req.user injection guard
+│       │   ├── rateLimiter.middleware.js  # Endpoint rate limiting against brute force & DoS
+│       │   └── upload.middleware.js       # Multer middleware for document & image file uploads
+│       ├── controllers/                   # REST API request handlers & business logic
+│       │   ├── auth.controller.js         # Registration, login, Google OAuth & token renewal
+│       │   ├── exam.controller.js         # Exam CRUD, catalog listing & sanitized question delivery
+│       │   ├── submission.controller.js   # Deterministic grading & attempt history retrieval
+│       │   ├── question.controller.js     # Question bank CRUD, filtering & dynamic assembly
+│       │   ├── ai.controller.js           # Gemini AI document parsing & automated question ingestion
+│       │   └── notification.controller.js # Notification queries & mark-as-read handlers
+│       ├── routes/                        # Express API route declarations
 │       │   ├── auth.routes.js             # /api/auth endpoints
 │       │   ├── exam.routes.js             # /api/exams endpoints
-│       │   └── submission.routes.js       # /api/submissions endpoints
-│       ├── services/
-│       │   ├── grading.service.js         # Deterministic scoring algorithm (+4/-1, NAT, MSQ)
-│       │   └── emailService.js            # Nodemailer / SMTP transactional emails
-│       └── seeds/
-│           ├── seed.js                    # Database seeder with sample questions
-│           ├── seedDatabase.js            # Production seeder script
-│           └── jee_adv_2024_paper1.json   # Authentic JEE Advanced 2024 Paper 1 dataset
+│       │   ├── submission.routes.js       # /api/submissions endpoints
+│       │   ├── question.routes.js         # /api/questions question bank endpoints
+│       │   ├── ai.routes.js               # /api/ai endpoints for Gemini AI ingestion
+│       │   └── notification.routes.js     # /api/notifications endpoints
+│       ├── services/                      # Core business services & external integrations
+│       │   ├── grading.service.js         # Server-side deterministic grading (+4/-1, NAT, MSQ)
+│       │   ├── gemini.service.js          # Google Gemini GenAI SDK wrapper & prompt engineering
+│       │   └── emailService.js            # Nodemailer SMTP transactional email delivery
+│       ├── seeds/                         # Database initialization datasets & seed runners
+│       │   ├── seed.js                    # Database seeder with sample questions
+│       │   ├── seedDatabase.js            # Full database initialization runner
+│       │   ├── seedQuestionBank.js        # Question bank pre-population dataset & runner
+│       │   └── jee_adv_2024_paper1.json   # Authentic JEE Advanced 2024 Paper 1 dataset
+│       └── utils/                         # Server-side utilities
+│           ├── seeder.js                  # Question & exam parsing helpers for seeding
+│           └── sendEmail.js               # Email dispatch utility wrapper
 │
-├── vercel.json                            # Root deployment configuration
-├── README_BLUEPRINT.md                    # Engineering blueprint & phase specifications
-└── PLAN_OF_ACTION.md                      # Architecture roadmap & action plan
+├── docs/                                  # Project Documentation & Architecture Artifacts
+│   └── uml/                               # System UML diagrams (PDF & high-resolution PNG)
+│       ├── mock-test-canvas UML activity diagram png.png
+│       ├── mock-test-canvas UML class diagram png.png
+│       ├── mock-test-canvas UML class diagram.pdf
+│       ├── mock-test-canvas UML squence diagram png.png
+│       ├── mock-test-canvas UML squence diagram.pdf
+│       ├── mock-test-canvas UML state activity diagram.pdf
+│       ├── mock-test-canvas UML state machine diagram png.png
+│       ├── mock-test-canvas UML state machine diagram.pdf
+│       ├── mock-test-canvas UML use-case diagram png.png
+│       └── mock-test-canvas UML use-case diagram.pdf
+│
+├── vercel.json                            # Root deployment & monorepo routing configuration
+├── README.md                              # Main platform documentation & architectural overview
+└── README_BLUEPRINT.md                    # Master engineering blueprint & phase specifications
 ```
 
 ---
