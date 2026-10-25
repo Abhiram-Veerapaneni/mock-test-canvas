@@ -80,16 +80,16 @@ export default function TestCreationHeader({
           Questions: <strong className="text-slate-900 dark:text-slate-100 tabular-nums font-semibold">{questionCount}</strong>
         </div>
 
-        {/* Preview Question Paper Modal Button */}
+        {/* Preview / Download Question Paper Modal Button */}
         <button
           type="button"
           onClick={onPreviewPaper}
           disabled={questionCount === 0}
-          title={questionCount === 0 ? "Add questions to preview paper" : "Preview question paper in dark/light mode and PDF export"}
-          className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
+          title={questionCount === 0 ? "Add questions to preview or download paper" : "Preview question paper, save as PDF, or print"}
+          className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 cursor-pointer"
         >
-          <Eye className="w-3.5 h-3.5 text-slate-500" />
-          <span>Preview Paper</span>
+          <Eye className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+          <span>Preview / Download</span>
         </button>
 
         {/* Save as Draft Button */}

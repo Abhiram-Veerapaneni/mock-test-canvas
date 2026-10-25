@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import http from 'http';
 import { Server as SocketIOServer } from 'socket.io';
@@ -101,9 +102,10 @@ io.on('connection', (socket) => {
   });
 });
 
-// Express JSON parsing middleware with 10mb limit
+// Express JSON & cookie parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
 
 // Apply rate limiting in production or general traffic
 if (process.env.NODE_ENV === 'production') {

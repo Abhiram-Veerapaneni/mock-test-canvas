@@ -13,7 +13,7 @@ const getStoredUser = () => {
 export const useAuthStore = create((set, get) => ({
   user: getStoredUser(),
   token: localStorage.getItem('token') || null,
-  isAuthenticated: !!localStorage.getItem('token'),
+  isAuthenticated: !!getStoredUser() || !!localStorage.getItem('token'),
   isLoading: false,
   error: null,
 
@@ -48,14 +48,13 @@ export const useAuthStore = create((set, get) => ({
 
   // Initialize auth session on app start
   fetchMe: async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      localStorage.removeItem('user');
-      set({ user: null, isAuthenticated: false, isLoading: false });
-      return;
+    const hasCachedAuth = Boolean(localStorage.getItem('token') || localStorage.getItem('user'));
+    
+    // Only show full-screen blocking loader if user was previously signed in
+    if (hasCachedAuth) {
+      set({ isLoading: true, error: null });
     }
 
-    set({ isLoading: true, error: null });
     try {
       const response = await api.get('/auth/me');
       if (response.data?.success && response.data?.user) {
@@ -70,9 +69,11 @@ export const useAuthStore = create((set, get) => ({
       }
     } catch (err) {
       const status = err.response?.status;
-      // Only wipe token if the server explicitly rejected the JWT as invalid/expired (401)
+      // Only wipe state if server explicitly rejected auth (401)
       if (status === 401) {
-        console.warn('Session expired or invalid token');
+        if (hasCachedAuth) {
+          console.warn('Session expired or invalid token');
+        }
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         set({
@@ -80,14 +81,16 @@ export const useAuthStore = create((set, get) => ({
           token: null,
           isAuthenticated: false,
           isLoading: false,
-          error: err.response?.data?.message || 'Session expired'
+          error: hasCachedAuth ? (err.response?.data?.message || 'Session expired') : null
         });
       } else {
-        // Server is restarting (Render deploy), network drop, 502/503: Keep the token!
-        console.warn('Server temporarily unavailable, preserving token:', err.message);
+        // Server is restarting (Render cold start) or offline: Preserve cached state
+        if (hasCachedAuth) {
+          console.warn('Server temporarily unavailable, preserving session:', err.message);
+        }
         set({
           isLoading: false,
-          error: 'Unable to reach the server. Please try again in a moment.'
+          error: hasCachedAuth ? 'Unable to reach the server. Please try again in a moment.' : null
         });
       }
     }
@@ -242,7 +245,12 @@ export const useAuthStore = create((set, get) => ({
   },
 
   // Logout method
-  logout: () => {
+  logout: async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.warn('Server logout notice:', err?.message);
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     try {

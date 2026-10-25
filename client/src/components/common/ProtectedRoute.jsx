@@ -8,9 +8,9 @@ export default function ProtectedRoute({ children }) {
   const location = useLocation();
 
   useEffect(() => {
-    // Attempt revalidation if token is present but user state is not loaded yet
-    const token = localStorage.getItem('token');
-    if (token && !isAuthenticated && !isLoading) {
+    // Attempt revalidation if user state is not loaded yet
+    const hasCachedSession = localStorage.getItem('token') || localStorage.getItem('user');
+    if (hasCachedSession && !isAuthenticated && !isLoading) {
       fetchMe();
     }
   }, [fetchMe, isAuthenticated, isLoading]);
@@ -24,7 +24,7 @@ export default function ProtectedRoute({ children }) {
     );
   }
 
-  if (!isAuthenticated && !localStorage.getItem('token')) {
+  if (!isAuthenticated && !localStorage.getItem('token') && !localStorage.getItem('user')) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

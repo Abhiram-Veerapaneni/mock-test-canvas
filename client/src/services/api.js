@@ -7,6 +7,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 65000, // 65 seconds to comfortably tolerate Render free-tier cold boots (~30-50s)
+  withCredentials: true, // Send and receive secure httpOnly cookies cross-origin
 });
 
 // Request interceptor appending JWT Bearer token

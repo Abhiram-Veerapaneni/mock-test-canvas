@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import MathRenderer from '../common/MathRenderer';
 import useThemeStore from '../../store/useThemeStore';
 import {
   X,
-  Printer,
+  Download,
+  Loader2,
   FileText,
   Eye,
   EyeOff,
@@ -19,6 +21,20 @@ export default function QuestionPaperPDFModal({
   const resolvedTheme = useThemeStore((s) => s.resolvedTheme);
   const [includeSolutions, setIncludeSolutions] = useState(false);
   const [paperTheme, setPaperTheme] = useState(() => (resolvedTheme === 'dark' ? 'dark' : 'light'));
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  // Manage body class for print isolation & clean up any rogue blocking overlays
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('paper-modal-open');
+      // Force remove any leftover html2pdf overlay elements that could block interaction
+      document.querySelectorAll('.html2pdf__overlay').forEach((el) => el.remove());
+      return () => {
+        document.body.classList.remove('paper-modal-open');
+        document.querySelectorAll('.html2pdf__overlay').forEach((el) => el.remove());
+      };
+    }
+  }, [isOpen]);
 
   if (!isOpen || !exam) return null;
 
@@ -26,10 +42,7 @@ export default function QuestionPaperPDFModal({
   const correctMark = exam.markingScheme?.correct ?? 4;
   const incorrectMark = exam.markingScheme?.incorrect ?? -1;
   const totalMarks = exam.totalMarks || questions.length * correctMark;
-
-  const handlePrint = () => {
-    window.print();
-  };
+  const isDark = paperTheme === 'dark';
 
   const getOptionLabel = (idx) => String.fromCharCode(65 + idx);
 
@@ -40,16 +53,139 @@ export default function QuestionPaperPDFModal({
     return { text: String(opt || ''), image: '' };
   };
 
-  const isDark = paperTheme === 'dark';
+  /**
+   * High-Fidelity Vector PDF Export / Print
+   * Uses an isolated hidden iframe containing exclusively the question paper element.
+   * This guarantees that zero elements from the main application/editor flow into the print preview,
+   * rendering exactly 1 sheet (or clean pages for the exam) with 100% crisp vector KaTeX equations.
+   */
+  const handlePrintPDF = () => {
+    const element = document.getElementById('printable-question-paper');
+    if (!element) {
+      window.print();
+      return;
+    }
 
-  return (
-    <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-6 overflow-y-auto print:p-0 print:bg-white print:static">
+    setIsPrinting(true);
+
+    const originalTitle = document.title;
+    const cleanTitle = (exam.title || 'Question_Paper')
+      .replace(/[^a-zA-Z0-9_\-\s]/g, '')
+      .trim()
+      .replace(/\s+/g, '_');
+    const pdfFilename = `${cleanTitle || 'Examination'}_Question_Paper`;
+    document.title = pdfFilename;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.visibility = 'hidden';
+    iframe.title = 'Question Paper Print Frame';
+    document.body.appendChild(iframe);
+
+    try {
+      const iframeDoc = iframe.contentWindow.document;
+
+      // Extract all stylesheets and style tags from current document
+      const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+        .map((el) => el.outerHTML)
+        .join('\n');
+
+      iframeDoc.open();
+      iframeDoc.write(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <title>${pdfFilename}</title>
+          ${styles}
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 12mm 15mm;
+            }
+            * {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            body {
+              background: ${isDark ? '#0f172a' : '#ffffff'} !important;
+              color: ${isDark ? '#f8fafc' : '#000000'} !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            }
+            #printable-question-paper {
+              box-shadow: none !important;
+              border: none !important;
+              max-width: 100% !important;
+              width: 100% !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              background: transparent !important;
+            }
+            .break-inside-avoid {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            .break-before-page {
+              page-break-before: always !important;
+              break-before: page !important;
+            }
+          </style>
+        </head>
+        <body>
+          ${element.outerHTML}
+        </body>
+        </html>
+      `);
+      iframeDoc.close();
+
+      setTimeout(() => {
+        try {
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
+        } catch (e) {
+          console.warn('Iframe print error, falling back to window.print:', e);
+          window.print();
+        } finally {
+          setIsPrinting(false);
+          document.title = originalTitle;
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+          }, 1500);
+        }
+      }, 300);
+    } catch (err) {
+      console.error('Failed to setup print iframe, falling back to window.print:', err);
+      setIsPrinting(false);
+      document.title = originalTitle;
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+      window.print();
+    }
+  };
+
+
+  return createPortal(
+    <div
+      id="question-paper-modal-root"
+      className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-6 overflow-y-auto paper-modal-overlay"
+      onClick={onClose}
+    >
       <div
-        className="max-w-5xl w-full bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-sm overflow-hidden flex flex-col max-h-[94vh] print:max-h-none print:border-none print:shadow-none print:w-full print:rounded-none"
+        className="max-w-5xl w-full bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-sm overflow-hidden flex flex-col max-h-[94vh] paper-modal-dialog"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Toolbar (hidden in print) */}
-        <div className="px-6 py-3.5 border-b border-slate-200/80 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3 bg-[#F8FAFC] dark:bg-[#0C0F17] shrink-0 print:hidden">
+        <div className="paper-modal-toolbar px-6 py-3.5 border-b border-slate-200/80 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-3 bg-[#F8FAFC] dark:bg-[#0C0F17] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
               <FileText className="w-4 h-4" />
@@ -67,7 +203,7 @@ export default function QuestionPaperPDFModal({
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
             {/* Paper Dark / Light Mode Switcher */}
             <button
               type="button"
@@ -93,20 +229,33 @@ export default function QuestionPaperPDFModal({
               <span>{includeSolutions ? 'Hide Solutions' : 'Include Solutions'}</span>
             </button>
 
-            {/* Print / Save PDF button */}
+            {/* Download / Print PDF button (Primary Action) */}
             <button
               type="button"
-              onClick={handlePrint}
-              className="btn-primary text-xs py-1.5 px-3.5 flex items-center gap-2"
+              onClick={handlePrintPDF}
+              disabled={isPrinting}
+              className="btn-primary text-xs py-1.5 px-3.5 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              title="Save as PDF or Print question paper"
             >
-              <Printer className="w-3.5 h-3.5" />
-              <span>Print / Save PDF</span>
+              {isPrinting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Preparing PDF...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download / Print PDF</span>
+                </>
+              )}
             </button>
+
 
             <button
               type="button"
               onClick={onClose}
               className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-[#162030] transition-colors cursor-pointer"
+              title="Close Preview"
             >
               <X className="w-4 h-4" />
             </button>
@@ -114,10 +263,11 @@ export default function QuestionPaperPDFModal({
         </div>
 
         {/* Printable Document Sheet Container */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-10 bg-slate-100 dark:bg-[#0C0F17] print:bg-white print:p-0">
+        <div className="paper-content-container flex-1 overflow-y-auto p-4 sm:p-10 bg-slate-100 dark:bg-[#0C0F17]">
           {/* A4 Sheet Replica */}
           <div
-            className={`max-w-[850px] mx-auto shadow-sm print:shadow-none p-8 sm:p-12 rounded-lg print:rounded-none print:p-6 space-y-8 font-serif leading-relaxed transition-colors duration-200 print:bg-white print:text-black ${
+            id="printable-question-paper"
+            className={`max-w-[850px] mx-auto shadow-sm p-8 sm:p-12 rounded-lg space-y-8 font-serif leading-relaxed transition-colors duration-200 ${
               isDark
                 ? 'bg-slate-900 text-slate-100 border border-slate-800'
                 : 'bg-white text-slate-900 border border-slate-200'
@@ -125,7 +275,7 @@ export default function QuestionPaperPDFModal({
           >
             {/* Header / Title Banner */}
             <div
-              className={`text-center border-b-2 pb-6 space-y-2 print:border-black ${
+              className={`text-center border-b-2 pb-6 space-y-2 ${
                 isDark ? 'border-slate-700' : 'border-slate-900'
               }`}
             >
@@ -149,7 +299,7 @@ export default function QuestionPaperPDFModal({
 
             {/* General Instructions */}
             <div
-              className={`rounded-lg p-4 font-sans text-xs space-y-1.5 border print:bg-slate-50 print:text-slate-700 ${
+              className={`rounded-lg p-4 font-sans text-xs space-y-1.5 border ${
                 isDark
                   ? 'bg-slate-900/90 border-slate-800 text-slate-300'
                   : 'bg-slate-50 border-slate-200 text-slate-700'
@@ -175,7 +325,7 @@ export default function QuestionPaperPDFModal({
                 return (
                   <div
                     key={q._id || idx}
-                    className={`space-y-3 pb-6 border-b last:border-b-0 break-inside-avoid ${
+                    className={`question-card-item space-y-3 pb-6 border-b last:border-b-0 break-inside-avoid ${
                       isDark ? 'border-slate-800' : 'border-slate-200'
                     }`}
                   >
@@ -338,6 +488,7 @@ export default function QuestionPaperPDFModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

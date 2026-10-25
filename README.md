@@ -332,7 +332,6 @@ mock-test-canvas/
 │       │   ├── ExamCatalog.jsx            # Searchable & filterable assessment catalog
 │       │   ├── ExamDetailPage.jsx         # Exam overview, syllabus, rules & attempt history
 │       │   ├── ExamSessionPage.jsx        # Canonical proctored testing environment
-│       │   ├── ExamPlayer.jsx             # Alternative live player entry wrapper
 │       │   ├── ExamResponsesPage.jsx      # Post-exam question-by-question review & explanations
 │       │   ├── ExamAuditReportPage.jsx    # Detailed proctoring audit log & violation report
 │       │   ├── ExamLiveMonitorPage.jsx    # Real-time administrator proctoring console
@@ -357,8 +356,6 @@ mock-test-canvas/
 │       ├── utils/                         # Reusable client helpers & business logic
 │       │   ├── auditConstants.js          # Violation penalty points, trust thresholds & codes
 │       │   ├── dateUtils.js               # Date formatting, relative time & countdown helpers
-│       │   ├── examScoring.js             # Score calculation & accuracy percentage utilities
-│       │   ├── fallbackExamPaper.js       # Default offline backup exam dataset
 │       │   └── printPreview.js            # Print styling & paper preview generation helpers
 │       └── workers/                       # Dedicated Web Workers
 │           └── timer.worker.js            # High-precision performance.now() countdown clock

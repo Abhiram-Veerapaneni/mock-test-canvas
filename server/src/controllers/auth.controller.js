@@ -16,6 +16,42 @@ const generateToken = (id) => {
 };
 
 /**
+ * Cookie options for httpOnly authentication token
+ */
+export const getCookieOptions = () => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  return {
+    httpOnly: true,
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax'
+  };
+};
+
+/**
+ * Helper to generate JWT, attach httpOnly cookie, and respond with user details
+ */
+const sendTokenResponse = (user, statusCode, res, message) => {
+  const token = generateToken(user._id);
+  const cookieOptions = getCookieOptions();
+
+  return res.status(statusCode).cookie('token', token, cookieOptions).json({
+    success: true,
+    message,
+    token, // Provided for non-browser / mobile / API testing clients
+    user: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar || '',
+      createdTests: user.createdTests,
+      attemptedTests: user.attemptedTests,
+      createdAt: user.createdAt
+    }
+  });
+};
+
+/**
  * @desc    Send 6-digit OTP verification code to user email
  * @route   POST /api/auth/send-otp
  * @access  Public
@@ -148,21 +184,7 @@ export const register = async (req, res) => {
       password
     });
 
-    const token = generateToken(user._id);
-
-    return res.status(201).json({
-      success: true,
-      message: 'Registration successful',
-      token,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        createdTests: user.createdTests,
-        attemptedTests: user.attemptedTests,
-        createdAt: user.createdAt
-      }
-    });
+    return sendTokenResponse(user, 201, res, 'Registration successful');
   } catch (error) {
     console.error('Register error:', error);
     return res.status(500).json({
@@ -198,21 +220,7 @@ export const login = async (req, res) => {
       });
     }
 
-    const token = generateToken(user._id);
-
-    return res.status(200).json({
-      success: true,
-      message: 'Login successful',
-      token,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        createdTests: user.createdTests,
-        attemptedTests: user.attemptedTests,
-        createdAt: user.createdAt
-      }
-    });
+    return sendTokenResponse(user, 200, res, 'Login successful');
   } catch (error) {
     console.error('Login error:', error);
     return res.status(500).json({
@@ -314,22 +322,7 @@ export const googleAuth = async (req, res) => {
       });
     }
 
-    const token = generateToken(user._id);
-
-    return res.status(200).json({
-      success: true,
-      message: 'Google sign-in successful',
-      token,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        avatar: user.avatar,
-        createdTests: user.createdTests,
-        attemptedTests: user.attemptedTests,
-        createdAt: user.createdAt
-      }
-    });
+    return sendTokenResponse(user, 200, res, 'Google sign-in successful');
   } catch (error) {
     console.error('Google Auth Error:', error);
     return res.status(401).json({
@@ -337,4 +330,24 @@ export const googleAuth = async (req, res) => {
       message: error.message || 'Google token verification failed'
     });
   }
+};
+
+/**
+ * @desc    Logout user & clear httpOnly cookie
+ * @route   POST /api/auth/logout
+ * @access  Public
+ */
+export const logout = async (req, res) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.cookie('token', '', {
+    httpOnly: true,
+    expires: new Date(0),
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax'
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: 'Logged out successfully'
+  });
 };

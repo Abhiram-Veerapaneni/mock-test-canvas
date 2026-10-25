@@ -382,3 +382,102 @@ input:-webkit-autofill:active {
     box-shadow: 0 0 0 1px var(--color-border-hover);
   }
 }
+
+/* ==========================================================================
+   Question Paper Print & PDF Export Isolation
+   Ensures that only the examination paper preview is printed/saved to PDF,
+   completely hiding the underlying application UI, forms, and navigation.
+   ========================================================================== */
+@media print {
+  /* Hide the rest of the application when the question paper preview modal is active */
+  body.paper-modal-open > #root,
+  body.paper-modal-open > *:not(#question-paper-modal-root),
+  body:has(#question-paper-modal-root) > #root,
+  body:has(#question-paper-modal-root) > *:not(#question-paper-modal-root) {
+    display: none !important;
+  }
+
+  body.paper-modal-open,
+  body:has(#question-paper-modal-root) {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  #question-paper-modal-root {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    display: block !important;
+  }
+
+  #question-paper-modal-root .paper-modal-overlay {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    max-height: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    display: block !important;
+  }
+
+  #question-paper-modal-root .paper-modal-dialog {
+    position: static !important;
+    max-height: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  #question-paper-modal-root .paper-modal-toolbar {
+    display: none !important;
+  }
+
+  #question-paper-modal-root .paper-content-container {
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+  }
+
+  #printable-question-paper {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm;
+  }
+}
+
+/* Guard against any rogue html2pdf overlay blocking clicks or scroll */
+.html2pdf__overlay {
+  display: none !important;
+  pointer-events: none !important;
+}
+
