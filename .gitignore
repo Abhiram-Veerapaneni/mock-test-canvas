@@ -12,3 +12,4 @@ build/
 PLAN_OF_ACTION.md
 README_BLUEPRINT.md
 *.puml
+.vscode

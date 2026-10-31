@@ -41,6 +41,7 @@ const NO_COOLDOWN_TYPES = new Set([
 
 const useProctorStore = create(
   persist(
+    // 1. normal sote
     (set, get) => ({
       /** @type {{ type: string, timestamp: string }[]} */
       violations: [],
@@ -120,6 +121,8 @@ const useProctorStore = create(
         });
       },
     }),
+
+    // 2. Configuration options to store data in local storage
     {
       name: 'proctor-session', // localStorage key
       // Only persist the violation record fields, not the cooldown timestamps

@@ -89,7 +89,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Client joins specific exam room for live monitoring
+  // Client joins specific exam room for live monitoring -> only exam creater will be in that room
   socket.on('join_exam', (examId) => {
     if (examId) {
       socket.join(`exam_${examId}`);

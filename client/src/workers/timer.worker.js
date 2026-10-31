@@ -5,9 +5,9 @@
  * is backgrounded or the browser throttles setTimeout/setInterval.
  */
 
-let intervalId = null;
-let expectedTime = null;
-let remainingMs = 0;
+let intervalId = null;   // Holds reference to the active setTimeout so we can stop it
+let expectedTime = null; // The exact stopwatch timestamp when the NEXT tick should occur
+let remainingMs = 0;     // Total exam milliseconds remaining (e.g., 180 mins = 10,800,000 ms)
 
 /**
  * Corrected tick loop — schedules the next tick to compensate for any
@@ -18,10 +18,10 @@ function tick() {
   const drift = now - expectedTime;
 
   remainingMs -= 1000;
-
+  // timer ran out
   if (remainingMs <= 0) {
     remainingMs = 0;
-    self.postMessage({ type: 'tick', remainingMs: 0 });
+    self.postMessage({ type: 'tick', remainingMs: 0 }); // sends data to react
     self.postMessage({ type: 'expired' });
     clearTimeout(intervalId);
     intervalId = null;
@@ -36,6 +36,7 @@ function tick() {
   intervalId = setTimeout(tick, nextDelay);
 }
 
+// listens for commands from react
 self.onmessage = (e) => {
   const { command, durationSeconds } = e.data;
 
