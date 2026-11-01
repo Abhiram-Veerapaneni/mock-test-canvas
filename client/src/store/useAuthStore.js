@@ -244,6 +244,55 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  // Update profile details (e.g. name, avatar)
+  updateProfile: async ({ name, avatar }) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await api.put('/auth/profile', { name, avatar });
+      const updatedUser = response.data.user;
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      set({
+        user: updatedUser,
+        isLoading: false,
+        error: null
+      });
+      return {
+        success: true,
+        message: response.data.message || 'Profile updated successfully',
+        user: updatedUser
+      };
+    } catch (err) {
+      const message = err.response?.data?.message || 'Failed to update profile.';
+      set({ isLoading: false, error: message });
+      return { success: false, message };
+    }
+  },
+
+  // Change account password & update session token
+  changePassword: async ({ currentPassword, newPassword }) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await api.put('/auth/change-password', { currentPassword, newPassword });
+      const { token, user: updatedUser, message } = response.data;
+      if (token) {
+        localStorage.setItem('token', token);
+      }
+      if (updatedUser) {
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        set({ user: updatedUser, token: token || get().token });
+      }
+      set({ isLoading: false, error: null });
+      return {
+        success: true,
+        message: message || 'Password changed successfully'
+      };
+    } catch (err) {
+      const message = err.response?.data?.message || 'Failed to change password.';
+      set({ isLoading: false, error: message });
+      return { success: false, message };
+    }
+  },
+
   // Logout method
   logout: async () => {
     try {

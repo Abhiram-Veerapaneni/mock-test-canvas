@@ -11,6 +11,7 @@ import ExamAuditReportPage from './pages/ExamAuditReportPage';
 import ExamLiveMonitorPage from './pages/ExamLiveMonitorPage';
 import ExamResponsesPage from './pages/ExamResponsesPage';
 import NotificationsPage from './pages/NotificationsPage';
+import ProfilePage from './pages/ProfilePage';
 import QuestionBankPage from './pages/QuestionBankPage';
 import UnderDevelopmentPage from './pages/UnderDevelopmentPage';
 import LiveViolationToast from './components/proctoring/LiveViolationToast';
@@ -70,6 +71,16 @@ export default function App() {
           element={
             <ProtectedRoute>
               <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected User Profile & Security Settings */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
             </ProtectedRoute>
           }
         />

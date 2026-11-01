@@ -44,6 +44,8 @@ const sendTokenResponse = (user, statusCode, res, message) => {
       name: user.name,
       email: user.email,
       avatar: user.avatar || '',
+      authProvider: user.authProvider || 'local',
+      hasPassword: Boolean(user.password),
       createdTests: user.createdTests,
       attemptedTests: user.attemptedTests,
       createdAt: user.createdAt
@@ -238,7 +240,6 @@ export const login = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
-      .select('-password')
       .populate('createdTests', 'title category durationMinutes totalMarks');
 
     if (!user) {
@@ -250,13 +251,145 @@ export const getMe = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      user
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar || '',
+        authProvider: user.authProvider || 'local',
+        hasPassword: Boolean(user.password),
+        createdTests: user.createdTests,
+        attemptedTests: user.attemptedTests,
+        createdAt: user.createdAt
+      }
     });
   } catch (error) {
     console.error('getMe error:', error);
     return res.status(500).json({
       success: false,
       message: error.message || 'Server error fetching user profile'
+    });
+  }
+};
+
+/**
+ * @desc    Update current user profile (name, avatar)
+ * @route   PUT /api/auth/profile
+ * @access  Private
+ */
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, avatar } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (name !== undefined) {
+      if (!name || !name.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Name cannot be empty'
+        });
+      }
+      user.name = name.trim();
+    }
+
+    if (avatar !== undefined) {
+      user.avatar = typeof avatar === 'string' ? avatar.trim() : '';
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar || '',
+        authProvider: user.authProvider || 'local',
+        hasPassword: Boolean(user.password),
+        createdTests: user.createdTests,
+        attemptedTests: user.attemptedTests,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('updateProfile error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error updating profile'
+    });
+  }
+};
+
+/**
+ * @desc    Change user password and invalidate previous JWTs
+ * @route   PUT /api/auth/change-password
+ * @access  Private
+ */
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 6 characters long'
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // If user already has a password set, require and verify currentPassword
+    if (user.password) {
+      if (!currentPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current password is required'
+        });
+      }
+
+      const isMatch = await user.matchPassword(currentPassword);
+      if (!isMatch) {
+        return res.status(400).json({
+          success: false,
+          message: 'Current password is incorrect'
+        });
+      }
+
+      if (currentPassword === newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'New password cannot be the same as your current password'
+        });
+      }
+    }
+
+    // Set new password (pre-save hook hashes password and sets passwordChangedAt)
+    user.password = newPassword;
+    await user.save();
+
+    // Re-issue a fresh JWT with new iat > passwordChangedAt into httpOnly cookie
+    return sendTokenResponse(user, 200, res, 'Password changed successfully');
+  } catch (error) {
+    console.error('changePassword error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error changing password'
     });
   }
 };

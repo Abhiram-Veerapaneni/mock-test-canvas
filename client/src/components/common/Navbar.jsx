@@ -261,6 +261,15 @@ export default function Navbar() {
 
                   <div className="space-y-0.5">
                     <Link
+                      to="/profile"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030] transition-colors"
+                    >
+                      <UserIcon className="w-3.5 h-3.5 text-slate-400" />
+                      <span>My Profile</span>
+                    </Link>
+
+                    <Link
                       to="/assessments-overview"
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030] transition-colors"

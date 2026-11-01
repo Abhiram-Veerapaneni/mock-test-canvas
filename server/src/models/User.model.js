@@ -36,6 +36,9 @@ const userSchema = new mongoose.Schema(
       enum: ['local', 'google'],
       default: 'local'
     },
+    passwordChangedAt: {
+      type: Date
+    },
     createdTests: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -73,6 +76,10 @@ userSchema.pre('save', async function (next) {
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
+    // If updating an existing user's password, record passwordChangedAt timestamp
+    if (!this.isNew) {
+      this.passwordChangedAt = new Date(Date.now() - 1000);
+    }
     next();
   } catch (error) {
     next(error);
@@ -83,6 +90,15 @@ userSchema.pre('save', async function (next) {
 userSchema.methods.matchPassword = async function (enteredPassword) {
   if (!this.password) return false;
   return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Check if password was changed after token issuance
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+    return JWTTimestamp < changedTimestamp;
+  }
+  return false;
 };
 
 export const User = mongoose.model('User', userSchema);

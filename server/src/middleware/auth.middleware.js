@@ -37,6 +37,14 @@ export const protect = async (req, res, next) => {
       });
     }
 
+    // Check if user changed password after the token was issued
+    if (user.changedPasswordAfter && user.changedPasswordAfter(decoded.iat)) {
+      return res.status(401).json({
+        success: false,
+        message: 'Password was recently changed. Please log in again with your new credentials.'
+      });
+    }
+
     req.user = user;
     next();
   } catch (error) {
@@ -64,8 +72,13 @@ export const optionalAuth = async (req, res, next) => {
     if (!token) return next();
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-    const user = await User.findById(decoded.id).select('-password').lean();
-    if (user) req.user = user;
+    const user = await User.findById(decoded.id).select('-password');
+    if (user) {
+      if (user.changedPasswordAfter && user.changedPasswordAfter(decoded.iat)) {
+        return next();
+      }
+      req.user = user;
+    }
   } catch (_) {
     // Invalid token — just continue without attaching user
   }
