@@ -12,3 +12,4 @@ const router = express.Router();
 router.post('/ai-explain', protect, aiExplain);
 
 export default router;
+

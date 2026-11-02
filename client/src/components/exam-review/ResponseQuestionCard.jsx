@@ -1,6 +1,7 @@
 import React from 'react';
 import MathRenderer from '../common/MathRenderer';
 import { HelpCircle, Check, X } from 'lucide-react';
+import AIExplainPanel from '../analytics/AIExplainPanel';
 
 export default function ResponseQuestionCard({ question: q, onPreviewImage }) {
   const isCorrect = q.isCorrect;
@@ -111,13 +112,12 @@ export default function ResponseQuestionCard({ question: q, onPreviewImage }) {
                 className={`p-3 rounded-md border flex items-start justify-between gap-3 text-xs transition-colors ${borderStyle}`}
               >
                 <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                  <span className={`w-5 h-5 rounded flex items-center justify-center font-medium text-xs shrink-0 ${
-                    isCorrectAnswer
+                  <span className={`w-5 h-5 rounded flex items-center justify-center font-medium text-xs shrink-0 ${isCorrectAnswer
                       ? 'bg-emerald-600 text-white'
                       : isUserSelected
                         ? 'bg-rose-600 text-white'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                  }`}>
+                    }`}>
                     {letter}
                   </span>
                   <div className="space-y-1">
@@ -139,7 +139,7 @@ export default function ResponseQuestionCard({ question: q, onPreviewImage }) {
         </div>
       )}
 
-      {/* Step-by-Step Explanation */}
+      {/* Step-by-Step Existing Explanation */}
       {q.explanation && (
         <div className="p-4 rounded-md bg-slate-50 dark:bg-[#162030]/60 border border-slate-200/80 dark:border-slate-800/80 text-xs space-y-1.5 mt-3">
           <span className="font-medium text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
@@ -151,7 +151,9 @@ export default function ResponseQuestionCard({ question: q, onPreviewImage }) {
           </div>
         </div>
       )}
+
+      {/* AI Pedagogical Solution Panel (BYOK) */}
+      <AIExplainPanel question={q} />
     </div>
   );
 }
-

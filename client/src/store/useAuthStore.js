@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import api from '../services/api';
+import { clearGeminiBYOKSession } from '../utils/geminiKey';
 
 const getStoredUser = () => {
   try {
@@ -76,6 +77,7 @@ export const useAuthStore = create((set, get) => ({
         }
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        clearGeminiBYOKSession();
         set({
           user: null,
           token: null,
@@ -302,6 +304,7 @@ export const useAuthStore = create((set, get) => ({
     }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+        clearGeminiBYOKSession();
     try {
       sessionStorage.removeItem('dismissedGoogleOneTap');
     } catch (_) {}
