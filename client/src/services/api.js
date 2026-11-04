@@ -55,7 +55,10 @@ api.interceptors.response.use(
     }
 
     if (status === 401) {
-      localStorage.removeItem('token');
+      // Do not clear token during an active exam to avoid premature logout
+      if (!localStorage.getItem('active_exam_id')) {
+        localStorage.removeItem('token');
+      }
     }
 
     return Promise.reject(error);

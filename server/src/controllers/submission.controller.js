@@ -1,9 +1,11 @@
+import jwt from 'jsonwebtoken';
 import { Exam } from '../models/Exam.model.js';
 import { Attempt } from '../models/Attempt.model.js';
 import { User } from '../models/User.model.js';
 import { Notification } from '../models/Notification.model.js';
 import { gradeAttempt } from '../services/grading.service.js';
 import cloudinary, { isCloudinaryConfigured } from '../config/cloudinary.js';
+import { getCookieOptions } from './auth.controller.js';
 
 /**
  * @desc   Initialize or retrieve an active exam attempt
@@ -111,8 +113,17 @@ export const startAttempt = async (req, res) => {
       });
     }
 
+    // Refresh JWT session on exam start so candidate session cannot expire mid-test
+    const freshToken = jwt.sign(
+      { id: req.user._id },
+      process.env.JWT_SECRET || 'secret',
+      { expiresIn: '30d' }
+    );
+    res.cookie('token', freshToken, getCookieOptions());
+
     return res.status(200).json({
       success: true,
+      token: freshToken,
       attemptId: attempt._id,
       isPractice: attempt.isPractice,
       isPreview: Boolean(attempt.isPreview),

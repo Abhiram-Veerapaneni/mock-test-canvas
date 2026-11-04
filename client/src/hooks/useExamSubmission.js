@@ -72,6 +72,7 @@ export default function useExamSubmission({
     const timeSpentSeconds = Math.max(0, totalDurationSeconds - remainingSeconds);
 
     let resultDataPayload = null;
+    let submitSucceeded = false;
     try {
       const res = await api.post('/submissions/submit', {
         examId: currentExam?._id || examId,
@@ -82,12 +83,20 @@ export default function useExamSubmission({
         timeSpentSeconds,
       });
       if (res.data?.success) {
+        submitSucceeded = true;
         resultDataPayload = res.data.result;
         setGradedResult(res.data.result);
       }
     } catch (err) {
       console.error('[Submit] Error:', err);
-    } finally {
+      // Do not clear local answers on failure so the candidate can retry without data loss
+      setIsSubmitting(false);
+      alert(err.response?.data?.message || 'Failed to submit exam. Please check your connection and try again. Your answers are preserved.');
+      return;
+    }
+
+    if (submitSucceeded) {
+      // Clear local session storage only after successful server confirmation
       clearStoredSession?.();
       if (typeof window !== 'undefined') {
         localStorage.removeItem('active_exam_id');

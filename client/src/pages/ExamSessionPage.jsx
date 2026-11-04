@@ -277,8 +277,14 @@ export default function ExamSessionPage() {
           }),
         ]);
 
-        if (startRes.data?.success && startRes.data?.attemptId) {
-          setAttemptId(startRes.data.attemptId);
+        if (startRes.data?.success) {
+          // Store refreshed JWT token so exam session remains valid for 30 days
+          if (startRes.data.token) {
+            localStorage.setItem('token', startRes.data.token);
+          }
+          if (startRes.data.attemptId) {
+            setAttemptId(startRes.data.attemptId);
+          }
         }
 
         if (examRes.data?.success && examRes.data.exam) {
