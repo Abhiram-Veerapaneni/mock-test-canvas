@@ -13,6 +13,7 @@ import ExamResponsesPage from './pages/ExamResponsesPage';
 import NotificationsPage from './pages/NotificationsPage';
 import ProfilePage from './pages/ProfilePage';
 import QuestionBankPage from './pages/QuestionBankPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 import UnderDevelopmentPage from './pages/UnderDevelopmentPage';
 import LiveViolationToast from './components/proctoring/LiveViolationToast';
 import SnapshotPreviewModal from './components/proctoring/SnapshotPreviewModal';
@@ -92,7 +93,7 @@ export default function App() {
         <Route path="/question-bank" element={<QuestionBankPage />} />
 
         {/* Modules in active development */}
-        <Route path="/analytics" element={<UnderDevelopmentPage featureKey="/analytics" />} />
+        <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/assessments-overview" element={<UnderDevelopmentPage featureKey="/assessments-overview" />} />
         <Route path="/telemetry" element={<UnderDevelopmentPage featureKey="/telemetry" />} />
 
