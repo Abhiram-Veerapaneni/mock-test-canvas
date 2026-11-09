@@ -11,6 +11,7 @@ import submissionRoutes from './routes/submission.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import aiRoutes from './routes/ai.routes.js';
 import questionRoutes from './routes/question.routes.js';
+import analyticsRoutes from './routes/analytics.routes.js';
 import { apiLimiter } from './middleware/rateLimiter.middleware.js';
 
 dotenv.config();
@@ -49,7 +50,7 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Gemini-Key', 'X-Gemini-Model']
 };
 
 app.use(cors(corsOptions));
@@ -128,6 +129,7 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/submissions', submissionRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Global 404 Handler
 app.use((req, res) => {
