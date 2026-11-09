@@ -106,7 +106,16 @@ Built with **React 19**, **Tailwind CSS v4**, **Node.js/Express**, and **MongoDB
 - **Dedicated Live Monitor (`/test/:testId/live`)**: Real-time supervision dashboard displaying connected test takers, trust score gauges, and live camera snapshot feeds.
 - **Granular Post-Exam Audit (`/test/:testId/audit`)**: Timestamped violation timeline, photographic evidence gallery, and score reports for post-test integrity verification.
 
-### 9. 🔐 Dual Authentication: JWT & Google OAuth
+### 9. 📊 Performance Analytics & BYOK AI Pedagogical Explanations
+- **Bring Your Own Key (BYOK) Architecture**: Candidates can supply their personal Google Gemini API key to unlock on-demand, step-by-step pedagogical solutions directly in post-exam review sheets.
+- **Zero Server Retention Guarantee**: The key is kept locally in the candidate's browser, forwarded via the `X-Gemini-Key` header, instantiated in ephemeral memory per-request, and instantly garbage-collected without ever being logged or saved to the database. Wiped automatically on logout.
+- **Model Choice**: Flexible model selection with one-click toggling between `gemini-2.5-flash` (recommended), `gemini-1.5-flash`, `gemini-2.0-flash`, and `gemini-1.5-pro`.
+- **Score Progression Trend**: Recharts visualization mapping chronological score evolution, contrasting official vs. practice attempts.
+- **Subject Mastery & Topic Heatmap**: Dynamic aggregation evaluating subject streams and question tags to highlight weaknesses and track 14-day study streaks.
+- **Decile Score Distribution Histogram**: Deep dive per-exam analysis bucketing student marks into 10 deciles (0–10% through 91–100%).
+- **Global Official Leaderboard**: Fair, cheat-resilient leaderboard grouping official attempt performance across all candidates with personalized rank pinning.
+
+### 10. 🔐 Dual Authentication: JWT & Google OAuth
 - Traditional registration/login with email, **bcrypt** salted password hashing, and email OTP verification.
 - Native **Google OAuth 2.0** integration (`google-auth-library`) for instant one-tap candidate sign-in.
 - Stateless, cryptographically signed JSON Web Tokens (JWT) stored in secure cookies or `Authorization` headers.
@@ -341,6 +350,15 @@ client/
     │   │   ├── AuditSnapshotModal.jsx     # Proctoring webcam snapshots review modal
     │   │   └── AuditViolationLogsTable.jsx# Timestamped infraction trail with penalty points
     │   │
+    │   ├── analytics/                     # Performance analytics & AI pedagogical explanations
+    │   │   ├── AccuracyHeatmap.jsx        # Topic mastery matrix & 14-day study activity calendar
+    │   │   ├── AIExplainPanel.jsx         # On-demand BYOK Gemini AI pedagogical solution generator
+    │   │   ├── ExamInsightsPanel.jsx      # Per-exam deep dive, decile histogram & subject breakdowns
+    │   │   ├── GeminiKeyModal.jsx         # Bring Your Own Key (BYOK) credential manager & model picker
+    │   │   ├── LeaderboardTable.jsx       # Global official standings table with user rank pinning
+    │   │   ├── ScoreTrendChart.jsx        # Recharts chronological score progression (Official vs Practice)
+    │   │   └── StreamAccuracyChart.jsx    # Horizontal subject/stream accuracy & mastery bars
+    │   │
     │   ├── question-bank/                 # Centralized question repository & generator
     │   │   ├── AddQuestionModal.jsx       # Modal form to author new questions to the bank
     │   │   ├── BankQuestionMetaFields.jsx # Metadata inputs (Subject, Topic, Difficulty, Marks)
@@ -400,6 +418,7 @@ client/
     │   ├── ExamResponsesPage.jsx          # Post-exam question-by-question review & solutions
     │   ├── ExamSessionPage.jsx            # Live proctored testing environment
     │   ├── NotificationsPage.jsx          # User notifications center & system alerts
+    │   ├── AnalyticsPage.jsx              # Personal analytics, exam insights & global leaderboard
     │   ├── QuestionBankPage.jsx           # Centralized question repository & search portal
     │   ├── TestCreationPage.jsx           # Test authoring studio with AI ingestion & live preview
     │   └── UnderDevelopmentPage.jsx       # Feature placeholder page
@@ -445,6 +464,7 @@ server/
     │
     ├── controllers/
     │   ├── ai.controller.js               # Gemini AI document parsing & automated question ingestion
+    │   ├── analytics.controller.js        # Personal analytics, exam insights, leaderboard & BYOK AI explain proxy
     │   ├── auth.controller.js             # Registration, login, Google OAuth, OTP & tokens
     │   ├── exam.controller.js             # Exam CRUD, catalog listing & sanitized question delivery
     │   ├── notification.controller.js     # Notification queries & mark-as-read handlers
@@ -696,6 +716,15 @@ All API endpoints are prefixed with `/api`. Protected routes require an `Authori
 | `PUT` | `/api/questions/:id` | Protected | Update a bank question's statement, options, or solution. |
 | `DELETE` | `/api/questions/:id` | Protected | Delete a question from the bank pool. |
 
+### 📈 Analytics & AI Solutions (`/api/analytics`)
+
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/analytics/me` | Protected | Retrieve candidate performance summary, score progression trend, stream accuracy, tag matrix, and daily streak. |
+| `GET` | `/api/analytics/exam/:examId` | Protected | Retrieve per-exam metrics, score distribution histogram (deciles), and topic answer breakdown. |
+| `GET` | `/api/analytics/leaderboard` | Public / Optional Auth | Retrieve global official leaderboard rankings (top 50 + authenticated candidate's rank). |
+| `POST` | `/api/analytics/ai-explain` | Protected | BYOK Gemini proxy: generates on-demand pedagogical explanation with LaTeX math using client-supplied API key. Zero server storage. |
+
 ### 🤖 AI Document Ingestion (`/api/ai`)
 
 | Method | Endpoint | Access | Description |
@@ -768,7 +797,7 @@ This populates the database with real questions including LaTeX mathematical for
 - [x] **Phase 6**: Deterministic Server-Side Grading Engine & Historical Attempt Review Breakdown.
 - [x] **Phase 7**: Edge ML Computer Vision Proctoring (MediaPipe Face & Gaze Tracking, Audio Anomaly Hook, Cloudinary Snapshot Evidence).
 - [x] **Phase 8**: Automated AI Question Paper Ingestion (DOCX, PDF & image OCR to structured LaTeX JSON via Gemini 2.5 Flash).
-- [ ] **Phase 9**: Real-Time Streaming AI Pedagogical Explanations (Server-Sent Events via Gemini).
+- [x] **Phase 9**: Performance Analytics & AI-Powered Solutions (BYOK Gemini API key proxy, score progression trends, subject mastery, decile score distribution histogram, global official leaderboard, and on-demand AI pedagogical explanations in exam review).
 - [ ] **Phase 10**: Dynamic Question & Option Shuffling Engine (Per-candidate order jumbling, option randomization & attempt seed persistence for anti-collusion).
 
 ---
