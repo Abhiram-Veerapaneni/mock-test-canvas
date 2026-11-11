@@ -4,6 +4,7 @@ import Navbar from '../components/common/Navbar';
 import BackButton from '../components/common/BackButton';
 import Breadcrumbs from '../components/common/Breadcrumbs';
 import ResponseScoreBanner from '../components/exam-review/ResponseScoreBanner';
+import SubjectTopicReviewBreakdown from '../components/exam-review/SubjectTopicReviewBreakdown';
 import ResponseQuestionNavigator from '../components/exam-review/ResponseQuestionNavigator';
 import ResponseQuestionCard from '../components/exam-review/ResponseQuestionCard';
 import api from '../services/api';
@@ -19,6 +20,8 @@ export default function ExamResponsesPage() {
   const [error, setError] = useState(null);
   const [errorDetails, setErrorDetails] = useState(null);
   const [filterType, setFilterType] = useState('ALL'); // 'ALL' | 'CORRECT' | 'INCORRECT' | 'UNANSWERED'
+  const [selectedSubject, setSelectedSubject] = useState('ALL');
+  const [selectedTopic, setSelectedTopic] = useState('ALL');
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(1);
   const [lightboxImage, setLightboxImage] = useState(null);
 
@@ -54,11 +57,21 @@ export default function ExamResponsesPage() {
   const questions = attempt?.questions || [];
 
   const filteredQuestions = useMemo(() => {
-    if (filterType === 'CORRECT') return questions.filter((q) => q.isCorrect);
-    if (filterType === 'INCORRECT') return questions.filter((q) => q.isAnswered && !q.isCorrect);
-    if (filterType === 'UNANSWERED') return questions.filter((q) => !q.isAnswered);
-    return questions;
-  }, [questions, filterType]);
+    return questions.filter((q) => {
+      // Status filter
+      if (filterType === 'CORRECT' && !q.isCorrect) return false;
+      if (filterType === 'INCORRECT' && (!q.isAnswered || q.isCorrect)) return false;
+      if (filterType === 'UNANSWERED' && q.isAnswered) return false;
+
+      // Subject filter
+      if (selectedSubject !== 'ALL' && (q.subject || 'General') !== selectedSubject) return false;
+
+      // Topic filter
+      if (selectedTopic !== 'ALL' && (q.topic || 'General') !== selectedTopic) return false;
+
+      return true;
+    });
+  }, [questions, filterType, selectedSubject, selectedTopic]);
 
   const scrollToQuestion = (idx) => {
     setActiveQuestionIndex(idx);
@@ -132,6 +145,16 @@ export default function ExamResponsesPage() {
 
         {/* Hero Performance Header Banner */}
         <ResponseScoreBanner exam={exam} attempt={attempt} />
+
+        {/* Diagnostic Subject & Topic Breakdown */}
+        <SubjectTopicReviewBreakdown
+          questions={questions}
+          selectedSubject={selectedSubject}
+          onSelectSubject={setSelectedSubject}
+          selectedTopic={selectedTopic}
+          onSelectTopic={setSelectedTopic}
+          onScrollToQuestion={scrollToQuestion}
+        />
 
         {/* Main Content Layout: Navigator Sidebar + Question Review Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">

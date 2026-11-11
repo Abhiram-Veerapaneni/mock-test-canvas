@@ -172,7 +172,127 @@ export const getPersonalAnalytics = async (req, res) => {
 
     const currentStreakDays = calculateStreak(submissionDates);
 
-    // 2. Stream-wise & Tag-wise Accuracy Aggregations
+    // 2. Stream-wise, Tag-wise, and Category-Subject Aggregations
+    // Follows industry standards (Testbook, Allen): evaluate candidate mastery based on their latest attempt per exam
+    const categorySubjectPipeline = [
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          status: 'SUBMITTED',
+          isPreview: { $ne: true }
+        }
+      },
+      // Pick the latest attempt for each unique exam
+      { $sort: { submittedAt: -1, createdAt: -1 } },
+      {
+        $group: {
+          _id: '$examId',
+          latestAttempt: { $first: '$$ROOT' }
+        }
+      },
+      {
+        $replaceRoot: { newRoot: '$latestAttempt' }
+      },
+      {
+        $lookup: {
+          from: 'exams',
+          localField: 'examId',
+          foreignField: '_id',
+          as: 'exam'
+        }
+      },
+      { $unwind: '$exam' },
+      { $unwind: '$responses' },
+      {
+        $lookup: {
+          from: 'questions',
+          localField: 'responses.questionId',
+          foreignField: '_id',
+          as: 'q'
+        }
+      },
+      { $unwind: '$q' },
+      {
+        $project: {
+          category: { $ifNull: ['$exam.category', 'CUSTOM'] },
+          subject: { $ifNull: ['$q.subject', { $ifNull: ['$q.stream', 'General'] }] },
+          selectedAnswers: '$responses.selectedAnswers',
+          correctAnswers: '$q.correctAnswers',
+          isAnswered: {
+            $gt: [{ $size: { $ifNull: ['$responses.selectedAnswers', []] } }, 0]
+          }
+        }
+      },
+      {
+        $addFields: {
+          isCorrect: {
+            $and: [
+              '$isAnswered',
+              {
+                $eq: [
+                  { $setEquals: ['$selectedAnswers', '$correctAnswers'] },
+                  true
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            category: '$category',
+            subject: '$subject'
+          },
+          totalQuestions: { $sum: 1 },
+          totalAnswered: { $sum: { $cond: ['$isAnswered', 1, 0] } },
+          totalCorrect: { $sum: { $cond: ['$isCorrect', 1, 0] } },
+          totalIncorrect: {
+            $sum: {
+              $cond: [
+                { $and: ['$isAnswered', { $not: '$isCorrect' }] },
+                1,
+                0
+              ]
+            }
+          },
+          totalUnanswered: {
+            $sum: { $cond: [{ $not: '$isAnswered' }, 1, 0] }
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          category: '$_id.category',
+          subject: '$_id.subject',
+          totalQuestions: 1,
+          totalAnswered: 1,
+          totalCorrect: 1,
+          totalIncorrect: 1,
+          totalUnanswered: 1,
+          accuracy: {
+            $cond: [
+              { $gt: ['$totalAnswered', 0] },
+              {
+                $round: [
+                  {
+                    $multiply: [
+                      { $divide: ['$totalCorrect', '$totalAnswered'] },
+                      100
+                    ]
+                  },
+                  1
+                ]
+              },
+              0
+            ]
+          }
+        }
+      },
+      { $sort: { totalAnswered: -1 } }
+    ];
+
     const streamAccuracyPipeline = [
       {
         $match: {
@@ -335,10 +455,86 @@ export const getPersonalAnalytics = async (req, res) => {
       { $limit: 20 }
     ];
 
-    const [streamAccuracy, tagAccuracy] = await Promise.all([
+    const [categorySubjectResults, streamAccuracy, tagAccuracy] = await Promise.all([
+      Attempt.aggregate(categorySubjectPipeline),
       Attempt.aggregate(streamAccuracyPipeline),
       Attempt.aggregate(tagAccuracyPipeline)
     ]);
+
+    // Build Category-wise Subject Performance mapping
+    const categoryMap = new Map();
+    const examSetByCategory = new Map();
+
+    attempts.forEach((att) => {
+      const cat = att.examId?.category || 'CUSTOM';
+      const examIdStr = att.examId?._id?.toString() || att.examId?.toString();
+      if (!categoryMap.has(cat)) {
+        categoryMap.set(cat, {
+          category: cat,
+          totalExams: 0,
+          totalAttempts: 0,
+          totalQuestions: 0,
+          totalAnswered: 0,
+          totalCorrect: 0,
+          totalIncorrect: 0,
+          totalUnanswered: 0,
+          accuracy: 0,
+          subjects: []
+        });
+        examSetByCategory.set(cat, new Set());
+      }
+      categoryMap.get(cat).totalAttempts += 1;
+      if (examIdStr) {
+        examSetByCategory.get(cat).add(examIdStr);
+      }
+    });
+
+    for (const [cat, set] of examSetByCategory.entries()) {
+      if (categoryMap.has(cat)) {
+        categoryMap.get(cat).totalExams = set.size;
+      }
+    }
+
+    categorySubjectResults.forEach((item) => {
+      if (!categoryMap.has(item.category)) {
+        categoryMap.set(item.category, {
+          category: item.category,
+          totalExams: 0,
+          totalAttempts: 0,
+          totalQuestions: 0,
+          totalAnswered: 0,
+          totalCorrect: 0,
+          totalIncorrect: 0,
+          totalUnanswered: 0,
+          accuracy: 0,
+          subjects: []
+        });
+      }
+      const entry = categoryMap.get(item.category);
+      entry.totalQuestions += item.totalQuestions || 0;
+      entry.totalAnswered += item.totalAnswered || 0;
+      entry.totalCorrect += item.totalCorrect || 0;
+      entry.totalIncorrect += item.totalIncorrect || 0;
+      entry.totalUnanswered += item.totalUnanswered || 0;
+      entry.subjects.push({
+        subject: item.subject,
+        totalQuestions: item.totalQuestions,
+        totalAnswered: item.totalAnswered,
+        totalCorrect: item.totalCorrect,
+        totalIncorrect: item.totalIncorrect,
+        totalUnanswered: item.totalUnanswered,
+        accuracy: item.accuracy
+      });
+    });
+
+    const categoryPerformance = Array.from(categoryMap.values()).map((c) => {
+      c.accuracy =
+        c.totalAnswered > 0
+          ? Math.round((c.totalCorrect / c.totalAnswered) * 100 * 10) / 10
+          : 0;
+      c.subjects.sort((a, b) => b.totalAnswered - a.totalAnswered);
+      return c;
+    });
 
     // Format unique active days for mini-calendar / activity tracker
     const activeDays = Array.from(
@@ -359,6 +555,7 @@ export const getPersonalAnalytics = async (req, res) => {
         totalTimeInvestedSeconds,
         currentStreakDays
       },
+      categoryPerformance,
       trend,
       streamAccuracy,
       tagAccuracy,

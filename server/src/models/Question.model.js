@@ -33,9 +33,7 @@ const questionSchema = new mongoose.Schema(
     },
     subject: {
       type: String,
-      default: function () {
-        return this.stream || 'General';
-      },
+      default: 'General',
       trim: true
     },
     topic: {
@@ -43,10 +41,13 @@ const questionSchema = new mongoose.Schema(
       default: 'General',
       trim: true
     },
+    // Deprecated legacy field: kept optional for schema compatibility with older documents
     stream: {
       type: String,
       trim: true,
-      default: 'General'
+      default: function () {
+        return this.subject || 'General';
+      }
     },
     tags: [
       {
