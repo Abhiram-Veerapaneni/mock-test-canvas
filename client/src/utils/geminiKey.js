@@ -6,13 +6,39 @@
 
 const STORAGE_KEY = 'gemini_api_key';
 const MODEL_KEY = 'gemini_api_model';
-const DEFAULT_MODEL = 'gemini-2.5-flash';
+const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
 
 export const SUPPORTED_GEMINI_MODELS = [
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', tag: 'Recommended', description: 'Fast, high quality reasoning & math derivations' },
-  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', tag: 'Fast', description: 'High speed and low latency' },
-  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', tag: 'Balanced', description: 'High throughput reasoning' },
-  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', tag: 'Deep Thinking', description: 'Complex multi-step academic proofs' },
+  {
+    id: 'gemini-3.5-flash-lite',
+    name: 'Gemini 3.5 Flash-Lite',
+    tag: 'Fastest (Instant)',
+    description: 'Sub-second real-time streaming with lowest latency'
+  },
+  {
+    id: 'gemini-3.8-flash',
+    name: 'Gemini 3.8 Flash',
+    tag: 'Balanced',
+    description: 'Latest model with fast reasoning & step-by-step derivations'
+  },
+  {
+    id: 'gemini-flash-latest',
+    name: 'Gemini Flash (Latest)',
+    tag: 'Auto-Update',
+    description: 'Always routes to Google’s latest active flash release'
+  },
+  {
+    id: 'gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro',
+    tag: 'Deep Thinking',
+    description: 'Complex multi-step academic proofs & derivations'
+  },
+  {
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
+    tag: 'Legacy',
+    description: 'Legacy 2.5 model (requires prior account access from Google)'
+  }
 ];
 
 export const getGeminiApiKey = () => {
@@ -45,7 +71,18 @@ export const removeGeminiApiKey = () => {
 
 export const getGeminiModel = () => {
   try {
-    return localStorage.getItem(MODEL_KEY) || DEFAULT_MODEL;
+    const saved = localStorage.getItem(MODEL_KEY);
+    // Automatically migrate legacy or deprecated model keys
+    if (
+      !saved ||
+      saved === 'gemini-2.5-flash' ||
+      saved === 'gemini-1.5-flash' ||
+      saved === 'gemini-2.0-flash' ||
+      saved === 'gemini-1.5-pro'
+    ) {
+      return DEFAULT_MODEL;
+    }
+    return saved;
   } catch {
     return DEFAULT_MODEL;
   }
@@ -70,4 +107,3 @@ export const maskApiKey = (key) => {
   if (!key || key.length < 8) return '••••••••';
   return `${key.slice(0, 6)}••••••••${key.slice(-4)}`;
 };
-

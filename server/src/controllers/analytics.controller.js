@@ -6,7 +6,12 @@ import Exam from '../models/Exam.model.js';
 import User from '../models/User.model.js';
 
 const ALLOWED_MODELS = [
+  'gemini-3.8-flash',
+  'gemini-flash-latest',
+  'gemini-3.5-flash-lite',
+  'gemini-2.5-pro',
   'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
   'gemini-1.5-flash',
   'gemini-2.0-flash',
   'gemini-1.5-pro'
@@ -922,11 +927,11 @@ export const aiExplain = async (req, res) => {
 
   const { questionId, userAnswer, correctAnswer, model } = req.body;
   const requestedModel =
-    model || req.headers['x-gemini-model'] || 'gemini-2.5-flash';
+    model || req.headers['x-gemini-model'] || 'gemini-3.5-flash-lite';
 
   const selectedModel = ALLOWED_MODELS.includes(requestedModel)
     ? requestedModel
-    : 'gemini-2.5-flash';
+    : 'gemini-3.5-flash-lite';
 
   if (!questionId) {
     return res.status(400).json({
@@ -1021,60 +1026,133 @@ Summarize the foundational rule, theorem, or equation the student should revise.
 ### 4. Common Pitfall & Mistake Analysis
 Analyze what mistake, miscalculation, or distractor option likely led to the wrong answer, and how to avoid it in future tests.`;
 
+    // Set up SSE streaming headers immediately to establish low-latency connection (<5ms)
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable proxy/CDN response buffering
+    if (res.flushHeaders) res.flushHeaders();
+
+    // Send immediate initial ping
+    res.write(`data: ${JSON.stringify({ status: 'connected', model: selectedModel })}\n\n`);
+
     // Instantiate ephemeral client
     const ai = new GoogleGenAI({ apiKey: geminiKey });
 
-    const response = await ai.models.generateContent({
-      model: selectedModel,
-      contents: prompt
-    });
+    // Fallback cascade: start with requested model, fallback to modern flash models if restricted/busy
+    const candidateModels = [
+      selectedModel,
+      'gemini-3.5-flash-lite',
+      'gemini-3.8-flash',
+      'gemini-flash-latest',
+      'gemini-2.5-flash-lite'
+    ].filter((m, idx, arr) => Boolean(m) && arr.indexOf(m) === idx);
 
-    const explanation = response?.text || 'No explanation could be generated.';
+    let streamStarted = false;
+    let actualModelUsed = selectedModel;
+    let lastError = null;
 
-    return res.status(200).json({
-      success: true,
-      explanation,
-      model: selectedModel
-    });
+    for (const modelToTry of candidateModels) {
+      try {
+        console.log(`[BYOK AI Explain] Streaming with model: ${modelToTry}`);
+
+        // Only pass thinkingConfig to models that support it (Gemini 3.8).
+        // Models like gemini-3.5-flash-lite reject thinkingConfig with 400 INVALID_ARGUMENT.
+        const streamConfig = {};
+        if (modelToTry.includes('3.8')) {
+          streamConfig.thinkingConfig = {
+            thinkingLevel: 'minimal' // Minimal thinking: bypasses deep reasoning for instant streaming
+          };
+        }
+
+        const stream = await ai.models.generateContentStream({
+          model: modelToTry,
+          contents: prompt,
+          config: Object.keys(streamConfig).length > 0 ? streamConfig : undefined
+        });
+
+        for await (const chunk of stream) {
+          const text = chunk.text;
+          if (text) {
+            streamStarted = true;
+            actualModelUsed = modelToTry;
+            res.write(`data: ${JSON.stringify({ chunk: text, model: modelToTry })}\n\n`);
+            if (res.flush) res.flush();
+          }
+        }
+
+        if (streamStarted) {
+          break; // Successfully finished streaming
+        }
+      } catch (err) {
+        if (streamStarted) {
+          console.error(`[BYOK AI Explain] Stream interrupted mid-generation:`, err.message);
+          break;
+        }
+
+        lastError = err;
+        const errMsg = err?.message || String(err);
+        console.warn(`[BYOK AI Explain] Model "${modelToTry}" failed: ${errMsg.slice(0, 160)}`);
+
+        // If explicitly an invalid API key, stop immediately without attempting fallbacks
+        if (
+          errMsg.includes('API_KEY_INVALID') ||
+          errMsg.includes('API key not valid')
+        ) {
+          res.write(
+            `data: ${JSON.stringify({
+              error: 'Invalid Gemini API key. Please verify your key at Google AI Studio (aistudio.google.com).'
+            })}\n\n`
+          );
+          return res.end();
+        }
+
+        // If permission denied / blocked project
+        if (errMsg.includes('PERMISSION_DENIED') || err?.status === 403) {
+          res.write(
+            `data: ${JSON.stringify({
+              error: 'Permission denied. Please ensure your Gemini API key has Generative Language API access enabled.'
+            })}\n\n`
+          );
+          return res.end();
+        }
+
+        // Try next fallback model
+        continue;
+      }
+    }
+
+    if (!streamStarted) {
+      const finalErr = lastError?.message || '';
+      let userFriendlyErr =
+        'Failed to generate explanation. All attempted models were unavailable or busy. Please check your Google AI Studio quota.';
+      if (finalErr.includes('RESOURCE_EXHAUSTED') || finalErr.includes('quota')) {
+        userFriendlyErr =
+          'Gemini API quota exceeded for this key. Please check your Google AI Studio quota.';
+      }
+      res.write(`data: ${JSON.stringify({ error: userFriendlyErr })}\n\n`);
+      return res.end();
+    }
+
+    res.write(`data: ${JSON.stringify({ done: true, model: actualModelUsed })}\n\n`);
+    res.end();
   } catch (error) {
     const errorMsg = error?.message || '';
+    console.error('[AI Explain] Fatal Error:', errorMsg);
 
-    // Handle common Gemini API errors gracefully without leaking keys
-    if (
-      errorMsg.includes('API_KEY_INVALID') ||
-      errorMsg.includes('API key not valid') ||
-      error?.status === 400
-    ) {
-      return res.status(400).json({
+    if (!res.headersSent) {
+      return res.status(500).json({
         success: false,
-        message: 'Invalid Gemini API key. Please check your key in settings.'
+        message: 'Failed to initiate AI explanation stream.'
       });
     }
 
-    if (
-      errorMsg.includes('RESOURCE_EXHAUSTED') ||
-      errorMsg.includes('quota') ||
-      error?.status === 429
-    ) {
-      return res.status(429).json({
-        success: false,
-        message:
-          'Gemini API rate limit or quota exceeded for this key. Please check your Google AI Studio quota.'
-      });
-    }
-
-    if (errorMsg.includes('not found') || errorMsg.includes('NOT_FOUND')) {
-      return res.status(400).json({
-        success: false,
-        message: `Model "${selectedModel}" is not available with your Gemini key. Try selecting "gemini-2.5-flash" or "gemini-1.5-flash".`
-      });
-    }
-
-    console.error('[AI Explain] Gemini Generation Error:', errorMsg);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to generate AI solution explanation. Please try again.'
-    });
+    res.write(
+      `data: ${JSON.stringify({
+        error: 'Connection interrupted while generating explanation.'
+      })}\n\n`
+    );
+    res.end();
   } finally {
     // Force garbage collection reference release
     geminiKey = null;

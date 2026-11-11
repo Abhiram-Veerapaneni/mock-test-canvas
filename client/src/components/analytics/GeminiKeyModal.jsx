@@ -23,7 +23,7 @@ import {
 
 export default function GeminiKeyModal({ isOpen, onClose, onKeySaved }) {
   const [apiKey, setApiKey] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
+  const [selectedModel, setSelectedModel] = useState(() => getGeminiModel());
   const [showPassword, setShowPassword] = useState(false);
   const [existingKey, setExistingKey] = useState('');
   const [statusMessage, setStatusMessage] = useState(null);
