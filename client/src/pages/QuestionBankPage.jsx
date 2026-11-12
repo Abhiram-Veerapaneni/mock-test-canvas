@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import QuestionBankSidebar from '../components/question-bank/QuestionBankSidebar';
 import QuestionBankCard from '../components/question-bank/QuestionBankCard';
+import QuestionBankBatchBar from '../components/question-bank/QuestionBankBatchBar';
 import AddQuestionModal from '../components/question-bank/AddQuestionModal';
 import GenerateExamModal from '../components/question-bank/GenerateExamModal';
 import api from '../services/api';
 import useAuthStore from '../store/useAuthStore';
+import { addQuestionsToTestDraft } from '../utils/testDraftHelper';
 import {
   Plus,
   Zap,
@@ -22,11 +25,13 @@ import {
   HelpCircle,
   RefreshCw,
   Eye,
-  EyeOff
+  EyeOff,
+  ArrowRight
 } from 'lucide-react';
 
 export default function QuestionBankPage() {
-  const { isAuthenticated, openAuthModal } = useAuthStore();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, openAuthModal } = useAuthStore();
 
   // Filters & Search
   const [selectedStream, setSelectedStream] = useState('ALL');
@@ -73,6 +78,75 @@ export default function QuestionBankPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [questionToEdit, setQuestionToEdit] = useState(null);
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
+
+  // Batch selection state for Test Creator
+  const [selectedQuestionsMap, setSelectedQuestionsMap] = useState({});
+  const [isAddingToTest, setIsAddingToTest] = useState(false);
+  const [testDraftNotification, setTestDraftNotification] = useState(null);
+
+  // Selection computed helpers
+  const selectedCount = Object.keys(selectedQuestionsMap).length;
+  const currentQuestionIds = questions.map((q) => q._id);
+  const isAllPageSelected =
+    questions.length > 0 &&
+    currentQuestionIds.every((id) => Boolean(selectedQuestionsMap[id]));
+
+  const handleToggleSelectQuestion = (question) => {
+    setSelectedQuestionsMap((prev) => {
+      const copy = { ...prev };
+      if (copy[question._id]) {
+        delete copy[question._id];
+      } else {
+        copy[question._id] = question;
+      }
+      return copy;
+    });
+  };
+
+  const handleToggleSelectAllPage = () => {
+    setSelectedQuestionsMap((prev) => {
+      const copy = { ...prev };
+      if (isAllPageSelected) {
+        currentQuestionIds.forEach((id) => delete copy[id]);
+      } else {
+        questions.forEach((q) => {
+          copy[q._id] = q;
+        });
+      }
+      return copy;
+    });
+  };
+
+  const handleClearSelection = () => {
+    setSelectedQuestionsMap({});
+  };
+
+  const handleBatchAddToTest = () => {
+    const selectedList = Object.values(selectedQuestionsMap);
+    if (selectedList.length === 0) return;
+
+    setIsAddingToTest(true);
+    try {
+      const result = addQuestionsToTestDraft(user?._id, selectedList);
+      if (result.success) {
+        setSelectedQuestionsMap({});
+        const skippedText = result.skippedCount > 0 ? ` (${result.skippedCount} already in draft)` : '';
+        setTestDraftNotification({
+          addedCount: result.addedCount,
+          skippedCount: result.skippedCount,
+          totalInDraft: result.totalInDraft,
+          message: `Added ${result.addedCount} question${result.addedCount === 1 ? '' : 's'} to Test Creator draft${skippedText}.`
+        });
+      } else {
+        setError(result.error || 'Failed to add questions to test draft.');
+      }
+    } catch (err) {
+      console.error('Error adding questions to test draft:', err);
+      setError('Failed to add questions to test draft.');
+    } finally {
+      setIsAddingToTest(false);
+    }
+  };
 
   // Debounce search input
   const searchTimeoutRef = useRef(null);
@@ -230,6 +304,38 @@ export default function QuestionBankPage() {
             >
               ✕
             </button>
+          </div>
+        )}
+
+        {/* Test Draft Added Banner / Success Toast */}
+        {testDraftNotification && (
+          <div className="p-3.5 rounded-lg bg-indigo-50/90 dark:bg-indigo-950/40 border-l-4 border-l-indigo-600 border border-indigo-200/80 dark:border-indigo-800/80 text-xs flex flex-wrap items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span className="font-medium text-slate-900 dark:text-slate-100">
+                {testDraftNotification.message}
+                <span className="text-slate-500 dark:text-slate-400 ml-1.5 font-normal">
+                  (Total {testDraftNotification.totalInDraft} question{testDraftNotification.totalInDraft === 1 ? '' : 's'} in test draft)
+                </span>
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => navigate('/create-test')}
+                className="inline-flex items-center gap-1 font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer"
+              >
+                <span>Open Test Creator</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setTestDraftNotification(null)}
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-semibold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
           </div>
         )}
 
@@ -413,6 +519,8 @@ export default function QuestionBankPage() {
                       question={q}
                       showAnswerKey={showAnswerKeys}
                       forceExpand={showAllDetails}
+                      isSelected={Boolean(selectedQuestionsMap[q._id])}
+                      onToggleSelect={handleToggleSelectQuestion}
                       onEdit={handleEditQuestion}
                       onDelete={handleDeleteQuestion}
                     />
@@ -458,6 +566,17 @@ export default function QuestionBankPage() {
           </div>
         </div>
       </main>
+
+      {/* Floating Bottom Batch Action Bar */}
+      <QuestionBankBatchBar
+        selectedCount={selectedCount}
+        totalOnPage={questions.length}
+        isAllPageSelected={isAllPageSelected}
+        onToggleSelectAllPage={handleToggleSelectAllPage}
+        onClearSelection={handleClearSelection}
+        onAddToTest={handleBatchAddToTest}
+        isAdding={isAddingToTest}
+      />
 
       {/* Add / Edit Question Modal */}
       <AddQuestionModal

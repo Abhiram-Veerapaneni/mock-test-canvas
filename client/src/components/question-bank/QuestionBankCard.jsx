@@ -20,6 +20,8 @@ export default function QuestionBankCard({
   question,
   showAnswerKey = false,
   forceExpand = false,
+  isSelected = false,
+  onToggleSelect,
   onEdit,
   onDelete
 }) {
@@ -87,10 +89,32 @@ export default function QuestionBankCard({
     : '';
 
   return (
-    <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] hover:border-slate-300 hover:shadow-md transition-all duration-150 dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none dark:hover:border-slate-700 dark:hover:bg-[#162030] rounded-xl p-4 sm:p-5 flex flex-col justify-between space-y-4">
+    <div
+      className={`border shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] transition-all duration-150 rounded-xl p-4 sm:p-5 flex flex-col justify-between space-y-4 ${
+        isSelected
+          ? 'bg-indigo-50/20 border-indigo-300 dark:border-indigo-600/80 ring-2 ring-indigo-500/40 dark:ring-indigo-400/40 dark:bg-indigo-950/20'
+          : 'bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-md dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none dark:hover:border-slate-700 dark:hover:bg-[#162030]'
+      }`}
+    >
       {/* Top Header Row */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
+          {/* Selection Checkbox */}
+          {onToggleSelect && (
+            <label
+              className="flex items-center cursor-pointer select-none mr-1"
+              onClick={(e) => e.stopPropagation()}
+              title={isSelected ? 'Deselect question' : 'Select question to add to test'}
+            >
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={() => onToggleSelect(question)}
+                className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 dark:bg-[#0C0F17] dark:checked:bg-indigo-600 cursor-pointer accent-indigo-600 transition"
+              />
+            </label>
+          )}
+
           {/* Stream Badge */}
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700/60">
             <BookOpen className="w-3 h-3 text-slate-500" />
