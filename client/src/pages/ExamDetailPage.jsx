@@ -13,7 +13,7 @@ import api from '../services/api';
 import useExamStore from '../store/useExamStore';
 import useAuthStore from '../store/useAuthStore';
 import useExamSchedule from '../hooks/useExamSchedule';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, RotateCcw, Ban } from 'lucide-react';
 
 export default function ExamDetailPage() {
   const { testId, examId: routeExamId } = useParams();
@@ -221,7 +221,7 @@ export default function ExamDetailPage() {
     }
   };
 
-  const officialAttempts = attempts.filter((a) => !a.isPractice);
+  const officialAttempts = attempts.filter((a) => !a.isPractice && a.status !== 'REVOKED');
   const attemptsUsed = officialAttempts.length;
   const maxAttempts = exam?.maxAttempts ?? null;
   const isUnlimited = maxAttempts === null;
@@ -229,9 +229,13 @@ export default function ExamDetailPage() {
   const isExhausted = !isUnlimited && attemptsLeft === 0;
   const hasAttempted = officialAttempts.length > 0;
 
-  const bestAttempt = attempts.length > 0
-    ? attempts.reduce((best, a) => (a.score > best.score ? a : best), attempts[0])
+  const validScoredAttempts = attempts.filter((a) => a.status === 'SUBMITTED' && !a.isPractice);
+  const bestAttempt = validScoredAttempts.length > 0
+    ? validScoredAttempts.reduce((best, a) => (a.score > best.score ? a : best), validScoredAttempts[0])
     : null;
+
+  const hasRevokedRetake = attempts.some((a) => a.status === 'REVOKED');
+  const hasDisqualified = attempts.some((a) => a.status === 'DISQUALIFIED');
 
   if (isLoadingExam) {
     return (
@@ -277,6 +281,28 @@ export default function ExamDetailPage() {
             ]}
           />
         </div>
+
+        {/* Re-attempt / Revocation Notification Banner */}
+        {hasRevokedRetake && !isCreator && (
+          <div className="p-3.5 rounded-lg border border-indigo-200/80 bg-indigo-50/60 dark:border-indigo-900/60 dark:bg-indigo-950/40 text-xs flex items-center gap-2.5 text-indigo-900 dark:text-indigo-200">
+            <RotateCcw className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+            <div>
+              <span className="font-semibold">Re-attempt Unlocked: </span>
+              <span>An earlier attempt on this exam was reset by the examiner. You have been granted a fresh attempt.</span>
+            </div>
+          </div>
+        )}
+
+        {/* Disqualified Notification Banner */}
+        {hasDisqualified && !isCreator && (
+          <div className="p-3.5 rounded-lg border border-rose-200/80 bg-rose-50/60 dark:border-rose-900/60 dark:bg-rose-950/40 text-xs flex items-center gap-2.5 text-rose-900 dark:text-rose-200">
+            <Ban className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+            <div>
+              <span className="font-semibold">Attempt Disqualified: </span>
+              <span>An attempt on this exam was disqualified by the examiner due to a proctoring violation.</span>
+            </div>
+          </div>
+        )}
 
         {/* Main Hero Card */}
         <ExamHeroSection

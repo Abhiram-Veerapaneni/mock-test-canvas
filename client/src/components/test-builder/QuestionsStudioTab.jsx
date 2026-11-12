@@ -31,6 +31,7 @@ export default function QuestionsStudioTab({
   examTitle,
   contributeAllToBank,
   setSuccessMsg,
+  onOpenQuestionBank
 }) {
   return (
     <div className="space-y-6">
@@ -45,6 +46,7 @@ export default function QuestionsStudioTab({
         fileInputRef={fileInputRef}
         onFileUpload={onFileUpload}
         onFileDrop={onFileDrop}
+        onOpenQuestionBank={onOpenQuestionBank}
         onLoadSampleQuestion={() => {
           onAddQuestion({
             questionText: "A particle moves along the x-axis such that its position is given by $x(t) = 3t^2 - 12t + 9$. At what time $t$ does the particle momentarily come to rest?",
@@ -88,6 +90,7 @@ export default function QuestionsStudioTab({
         onToggleContribute={onToggleContribute}
         onToggleContributeAll={onToggleContributeAll}
         onPreviewImage={onPreviewImage}
+        onOpenQuestionBank={onOpenQuestionBank}
       />
     </div>
   );

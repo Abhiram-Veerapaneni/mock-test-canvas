@@ -636,7 +636,7 @@ export const getExamViolations = async (req, res) => {
 
     // Find all attempts for this exam (for both violation logs and completion reports)
     const attempts = await Attempt.find({ examId: id })
-      .select('userId score accuracy correct incorrect unanswered responses violations trustScore status startedAt submittedAt timeTakenSeconds isPractice')
+      .select('userId score accuracy correct incorrect unanswered responses violations trustScore status revocation startedAt submittedAt timeTakenSeconds isPractice')
       .populate('userId', 'name email avatar')
       .sort({ createdAt: -1 });
 
@@ -710,6 +710,7 @@ export const getExamViolations = async (req, res) => {
         violationsCount: att.violations?.length || 0,
         trustScore: att.trustScore ?? 100,
         status: att.status,
+        revocation: att.revocation || null,
         isPractice: Boolean(att.isPractice),
         timeTakenSeconds: att.timeTakenSeconds || 0,
         startedAt: att.startedAt,

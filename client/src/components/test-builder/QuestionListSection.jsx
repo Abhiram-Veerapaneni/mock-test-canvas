@@ -34,7 +34,8 @@ export default function QuestionListSection({
   onRemove,
   onToggleContribute,
   onToggleContributeAll,
-  onPreviewImage
+  onPreviewImage,
+  onOpenQuestionBank
 }) {
   const contributedCount = questions.filter((q) =>
     Boolean(q.contributeToBank !== undefined ? q.contributeToBank : q.isInBank)
@@ -112,7 +113,19 @@ export default function QuestionListSection({
             <Plus className="w-4 h-4" />
           </div>
           <p className="font-medium text-slate-600 dark:text-slate-400">No questions composed yet.</p>
-          <p className="text-xs text-slate-400 mt-0.5">Use the Question Authoring form or AI Ingestion above to add items to this examination.</p>
+          <p className="text-xs text-slate-400 mt-0.5">Use the Question Authoring form, AI Ingestion, or Question Bank to add items.</p>
+          {onOpenQuestionBank && (
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={onOpenQuestionBank}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60 text-xs font-medium transition-colors cursor-pointer"
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>Import from Question Bank</span>
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-3">

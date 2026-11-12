@@ -70,9 +70,20 @@ export default function TestCreationPage() {
   const [activeStudioTab, setActiveStudioTab] = useState('questions'); // 'questions' | 'settings'
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
   const [isDropzoneExpanded, setIsDropzoneExpanded] = useState(false);
+  const [isQuestionBankModalOpen, setIsQuestionBankModalOpen] = useState(false);
 
   const originalExamRef = useRef(null);
   const isInitialLoadFinishedRef = useRef(false);
+
+  const handleImportQuestionBank = (importedQuestions) => {
+    if (!Array.isArray(importedQuestions) || importedQuestions.length === 0) return;
+    setQuestions((prev) => [...prev, ...importedQuestions]);
+    setHasUnsavedChanges(true);
+    hasUnsavedChangesRef.current = true;
+    saveDraftToStorage();
+    setSuccessMsg(`Successfully imported ${importedQuestions.length} question${importedQuestions.length === 1 ? '' : 's'} from Question Bank!`);
+    setTimeout(() => setSuccessMsg(''), 4000);
+  };
 
   const formData = {
     title, description, category, durationMinutes, correctMark, incorrectMark,
@@ -437,6 +448,7 @@ export default function TestCreationPage() {
             examTitle={title}
             contributeAllToBank={contributeAllToBank}
             setSuccessMsg={setSuccessMsg}
+            onOpenQuestionBank={() => setIsQuestionBankModalOpen(true)}
           />
         )}
       </main>
@@ -516,6 +528,9 @@ export default function TestCreationPage() {
         onDiscardLocalDraft={handleDiscardLocalDraft}
         onDismissDraftRestored={() => setDraftRestored(false)}
         setDraftToastHovered={setDraftToastHovered}
+        isQuestionBankModalOpen={isQuestionBankModalOpen}
+        onCloseQuestionBankModal={() => setIsQuestionBankModalOpen(false)}
+        onImportQuestionBank={handleImportQuestionBank}
       />
     </div>
   );

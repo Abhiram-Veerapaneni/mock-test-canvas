@@ -91,8 +91,30 @@ const attemptSchema = new mongoose.Schema(
     violations: [violationItemSchema],
     status: {
       type: String,
-      enum: ['IN_PROGRESS', 'SUBMITTED', 'DISQUALIFIED'],
+      enum: ['IN_PROGRESS', 'SUBMITTED', 'DISQUALIFIED', 'REVOKED'],
       default: 'IN_PROGRESS'
+    },
+    revocation: {
+      isRevoked: {
+        type: Boolean,
+        default: false
+      },
+      actionType: {
+        type: String,
+        enum: ['RESET_FOR_RETAKE', 'DISQUALIFY', 'NONE'],
+        default: 'NONE'
+      },
+      reason: {
+        type: String,
+        default: ''
+      },
+      revokedAt: {
+        type: Date
+      },
+      revokedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }
     },
     startedAt: {
       type: Date,

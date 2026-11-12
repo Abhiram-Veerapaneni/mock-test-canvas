@@ -7,6 +7,7 @@ import LeaveDraftModal from './LeaveDraftModal';
 import QuestionPaperPDFModal from './QuestionPaperPDFModal';
 import DiscardDraftModal from '../common/DiscardDraftModal';
 import DraftRestoredToast from './DraftRestoredToast';
+import ImportQuestionBankModal from './ImportQuestionBankModal';
 
 export default function TestCreationModals({
   editingQuestionIndex,
@@ -64,7 +65,10 @@ export default function TestCreationModals({
   setToastConfirmDiscard,
   onDiscardLocalDraft,
   onDismissDraftRestored,
-  setDraftToastHovered
+  setDraftToastHovered,
+  isQuestionBankModalOpen,
+  onCloseQuestionBankModal,
+  onImportQuestionBank
 }) {
   return (
     <>
@@ -174,6 +178,14 @@ export default function TestCreationModals({
         onDiscard={onDiscardLocalDraft}
         onDismiss={onDismissDraftRestored}
         setDraftToastHovered={setDraftToastHovered}
+      />
+
+      {/* Import from Question Bank Modal */}
+      <ImportQuestionBankModal
+        isOpen={isQuestionBankModalOpen}
+        onClose={onCloseQuestionBankModal}
+        existingQuestions={questions}
+        onImport={onImportQuestionBank}
       />
     </>
   );

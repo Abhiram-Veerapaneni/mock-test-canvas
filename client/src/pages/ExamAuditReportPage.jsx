@@ -9,7 +9,8 @@ import AuditHeaderMetrics from '../components/audit/AuditHeaderMetrics';
 import AuditViolationLogsTable from '../components/audit/AuditViolationLogsTable';
 import AuditCompletionReportTable from '../components/audit/AuditCompletionReportTable';
 import AuditSnapshotModal from '../components/audit/AuditSnapshotModal';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import AuditRevokeModal from '../components/audit/AuditRevokeModal';
+import { Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 export default function ExamAuditReportPage() {
   const { testId, examId: routeExamId } = useParams();
@@ -24,6 +25,11 @@ export default function ExamAuditReportPage() {
 
   // Modal for clicked image snapshot
   const [selectedSnapshot, setSelectedSnapshot] = useState(null);
+
+  // Modal for revoking / resetting / disqualifying an attempt
+  const [selectedAttemptForRevoke, setSelectedAttemptForRevoke] = useState(null);
+  const [isRevoking, setIsRevoking] = useState(false);
+  const [actionNotice, setActionNotice] = useState(null);
 
   // Filters for Table 1: Violation Logs
   const [violationSearch, setViolationSearch] = useState('');
@@ -66,6 +72,95 @@ export default function ExamAuditReportPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleRevokeConfirm = async ({ attemptId, action, reason }) => {
+    setIsRevoking(true);
+    setActionNotice(null);
+    try {
+      const res = await api.post(`/submissions/attempt/${attemptId}/revoke`, { action, reason });
+      if (res.data?.success) {
+        // Optimistically update completion report
+        setData((prev) => {
+          if (!prev?.completionReport) return prev;
+          const nextReport = prev.completionReport.map((rep) => {
+            if (rep.attemptId === attemptId) {
+              return {
+                ...rep,
+                status: action === 'RESET_FOR_RETAKE' ? 'REVOKED' : 'DISQUALIFIED',
+                revocation: res.data.attempt?.revocation || {
+                  isRevoked: true,
+                  actionType: action,
+                  reason
+                }
+              };
+            }
+            return rep;
+          });
+          return { ...prev, completionReport: nextReport };
+        });
+
+        setActionNotice({
+          type: 'success',
+          message:
+            action === 'RESET_FOR_RETAKE'
+              ? 'Candidate attempt reset and 1 re-attempt quota granted.'
+              : 'Candidate attempt disqualified for malpractice.'
+        });
+        setSelectedAttemptForRevoke(null);
+      } else {
+        throw new Error(res.data?.message || 'Failed to revoke attempt');
+      }
+    } catch (err) {
+      console.error('Revoke attempt error:', err);
+      setActionNotice({
+        type: 'error',
+        message: err.response?.data?.message || err.message || 'Error revoking candidate attempt.'
+      });
+    } finally {
+      setIsRevoking(false);
+    }
+  };
+
+  const handleRestoreAttempt = async (item) => {
+    if (!item?.attemptId) return;
+    const confirmed = window.confirm(
+      `Restore this attempt for ${item.user?.name || 'this candidate'} back to submitted status?`
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await api.post(`/submissions/attempt/${item.attemptId}/revoke`, { action: 'RESTORE' });
+      if (res.data?.success) {
+        setData((prev) => {
+          if (!prev?.completionReport) return prev;
+          const nextReport = prev.completionReport.map((rep) => {
+            if (rep.attemptId === item.attemptId) {
+              return {
+                ...rep,
+                status: item.submittedAt ? 'SUBMITTED' : 'IN_PROGRESS',
+                revocation: null
+              };
+            }
+            return rep;
+          });
+          return { ...prev, completionReport: nextReport };
+        });
+
+        setActionNotice({
+          type: 'success',
+          message: 'Candidate attempt restored successfully.'
+        });
+      } else {
+        throw new Error(res.data?.message || 'Failed to restore attempt');
+      }
+    } catch (err) {
+      console.error('Restore attempt error:', err);
+      setActionNotice({
+        type: 'error',
+        message: err.response?.data?.message || err.message || 'Error restoring candidate attempt.'
+      });
+    }
+  };
 
   // Filtered Violation Logs
   const filteredViolations = (data?.violations || []).filter((v) => {
@@ -147,6 +242,32 @@ export default function ExamAuditReportPage() {
           completionCount={data?.completionReport?.length || 0}
         />
 
+        {/* Action Notice Alert */}
+        {actionNotice && (
+          <div
+            className={`p-3.5 rounded-lg border text-xs flex items-center justify-between ${
+              actionNotice.type === 'success'
+                ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/60 text-emerald-800 dark:text-emerald-300'
+                : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-300'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {actionNotice.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+              )}
+              <span className="font-medium">{actionNotice.message}</span>
+            </div>
+            <button
+              onClick={() => setActionNotice(null)}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-semibold cursor-pointer text-xs ml-3"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         {/* Loading / Error States */}
         {isLoading && (
           <div className="py-20 flex flex-col items-center justify-center text-slate-400 space-y-2">
@@ -200,6 +321,8 @@ export default function ExamAuditReportPage() {
                 formatSeconds={formatSeconds}
                 examId={examId}
                 navigate={navigate}
+                onOpenRevokeModal={setSelectedAttemptForRevoke}
+                onRestoreAttempt={handleRestoreAttempt}
               />
             )}
           </>
@@ -209,6 +332,14 @@ export default function ExamAuditReportPage() {
         <AuditSnapshotModal
           selectedSnapshot={selectedSnapshot}
           onClose={() => setSelectedSnapshot(null)}
+        />
+
+        {/* Revoke / Disqualify Modal */}
+        <AuditRevokeModal
+          attemptItem={selectedAttemptForRevoke}
+          onClose={() => setSelectedAttemptForRevoke(null)}
+          onConfirm={handleRevokeConfirm}
+          isSubmitting={isRevoking}
         />
       </main>
     </div>

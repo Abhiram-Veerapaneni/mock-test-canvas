@@ -94,8 +94,6 @@ export default function App() {
 
         {/* Modules in active development */}
         <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/assessments-overview" element={<UnderDevelopmentPage featureKey="/assessments-overview" />} />
-        <Route path="/telemetry" element={<UnderDevelopmentPage featureKey="/telemetry" />} />
 
         {/* Dedicated Creator Audit Report & Completion Page */}
         <Route

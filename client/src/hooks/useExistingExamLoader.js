@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import api from '../services/api';
 
 export default function useExistingExamLoader({
@@ -18,33 +18,44 @@ export default function useExistingExamLoader({
   setExamStatus,
   setError,
 }) {
-  const {
-    setTitle,
-    setDescription,
-    setCategory,
-    setDurationMinutes,
-    setCorrectMark,
-    setIncorrectMark,
-    setIsUnlimitedAttempts,
-    setMaxAttemptsValue,
-    setAllowPracticeMode,
-    setAllowReviewResponses,
-    setIsScheduled,
-    setStartTime,
-    setEndTime,
-    setFaceCheck,
-    setAudioCheck,
-    setFullScreenLock,
-    setObjectCheck,
-    setLiveNotifications,
-    setQuestions,
-    setContributeAllToBank,
-    setActiveStudioTab,
-  } = formSetters;
+  const hasLoadedExamIdRef = useRef(null);
+  const formSettersRef = useRef(formSetters);
+  formSettersRef.current = formSetters;
+
+  const findDraftRef = useRef(findLocalDraftForExam);
+  findDraftRef.current = findLocalDraftForExam;
 
   useEffect(() => {
     if (!examIdParam) return;
+    if (hasLoadedExamIdRef.current === examIdParam) return;
+    hasLoadedExamIdRef.current = examIdParam;
+
     setIsLoadingExisting(true);
+
+    const {
+      setTitle,
+      setDescription,
+      setCategory,
+      setDurationMinutes,
+      setCorrectMark,
+      setIncorrectMark,
+      setIsUnlimitedAttempts,
+      setMaxAttemptsValue,
+      setAllowPracticeMode,
+      setAllowReviewResponses,
+      setIsScheduled,
+      setStartTime,
+      setEndTime,
+      setFaceCheck,
+      setAudioCheck,
+      setFullScreenLock,
+      setObjectCheck,
+      setLiveNotifications,
+      setQuestions,
+      setContributeAllToBank,
+      setActiveStudioTab,
+    } = formSettersRef.current;
+
     api.get(`/exams/${examIdParam}?reveal=true`)
       .then((res) => {
         if (res.data?.success && res.data.exam) {
@@ -54,7 +65,7 @@ export default function useExistingExamLoader({
 
           let restoredFromLocal = false;
           try {
-            const draftMatch = findLocalDraftForExam(ex._id);
+            const draftMatch = findDraftRef.current ? findDraftRef.current(ex._id) : null;
             if (draftMatch?.raw) {
               const draft = JSON.parse(draftMatch.raw);
               const draftTime = draft.savedAt ? new Date(draft.savedAt).getTime() : 0;
@@ -97,7 +108,7 @@ export default function useExistingExamLoader({
                 setAutoSaveStatus('saved');
                 setHasUnsavedChanges(true);
                 hasUnsavedChangesRef.current = true;
-                isInitialLoadFinishedRef.current = true;
+                if (isInitialLoadFinishedRef) isInitialLoadFinishedRef.current = true;
                 restoredFromLocal = true;
               }
             }
@@ -156,14 +167,14 @@ export default function useExistingExamLoader({
             }
             setHasUnsavedChanges(false);
             hasUnsavedChangesRef.current = false;
-            isInitialLoadFinishedRef.current = true;
+            if (isInitialLoadFinishedRef) isInitialLoadFinishedRef.current = true;
           }
         }
       })
       .catch((err) => {
         console.error('Failed to fetch existing exam (offline or network error):', err);
         try {
-          const draftMatch = findLocalDraftForExam(examIdParam);
+          const draftMatch = findDraftRef.current ? findDraftRef.current(examIdParam) : null;
           if (draftMatch?.raw) {
             const draft = JSON.parse(draftMatch.raw);
             if (draft.title !== undefined) setTitle(draft.title);
@@ -187,5 +198,5 @@ export default function useExistingExamLoader({
         setError('Failed to load assessment: ' + (err.response?.data?.message || err.message));
       })
       .finally(() => setIsLoadingExisting(false));
-  }, [examIdParam, findLocalDraftForExam, formSetters, hasUnsavedChangesRef, isInitialLoadFinishedRef, originalExamRef, setAutoSaveStatus, setDraftRestored, setDraftRestoredTime, setError, setExamStatus, setExistingExamId, setHasUnsavedChanges, setIsLoadingExisting, setLastSavedTime]);
+  }, [examIdParam]);
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, FileText, FlaskConical, ShieldCheck, ChevronRight } from 'lucide-react';
+import { Search, FileText, FlaskConical, ShieldCheck, ChevronRight, RotateCcw, Ban, Undo2 } from 'lucide-react';
 import { formatDateTime12h } from '../../utils/dateUtils';
 
 export default function AuditCompletionReportTable({
@@ -16,7 +16,9 @@ export default function AuditCompletionReportTable({
   setCompletionSearch,
   formatSeconds,
   examId,
-  navigate
+  navigate,
+  onOpenRevokeModal,
+  onRestoreAttempt
 }) {
   return (
     <section className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg shadow-none overflow-hidden space-y-4 p-6">
@@ -32,6 +34,7 @@ export default function AuditCompletionReportTable({
             <option value="ALL">All Statuses</option>
             <option value="SUBMITTED">Submitted</option>
             <option value="IN_PROGRESS">In Progress</option>
+            <option value="REVOKED">Revoked (Retake)</option>
             <option value="DISQUALIFIED">Disqualified</option>
           </select>
 
@@ -144,10 +147,35 @@ export default function AuditCompletionReportTable({
 
                   {/* 3. Status */}
                   <td className="py-3 px-4 whitespace-nowrap text-center">
-                    <span className="inline-flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                      <span className={`w-1.5 h-1.5 rounded-full ${item.status === 'SUBMITTED' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                      {item.status === 'SUBMITTED' ? 'Submitted' : item.status}
-                    </span>
+                    {item.status === 'SUBMITTED' ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Submitted
+                      </span>
+                    ) : item.status === 'IN_PROGRESS' ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        In Progress
+                      </span>
+                    ) : item.status === 'REVOKED' ? (
+                      <span
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50"
+                        title={item.revocation?.reason ? `Reason: ${item.revocation.reason}` : 'Retake unlocked by examiner'}
+                      >
+                        <RotateCcw className="w-3 h-3 shrink-0" />
+                        <span>Reset (Retake)</span>
+                      </span>
+                    ) : item.status === 'DISQUALIFIED' ? (
+                      <span
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border border-rose-200/50 dark:border-rose-800/50"
+                        title={item.revocation?.reason ? `Reason: ${item.revocation.reason}` : 'Disqualified for malpractice'}
+                      >
+                        <Ban className="w-3 h-3 shrink-0" />
+                        <span>Disqualified</span>
+                      </span>
+                    ) : (
+                      <span className="text-slate-500">{item.status}</span>
+                    )}
                   </td>
 
                   {/* 4. Time Taken */}
@@ -205,13 +233,37 @@ export default function AuditCompletionReportTable({
 
                   {/* 11. Actions */}
                   <td className="py-3 px-4 whitespace-nowrap text-right">
-                    <button
-                      onClick={() => navigate(`/test/${examId}/review/${item.attemptId}`)}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors cursor-pointer"
-                    >
-                      <span>Answers</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      {item.status === 'REVOKED' || item.status === 'DISQUALIFIED' ? (
+                        <button
+                          type="button"
+                          onClick={() => onRestoreAttempt && onRestoreAttempt(item)}
+                          className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#162030] transition-colors cursor-pointer"
+                          title="Restore attempt to Submitted status"
+                        >
+                          <Undo2 className="w-3 h-3 text-slate-500 dark:text-slate-400" />
+                          <span>Restore</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => onOpenRevokeModal && onOpenRevokeModal(item)}
+                          className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded border border-slate-200/80 hover:border-rose-300 hover:bg-rose-50/60 text-slate-600 hover:text-rose-600 dark:border-slate-800 dark:hover:border-rose-800 dark:hover:bg-rose-950/30 dark:text-slate-400 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                          title="Revoke attempt for retake or disqualify"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>Revoke</span>
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => navigate(`/test/${examId}/review/${item.attemptId}`)}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors cursor-pointer ml-1"
+                      >
+                        <span>Answers</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

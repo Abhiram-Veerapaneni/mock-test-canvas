@@ -1,5 +1,5 @@
 import express from 'express';
-import { submitExam, getUserAttempts, logViolation, startAttempt, getAttemptReview } from '../controllers/submission.controller.js';
+import { submitExam, getUserAttempts, logViolation, startAttempt, getAttemptReview, revokeAttempt } from '../controllers/submission.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 import { uploadSnapshot } from '../middleware/upload.middleware.js';
 
@@ -16,6 +16,9 @@ router.get('/my/:examId', protect, getUserAttempts);
 
 // Get detailed responses and solutions review for a completed attempt
 router.get('/attempt/:attemptId/review', protect, getAttemptReview);
+
+// Revoke, disqualify, or restore a candidate's attempt (Examiner or Admin)
+router.post('/attempt/:attemptId/revoke', protect, revokeAttempt);
 
 // Log a proctoring violation with optional snapshot image
 router.post('/:id/violation', protect, uploadSnapshot, logViolation);

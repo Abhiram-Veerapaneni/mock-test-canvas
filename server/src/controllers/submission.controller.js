@@ -80,7 +80,7 @@ export const startAttempt = async (req, res) => {
         const existingCount = await Attempt.countDocuments({
           examId,
           userId,
-          status: 'SUBMITTED',
+          status: { $in: ['SUBMITTED', 'DISQUALIFIED'] },
           isPractice: { $ne: true }
         });
         if (existingCount >= exam.maxAttempts) {
@@ -170,7 +170,7 @@ export const submitExam = async (req, res) => {
       const existingCount = await Attempt.countDocuments({
         examId,
         userId,
-        status: 'SUBMITTED',
+        status: { $in: ['SUBMITTED', 'DISQUALIFIED'] },
         isPractice: { $ne: true }
       });
       if (existingCount >= exam.maxAttempts) {
@@ -365,8 +365,12 @@ export const getUserAttempts = async (req, res) => {
     const { examId } = req.params;
     const userId = req.user._id;
 
-    const attempts = await Attempt.find({ examId, userId, status: 'SUBMITTED' })
-      .select('score accuracy correct incorrect unanswered responses submittedAt startedAt timeTakenSeconds isPractice createdAt violations')
+    const attempts = await Attempt.find({
+      examId,
+      userId,
+      status: { $in: ['SUBMITTED', 'DISQUALIFIED', 'REVOKED'] }
+    })
+      .select('score accuracy correct incorrect unanswered responses submittedAt startedAt timeTakenSeconds isPractice createdAt violations status revocation')
       .sort({ createdAt: -1 });
 
     return res.status(200).json({ success: true, attempts });
@@ -710,6 +714,214 @@ export const getAttemptReview = async (req, res) => {
   } catch (error) {
     console.error('[getAttemptReview] Error:', error);
     return res.status(500).json({ success: false, message: error.message || 'Server error fetching attempt review' });
+  }
+};
+
+/**
+ * @desc   Revoke, reset for retake, disqualify, or restore a candidate attempt
+ * @route  POST /api/submissions/attempt/:attemptId/revoke
+ * @access Private (Creator or Admin only)
+ */
+export const revokeAttempt = async (req, res) => {
+  try {
+    const { attemptId } = req.params;
+    const { action = 'RESET_FOR_RETAKE', reason = '' } = req.body;
+    const userId = req.user._id;
+
+    const attempt = await Attempt.findById(attemptId);
+    if (!attempt) {
+      return res.status(404).json({ success: false, message: 'Attempt not found' });
+    }
+
+    const exam = await Exam.findById(attempt.examId);
+    if (!exam) {
+      return res.status(404).json({ success: false, message: 'Associated exam not found' });
+    }
+
+    const isCreator = Boolean(
+      exam.creatorId && (
+        (exam.creatorId._id && exam.creatorId._id.toString() === userId.toString()) ||
+        exam.creatorId.toString() === userId.toString()
+      )
+    );
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access restricted: Only the creator of this exam or an administrator can revoke attempts.'
+      });
+    }
+
+    const trimmedReason = (reason || '').trim();
+
+    if (action === 'RESET_FOR_RETAKE') {
+      attempt.status = 'REVOKED';
+      attempt.revocation = {
+        isRevoked: true,
+        actionType: 'RESET_FOR_RETAKE',
+        reason: trimmedReason || 'Technical issue / Re-attempt granted by examiner',
+        revokedAt: new Date(),
+        revokedBy: userId
+      };
+
+      await attempt.save();
+
+      // Create notification for candidate
+      try {
+        const notif = await Notification.create({
+          recipient: attempt.userId,
+          sender: userId,
+          type: 'SYSTEM',
+          title: 'Attempt Reset for Retake',
+          message: `Your attempt on "${exam.title}" has been reset by the examiner (${attempt.revocation.reason}). You may now retake the exam.`,
+          data: {
+            examId: exam._id,
+            attemptId: attempt._id,
+            actionType: 'RESET_FOR_RETAKE',
+            reason: attempt.revocation.reason
+          },
+          link: `/test/${exam._id}`,
+          read: false
+        });
+
+        const io = req.app.get('io');
+        if (io) {
+          io.to(`user_${attempt.userId}`).emit('notification:new', notif);
+          io.to(`user_${attempt.userId}`).emit('attempt:revoked', {
+            attemptId: attempt._id,
+            examId: exam._id,
+            action: 'RESET_FOR_RETAKE',
+            reason: attempt.revocation.reason
+          });
+        }
+      } catch (notifErr) {
+        console.warn('[revokeAttempt] Notification warning:', notifErr?.message);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Attempt has been reset and a re-attempt granted to the candidate.',
+        attempt: {
+          _id: attempt._id,
+          status: attempt.status,
+          revocation: attempt.revocation
+        }
+      });
+    } else if (action === 'DISQUALIFY') {
+      attempt.status = 'DISQUALIFIED';
+      attempt.revocation = {
+        isRevoked: true,
+        actionType: 'DISQUALIFY',
+        reason: trimmedReason || 'Proctoring violation / Academic malpractice',
+        revokedAt: new Date(),
+        revokedBy: userId
+      };
+
+      await attempt.save();
+
+      // Create notification for candidate
+      try {
+        const notif = await Notification.create({
+          recipient: attempt.userId,
+          sender: userId,
+          type: 'SYSTEM',
+          title: 'Attempt Disqualified',
+          message: `Your attempt on "${exam.title}" has been disqualified by the examiner. Reason: ${attempt.revocation.reason}`,
+          data: {
+            examId: exam._id,
+            attemptId: attempt._id,
+            actionType: 'DISQUALIFY',
+            reason: attempt.revocation.reason
+          },
+          link: `/test/${exam._id}`,
+          read: false
+        });
+
+        const io = req.app.get('io');
+        if (io) {
+          io.to(`user_${attempt.userId}`).emit('notification:new', notif);
+          io.to(`user_${attempt.userId}`).emit('attempt:disqualified', {
+            attemptId: attempt._id,
+            examId: exam._id,
+            reason: attempt.revocation.reason
+          });
+        }
+      } catch (notifErr) {
+        console.warn('[revokeAttempt] Notification warning:', notifErr?.message);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Attempt has been disqualified for malpractice.',
+        attempt: {
+          _id: attempt._id,
+          status: attempt.status,
+          revocation: attempt.revocation
+        }
+      });
+    } else if (action === 'RESTORE') {
+      // Revert back to SUBMITTED if finished, or IN_PROGRESS if unfinished
+      attempt.status = attempt.submittedAt ? 'SUBMITTED' : 'IN_PROGRESS';
+      attempt.revocation = {
+        isRevoked: false,
+        actionType: 'NONE',
+        reason: '',
+        revokedAt: null,
+        revokedBy: null
+      };
+
+      await attempt.save();
+
+      try {
+        const notif = await Notification.create({
+          recipient: attempt.userId,
+          sender: userId,
+          type: 'SYSTEM',
+          title: 'Attempt Restored',
+          message: `Your previous attempt on "${exam.title}" has been restored by the examiner.`,
+          data: {
+            examId: exam._id,
+            attemptId: attempt._id,
+            actionType: 'RESTORE'
+          },
+          link: `/test/${exam._id}`,
+          read: false
+        });
+
+        const io = req.app.get('io');
+        if (io) {
+          io.to(`user_${attempt.userId}`).emit('notification:new', notif);
+          io.to(`user_${attempt.userId}`).emit('attempt:restored', {
+            attemptId: attempt._id,
+            examId: exam._id
+          });
+        }
+      } catch (notifErr) {
+        console.warn('[revokeAttempt] Notification warning:', notifErr?.message);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Attempt has been restored to active/submitted status.',
+        attempt: {
+          _id: attempt._id,
+          status: attempt.status,
+          revocation: attempt.revocation
+        }
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid action: "${action}". Must be RESET_FOR_RETAKE, DISQUALIFY, or RESTORE.`
+      });
+    }
+  } catch (error) {
+    console.error('[revokeAttempt] Error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error processing attempt revocation'
+    });
   }
 };
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy } from 'lucide-react';
+import { Trophy, RotateCcw, Ban } from 'lucide-react';
 import { formatDateTime12h } from '../../utils/dateUtils';
 
 const formatSeconds = (sec) => {
@@ -122,7 +122,23 @@ export default function ExamAttemptsTab({
                       #{attempts.length - idx}
                     </td>
                     <td className="py-2.5 px-4">
-                      {attempt.isPractice ? (
+                      {attempt.status === 'REVOKED' ? (
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50"
+                          title={attempt.revocation?.reason ? `Reason: ${attempt.revocation.reason}` : 'Retake unlocked'}
+                        >
+                          <RotateCcw className="w-3 h-3 shrink-0" />
+                          <span>Reset (Retake)</span>
+                        </span>
+                      ) : attempt.status === 'DISQUALIFIED' ? (
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 border border-rose-200/50 dark:border-rose-800/50"
+                          title={attempt.revocation?.reason ? `Reason: ${attempt.revocation.reason}` : 'Disqualified for malpractice'}
+                        >
+                          <Ban className="w-3 h-3 shrink-0" />
+                          <span>Disqualified</span>
+                        </span>
+                      ) : attempt.isPractice ? (
                         <span className="text-slate-500">Practice</span>
                       ) : (
                         <span className="text-slate-900 dark:text-slate-100 font-medium">
@@ -139,9 +155,23 @@ export default function ExamAttemptsTab({
                     <td className="py-2.5 px-4 text-center font-mono tabular-nums text-slate-700 dark:text-slate-300">
                       {(attempt.correct || 0) + (attempt.incorrect || 0)}
                     </td>
-                    <td className="py-2.5 px-4 text-right font-mono font-semibold text-slate-900 dark:text-slate-100 tabular-nums">
-                      {attempt.score}{' '}
-                      {!isCreator && exam.totalMarks ? `/ ${exam.totalMarks} pts` : 'pts'}
+                    <td className="py-2.5 px-4 text-right font-mono tabular-nums">
+                      {attempt.status === 'DISQUALIFIED' ? (
+                        <div>
+                          <span className="line-through text-slate-400 text-xs">{attempt.score} pts</span>
+                          <span className="text-[10px] text-rose-600 dark:text-rose-400 font-medium block">Voided</span>
+                        </div>
+                      ) : attempt.status === 'REVOKED' ? (
+                        <div>
+                          <span className="text-slate-400 text-xs">{attempt.score} pts</span>
+                          <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium block">Reset</span>
+                        </div>
+                      ) : (
+                        <span className="font-semibold text-slate-900 dark:text-slate-100">
+                          {attempt.score}{' '}
+                          {!isCreator && exam.totalMarks ? `/ ${exam.totalMarks} pts` : 'pts'}
+                        </span>
+                      )}
                     </td>
                     <td
                       className={`py-2.5 px-4 text-right font-mono font-semibold tabular-nums ${getAccuracyColor(

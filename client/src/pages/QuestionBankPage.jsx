@@ -135,6 +135,7 @@ export default function QuestionBankPage() {
           addedCount: result.addedCount,
           skippedCount: result.skippedCount,
           totalInDraft: result.totalInDraft,
+          existingExamId: result.existingExamId || null,
           message: `Added ${result.addedCount} question${result.addedCount === 1 ? '' : 's'} to Test Creator draft${skippedText}.`
         });
       } else {
@@ -322,7 +323,12 @@ export default function QuestionBankPage() {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => navigate('/create-test')}
+                onClick={() => {
+                  const targetUrl = testDraftNotification.existingExamId
+                    ? `/create-test?examId=${testDraftNotification.existingExamId}`
+                    : '/create-test';
+                  navigate(targetUrl);
+                }}
                 className="inline-flex items-center gap-1 font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer"
               >
                 <span>Open Test Creator</span>

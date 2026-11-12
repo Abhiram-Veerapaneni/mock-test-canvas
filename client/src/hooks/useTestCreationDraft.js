@@ -81,6 +81,7 @@ export default function useTestCreationDraft({
   const isInitialMountRef = useRef(true);
   const isDiscardingOrLoggingOutRef = useRef(false);
   const hasUnsavedChangesRef = useRef(false);
+  const hasRestoredNewDraftRef = useRef(false);
 
   // Keep draftDataRef updated on every render
   const draftDataRef = useRef(null);
@@ -166,9 +167,15 @@ export default function useTestCreationDraft({
 
   // Save current draft to local storage
   const saveDraftToStorage = useCallback((customData = null) => {
-    if (isDiscardingOrLoggingOutRef.current) return false;
+    if (isDiscardingOrLoggingOutRef.current) {
+      setAutoSaveStatus('idle');
+      return false;
+    }
     const data = customData || draftDataRef.current;
-    if (!data) return false;
+    if (!data) {
+      setAutoSaveStatus('idle');
+      return false;
+    }
 
     const hasContent = Boolean(
       (data.title && data.title.trim()) ||
@@ -176,7 +183,10 @@ export default function useTestCreationDraft({
       (Array.isArray(data.questions) && data.questions.length > 0)
     );
 
-    if (!hasContent) return false;
+    if (!hasContent) {
+      setAutoSaveStatus('idle');
+      return false;
+    }
 
     const isNew = !data.existingExamId;
     const isUnsaved = Boolean(hasUnsavedChangesRef.current || isNew);
@@ -196,7 +206,26 @@ export default function useTestCreationDraft({
       return true;
     } catch (err) {
       console.warn('Failed to save draft to localStorage:', err);
-      return false;
+      // If quota exceeded, clean up old/stale draft keys and retry once
+      try {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('pmt_draft_exam_') && k !== key) {
+            keysToRemove.push(k);
+          }
+        }
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
+        localStorage.setItem(key, JSON.stringify(payload));
+        setLastSavedTime(new Date());
+        setAutoSaveStatus('saved');
+        return true;
+      } catch (retryErr) {
+        console.warn('Failed to save draft even after clearing stale cache:', retryErr);
+        // CRUCIAL: Do not leave UI stuck on 'saving' spinner!
+        setAutoSaveStatus('idle');
+        return false;
+      }
     }
   }, [getDraftStorageKey]);
 
@@ -246,8 +275,8 @@ export default function useTestCreationDraft({
       return;
     }
 
-    if (isInitialLoadFinishedRef.current?.current) {
-      isInitialLoadFinishedRef.current.current = false;
+    if (isInitialLoadFinishedRef.current) {
+      isInitialLoadFinishedRef.current = false;
       return;
     }
 
@@ -326,7 +355,6 @@ export default function useTestCreationDraft({
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('pagehide', handlePageHide);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      saveDraftToStorage();
     };
   }, [hasUnsavedChanges, saveDraftToStorage]);
 
@@ -376,9 +404,10 @@ export default function useTestCreationDraft({
     }
   }, [hasUnsavedChanges, navigate]);
 
-  // 4. Restore draft from local storage for new exams
+  // 4. Restore draft from local storage for new exams (ONCE on mount)
   useEffect(() => {
-    if (examIdParam) return;
+    if (examIdParam || hasRestoredNewDraftRef.current) return;
+    hasRestoredNewDraftRef.current = true;
 
     try {
       const draftMatch = findLocalDraftForNew();

@@ -6,7 +6,8 @@ import {
   ChevronUp,
   Loader2,
   UploadCloud,
-  AlertCircle
+  AlertCircle,
+  Database
 } from 'lucide-react';
 
 export default function AIDropzoneCard({
@@ -20,7 +21,8 @@ export default function AIDropzoneCard({
   fileInputRef,
   onFileUpload,
   onFileDrop,
-  onLoadSampleQuestion
+  onLoadSampleQuestion,
+  onOpenQuestionBank
 }) {
   return (
     <div className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-lg p-5 space-y-4">
@@ -43,6 +45,18 @@ export default function AIDropzoneCard({
         </div>
 
         <div className="flex items-center gap-2">
+          {onOpenQuestionBank && (
+            <button
+              type="button"
+              onClick={onOpenQuestionBank}
+              className="px-3 py-1.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800/60 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Import verified questions directly from Question Bank"
+            >
+              <Database className="w-3.5 h-3.5" />
+              <span>Import from Bank</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={onLoadSampleQuestion}

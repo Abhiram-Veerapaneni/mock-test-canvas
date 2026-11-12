@@ -85,20 +85,31 @@ export const addQuestionsToTestDraft = (userId, rawQuestions) => {
   }
 
   try {
-    const existingMatch = findLocalDraftForNew(userId);
+    const uId = userId || 'guest';
     let draft = null;
-    let targetKey = existingMatch?.key || getDraftStorageKey(userId, null);
+    let targetKey = getDraftStorageKey(userId, null);
 
-    if (existingMatch?.raw) {
-      try {
-        draft = JSON.parse(existingMatch.raw);
-      } catch (parseErr) {
-        console.warn('Failed to parse existing draft JSON, initializing fresh draft', parseErr);
-        draft = null;
+    // Look for the most recently updated draft for this user (including existing exam drafts)
+    let mostRecentTime = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith(`pmt_draft_exam_${uId}`) || k.startsWith('pmt_draft_exam_new'))) {
+        const raw = localStorage.getItem(k);
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            const savedAt = parsed.savedAt ? new Date(parsed.savedAt).getTime() : 0;
+            if (savedAt > mostRecentTime) {
+              mostRecentTime = savedAt;
+              draft = parsed;
+              targetKey = k;
+            }
+          } catch (_) {}
+        }
       }
     }
 
-    // Default structure matching TestCreationPage state
+    // Default structure matching TestCreationPage state if no draft exists
     if (!draft || typeof draft !== 'object') {
       draft = {
         existingExamId: null,
@@ -178,7 +189,8 @@ export const addQuestionsToTestDraft = (userId, rawQuestions) => {
       success: true,
       addedCount,
       skippedCount,
-      totalInDraft: currentQuestions.length
+      totalInDraft: currentQuestions.length,
+      existingExamId: draft.existingExamId || null
     };
   } catch (err) {
     console.error('Error saving questions to test draft:', err);
