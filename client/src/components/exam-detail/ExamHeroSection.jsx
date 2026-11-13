@@ -114,6 +114,16 @@ export default function ExamHeroSection({
             {hasAttempted && !isCreator && (
               <span className="text-xs text-slate-500">Attempted</span>
             )}
+
+            {isCreator ? (
+              <span className="text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/80 dark:text-indigo-300 dark:bg-indigo-950/60 dark:border-indigo-800/60 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                Created by you
+              </span>
+            ) : (exam.creatorName || exam.creatorId?.name) ? (
+              <span className="text-xs font-medium text-slate-600 bg-slate-100 border border-slate-200/80 dark:text-slate-400 dark:bg-slate-800/80 dark:border-slate-700/80 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                Created by {exam.creatorName || exam.creatorId?.name}
+              </span>
+            ) : null}
           </div>
 
           {/* Title & Description */}

@@ -16,7 +16,7 @@ import DiscardDraftModal from '../components/common/DiscardDraftModal';
 import ExamCard from '../components/exam/ExamCard';
 
 export default function DashboardPage() {
-  const { user, isAuthenticated, loginWithGoogle } = useAuthStore();
+  const { user, isAuthenticated, loginWithGoogle, openAuthModal } = useAuthStore();
   const navigate = useNavigate();
 
   const [exams, setExams] = useState([]);
@@ -59,7 +59,7 @@ export default function DashboardPage() {
     }
   };
 
-  const categories = ['ALL', 'JEE', 'NEET', 'GATE', 'APTITUDE', 'CUSTOM'];
+  const categories = ['ALL', 'HOSTED', 'JEE', 'NEET', 'GATE', 'APTITUDE', 'CUSTOM'];
 
   // Initialize native Google One Tap prompt on Dashboard for unauthenticated users
   useEffect(() => {
@@ -146,7 +146,11 @@ export default function DashboardPage() {
     try {
       const activeSearch = searchOverride !== null ? searchOverride : searchQuery;
       const params = { limit: 50 };
-      if (selectedCategory !== 'ALL') params.category = selectedCategory;
+      if (selectedCategory === 'HOSTED') {
+        params.filter = 'hosted';
+      } else if (selectedCategory !== 'ALL') {
+        params.category = selectedCategory;
+      }
       if (activeSearch.trim()) params.search = activeSearch.trim();
 
       const res = await api.get('/exams', { params });
@@ -183,17 +187,30 @@ export default function DashboardPage() {
 
   // Instant 0ms client-side filtering on loaded exams for instantaneous response
   const displayExams = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return exams;
+    let list = exams;
 
-    return exams.filter((exam) => {
+    if (selectedCategory === 'HOSTED') {
+      list = list.filter((exam) => {
+        return Boolean(
+          exam.isCreator ||
+          (user?._id && exam.creatorId && (
+            String(exam.creatorId?._id || exam.creatorId) === String(user._id)
+          ))
+        );
+      });
+    }
+
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return list;
+
+    return list.filter((exam) => {
       const titleMatch = exam.title?.toLowerCase().includes(q);
       const descMatch = exam.description?.toLowerCase().includes(q);
       const catMatch = exam.category?.toLowerCase().includes(q);
       const creatorMatch = exam.creatorName?.toLowerCase().includes(q);
       return titleMatch || descMatch || catMatch || creatorMatch;
     });
-  }, [exams, searchQuery]);
+  }, [exams, searchQuery, selectedCategory, user]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -329,16 +346,29 @@ export default function DashboardPage() {
           <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
             {categories.map((cat) => {
               const isSelected = selectedCategory === cat;
+              let label = cat;
+              if (cat === 'ALL') label = 'All';
+              else if (cat === 'HOSTED') label = 'Hosted by you';
+
               return (
                 <button
                   key={cat}
-                  onClick={() => setSelectedCategory(cat)}
+                  onClick={() => {
+                    if (cat === 'HOSTED' && !isAuthenticated) {
+                      openAuthModal({
+                        title: 'Sign In to View Hosted Tests',
+                        subtitle: 'Sign in to access examinations created and hosted by you.'
+                      });
+                      return;
+                    }
+                    setSelectedCategory(cat);
+                  }}
                   className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors cursor-pointer whitespace-nowrap ${isSelected
                     ? 'bg-indigo-600 text-white dark:bg-indigo-500 dark:text-white shadow-sm shadow-indigo-600/20'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/60'
                     }`}
                 >
-                  {cat === 'ALL' ? 'All' : cat}
+                  {label}
                 </button>
               );
             })}
@@ -383,6 +413,22 @@ export default function DashboardPage() {
                     Clear Search Query
                   </button>
                 </>
+              ) : selectedCategory === 'HOSTED' ? (
+                <>
+                  <BookOpen className="w-6 h-6 text-slate-400 dark:text-slate-400 mx-auto mb-2" />
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">
+                    No Hosted Tests Yet
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-300 max-w-sm mx-auto mb-4">
+                    You haven't created or hosted any examinations yet. Author your first test in the studio.
+                  </p>
+                  <button
+                    onClick={() => navigate('/create-test')}
+                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-sm shadow-indigo-600/20 active:scale-[0.98] dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:text-white dark:shadow-indigo-500/10 text-xs py-1.5 px-3 rounded-lg transition cursor-pointer"
+                  >
+                    Create Exam
+                  </button>
+                </>
               ) : (
                 <>
                   <BookOpen className="w-6 h-6 text-slate-400 dark:text-slate-400 mx-auto mb-2" />
@@ -407,10 +453,19 @@ export default function DashboardPage() {
                 const questionCount = exam.questionCount || exam.questions?.length || 0;
                 const attemptsUsed = exam.userAttemptCount || 0;
                 const isDraft = exam.status === 'draft';
+                const isCreator = Boolean(
+                  exam.isCreator ||
+                  (user?._id && exam.creatorId && (
+                    String(exam.creatorId?._id || exam.creatorId) === String(user._id)
+                  ))
+                );
 
                 return (
                   <ExamCard
                     key={exam._id}
+                    exam={exam}
+                    isCreator={isCreator}
+                    creatorName={exam.creatorName}
                     category={exam.category}
                     title={exam.title}
                     description={exam.description}
@@ -434,8 +489,11 @@ export default function DashboardPage() {
                     onStart={() => {
                       navigate(`/test/${exam._id}`);
                     }}
+                    onManage={() => {
+                      navigate(`/test/${exam._id}`);
+                    }}
                     onPractice={
-                      exam.allowPracticeMode
+                      exam.allowPracticeMode && !isCreator
                         ? () => {
                             sessionStorage.setItem('active_exam_mode', 'PRACTICE');
                             localStorage.setItem('active_exam_id', exam._id);
