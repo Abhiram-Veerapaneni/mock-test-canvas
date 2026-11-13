@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ShieldCheck,
   Edit3,
@@ -15,7 +15,12 @@ import {
   HelpCircle,
   Award,
   Scale,
-  Trash2
+  Trash2,
+  Share2,
+  Check,
+  Globe,
+  Link2,
+  Lock
 } from 'lucide-react';
 import { formatTime12h, formatDateTime12h } from '../../utils/dateUtils';
 
@@ -42,6 +47,7 @@ export default function ExamHeroSection({
   isGeneratedRevealed,
   subjects = [],
   questions = [],
+  onChangeVisibility,
   onTogglePublic,
   onOpenLiveMonitor,
   onOpenAudit,
@@ -64,6 +70,19 @@ export default function ExamHeroSection({
   navigate
 }) {
   const isScheduled = Boolean(exam?.schedule?.isScheduled);
+  const effectiveVisibility = exam?.visibility || (exam?.isPublic === false ? 'private' : 'public');
+
+  const [copied, setCopied] = useState(false);
+
+  const handleShareLink = () => {
+    const url = `${window.location.origin}/test/${examId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch((err) => {
+      console.warn('Failed to copy link:', err);
+    });
+  };
 
   return (
     <section className="bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none rounded-xl p-5 sm:p-6 space-y-4">
@@ -97,21 +116,50 @@ export default function ExamHeroSection({
               </div>
             )}
 
-            {exam.isGenerated && (
-              <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
-                <span>{exam.isPublic ? 'Public' : 'Private'}</span>
-                {isOwner && (
+            {/* Visibility Badge & Quick Toggle for Owner */}
+            {isOwner ? (
+              <div className="flex items-center gap-1.5 text-xs">
+                {effectiveVisibility === 'unlisted' ? (
                   <button
                     type="button"
-                    onClick={onTogglePublic}
-                    className="text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline cursor-pointer ml-0.5"
-                    title="Toggle visibility"
+                    onClick={() => onChangeVisibility ? onChangeVisibility('private') : onTogglePublic?.()}
+                    className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-900/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors cursor-pointer"
+                    title="Visibility: Only via Link. Click to change to Private."
                   >
-                    {exam.isPublic ? '(make private)' : '(make public)'}
+                    <Link2 className="w-3 h-3 text-amber-500" />
+                    <span>Only via Link</span>
+                    <span className="text-[10px] text-slate-400 ml-1 underline">change</span>
+                  </button>
+                ) : effectiveVisibility === 'private' ? (
+                  <button
+                    type="button"
+                    onClick={() => onChangeVisibility ? onChangeVisibility('public') : onTogglePublic?.()}
+                    className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-md border border-rose-200/60 dark:border-rose-900/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors cursor-pointer"
+                    title="Visibility: Private. Click to change to Public."
+                  >
+                    <Lock className="w-3 h-3 text-rose-500" />
+                    <span>Private</span>
+                    <span className="text-[10px] text-slate-400 ml-1 underline">change</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onChangeVisibility ? onChangeVisibility('unlisted') : onTogglePublic?.()}
+                    className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-900/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors cursor-pointer"
+                    title="Visibility: Public. Click to change to Only via Link."
+                  >
+                    <Globe className="w-3 h-3 text-emerald-500" />
+                    <span>Public</span>
+                    <span className="text-[10px] text-slate-400 ml-1 underline">change</span>
                   </button>
                 )}
               </div>
-            )}
+            ) : effectiveVisibility === 'unlisted' ? (
+              <div className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-900/40">
+                <Link2 className="w-3 h-3 text-amber-500" />
+                <span>Link Only Access</span>
+              </div>
+            ) : null}
 
             {hasAttempted && !isCreator && (
               <span className="text-xs text-slate-500">Attempted</span>
@@ -213,6 +261,26 @@ export default function ExamHeroSection({
                   <span>Preview Run</span>
                 </button>
 
+                {/* Creator Action: Share Link */}
+                <button
+                  type="button"
+                  onClick={handleShareLink}
+                  className="btn-secondary text-xs py-1.5 px-3 shadow-xs flex items-center gap-1.5 cursor-pointer"
+                  title="Copy direct shareable test link to clipboard"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Share Link</span>
+                    </>
+                  )}
+                </button>
+
                 {/* Creator Action: Delete Assessment */}
                 {onOpenDelete && (
                   <button
@@ -303,6 +371,26 @@ export default function ExamHeroSection({
                     </div>
                   )
                 )}
+
+                {/* Candidate Share Button */}
+                <button
+                  type="button"
+                  onClick={handleShareLink}
+                  className="btn-secondary text-xs py-1.5 px-3 flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  title="Share this assessment"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Share</span>
+                    </>
+                  )}
+                </button>
               </div>
             )}
           </div>

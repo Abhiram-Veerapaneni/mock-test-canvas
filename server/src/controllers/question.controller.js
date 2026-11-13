@@ -603,6 +603,7 @@ export const generateExam = async (req, res) => {
       allowReviewResponses: true,
       isGenerated: true,
       isPublic: false,
+      visibility: 'private',
       examType: 'practice',
       questions: questionIds,
       proctorSettings: {

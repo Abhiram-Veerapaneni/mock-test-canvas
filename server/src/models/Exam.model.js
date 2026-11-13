@@ -77,6 +77,11 @@ const examSchema = new mongoose.Schema(
       type: Boolean,
       default: true
     },
+    visibility: {
+      type: String,
+      enum: ['public', 'unlisted', 'private'],
+      default: 'public'
+    },
     examType: {
       type: String,
       enum: ['official', 'practice'],
@@ -129,6 +134,7 @@ const examSchema = new mongoose.Schema(
 );
 
 examSchema.index({ status: 1, isPublic: 1, createdAt: -1 });
+examSchema.index({ status: 1, visibility: 1, createdAt: -1 });
 examSchema.index({ category: 1, status: 1 });
 examSchema.index({ creatorId: 1, createdAt: -1 });
 examSchema.index({ title: 'text', description: 'text' });

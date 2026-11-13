@@ -234,13 +234,26 @@ export default function ExamDetailPage() {
     }
   };
 
+  const handleChangeVisibility = async (newVisibility) => {
+    try {
+      const res = await api.put(`/exams/${examId}`, { visibility: newVisibility });
+      if (res.data?.success) {
+        setExam((prev) => ({
+          ...prev,
+          visibility: newVisibility,
+          isPublic: newVisibility === 'public'
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to change visibility:', err);
+    }
+  };
+
   const handleTogglePublic = async () => {
     try {
-      const nextPublic = !exam.isPublic;
-      const res = await api.put(`/exams/${examId}`, { isPublic: nextPublic });
-      if (res.data?.success) {
-        setExam((prev) => ({ ...prev, isPublic: nextPublic }));
-      }
+      const currentVis = exam?.visibility || (exam?.isPublic ? 'public' : 'private');
+      const nextVis = currentVis === 'public' ? 'unlisted' : currentVis === 'unlisted' ? 'private' : 'public';
+      await handleChangeVisibility(nextVis);
     } catch (err) {
       console.error('Failed to toggle public state:', err);
     }
@@ -339,6 +352,7 @@ export default function ExamDetailPage() {
           isGeneratedRevealed={isGeneratedRevealed}
           subjects={subjects}
           questions={questions}
+          onChangeVisibility={handleChangeVisibility}
           onTogglePublic={handleTogglePublic}
           onOpenLiveMonitor={() => setIsLiveMonitorOpen(true)}
           onOpenAudit={() => navigate(`/test/${examId}/audit`)}

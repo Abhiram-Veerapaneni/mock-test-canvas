@@ -86,6 +86,7 @@ export const createExam = async (req, res) => {
       description,
       category,
       status = 'published',
+      visibility = 'public',
       durationMinutes,
       maxAttempts,
       markingScheme,
@@ -159,6 +160,13 @@ export const createExam = async (req, res) => {
     const incorrectMark = markingScheme?.incorrect ?? -1;
     const totalMarks = questionIds.length * correctMark;
 
+    let resolvedVisibility = 'public';
+    if (['public', 'unlisted', 'private'].includes(visibility)) {
+      resolvedVisibility = visibility;
+    } else if (req.body.isPublic === false) {
+      resolvedVisibility = 'private';
+    }
+
     // Create the exam
     const exam = await Exam.create({
       title: title.trim(),
@@ -168,6 +176,8 @@ export const createExam = async (req, res) => {
       creatorId: req.user?._id,
       durationMinutes: durationMinutes ? Number(durationMinutes) : 180,
       totalMarks,
+      isPublic: resolvedVisibility === 'public',
+      visibility: resolvedVisibility,
       maxAttempts: (maxAttempts === null || maxAttempts === 0 || maxAttempts === 'unlimited')
         ? null
         : Math.max(1, Number(maxAttempts)) || 1,
@@ -208,6 +218,7 @@ export const createExam = async (req, res) => {
         _id: exam._id,
         title: exam.title,
         status: exam.status,
+        visibility: exam.visibility,
         category: exam.category,
         durationMinutes: exam.durationMinutes,
         totalMarks: exam.totalMarks,
@@ -250,13 +261,14 @@ export const getAllExams = async (req, res) => {
     }
 
     // Status and visibility filter:
-    // Public catalog only includes published, public exams (not private generated tests).
-    // Authenticated users also see their own exams (drafts and private generated practice tests).
+    // Public catalog only includes published, public exams (excludes unlisted or private tests).
+    // Authenticated users also see their own exams (drafts, unlisted, and private practice tests).
     const publicCondition = {
       status: 'published',
       $or: [
-        { isPublic: true },
-        { isPublic: { $exists: false }, isGenerated: { $ne: true } }
+        { visibility: 'public' },
+        { visibility: { $exists: false }, isPublic: true },
+        { visibility: { $exists: false }, isPublic: { $exists: false }, isGenerated: { $ne: true } }
       ]
     };
 
@@ -290,7 +302,7 @@ export const getAllExams = async (req, res) => {
 
     const total = await Exam.countDocuments(query);
     const exams = await Exam.find(query)
-      .select('title description category status durationMinutes totalMarks maxAttempts markingScheme proctorSettings allowPracticeMode allowReviewResponses schedule questions createdAt creatorId isGenerated isPublic examType')
+      .select('title description category status durationMinutes totalMarks maxAttempts markingScheme proctorSettings allowPracticeMode allowReviewResponses schedule questions createdAt creatorId isGenerated isPublic visibility examType')
       .populate('creatorId', 'name')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -332,7 +344,8 @@ export const getAllExams = async (req, res) => {
       questionCount: exam.questions?.length || 0,
       userAttemptCount: userAttemptMap[exam._id.toString()] || 0,
       isGenerated: Boolean(exam.isGenerated),
-      isPublic: exam.isPublic !== false,
+      isPublic: exam.visibility ? exam.visibility === 'public' : exam.isPublic !== false,
+      visibility: exam.visibility || (exam.isPublic === false ? 'private' : 'public'),
       examType: exam.examType || (exam.isGenerated ? 'practice' : 'official'),
       createdAt: exam.createdAt
     }));
@@ -365,7 +378,7 @@ export const getExamById = async (req, res) => {
     const userId = req.user?._id;
 
     // First fetch metadata to check authorization
-    const metaExam = await Exam.findById(id).select('creatorId isGenerated isPublic examType');
+    const metaExam = await Exam.findById(id).select('creatorId isGenerated isPublic visibility examType');
     if (!metaExam) {
       return res.status(404).json({
         success: false,
@@ -377,11 +390,13 @@ export const getExamById = async (req, res) => {
       userId && metaExam.creatorId && metaExam.creatorId.toString() === userId.toString()
     );
 
+    const isPrivate = metaExam.visibility === 'private' || (metaExam.visibility !== 'unlisted' && metaExam.isPublic === false);
+
     // Private assessment access control: if test is private, only owner can view
-    if (metaExam.isPublic === false && !isOwner) {
+    if (isPrivate && !isOwner) {
       return res.status(403).json({
         success: false,
-        message: 'This practice test is private to its creator and has not been made public.'
+        message: 'This assessment is private to its creator and has not been made accessible.'
       });
     }
 
@@ -407,6 +422,8 @@ export const getExamById = async (req, res) => {
 
     const examObj = exam.toObject();
     examObj.questions = (examObj.questions || []).filter(Boolean);
+    examObj.visibility = exam.visibility || (exam.isPublic === false ? 'private' : 'public');
+    examObj.isPublic = examObj.visibility === 'public';
     if (!examObj.creatorName && exam.creatorId?.name) {
       examObj.creatorName = exam.creatorId.name;
     }
@@ -497,8 +514,14 @@ export const updateExam = async (req, res) => {
     if (req.body.contributeAllToBank !== undefined) {
       existingExam.contributeAllToBank = Boolean(req.body.contributeAllToBank);
     }
-    if (req.body.isPublic !== undefined) {
+    if (req.body.visibility !== undefined) {
+      if (['public', 'unlisted', 'private'].includes(req.body.visibility)) {
+        existingExam.visibility = req.body.visibility;
+        existingExam.isPublic = req.body.visibility === 'public';
+      }
+    } else if (req.body.isPublic !== undefined) {
       existingExam.isPublic = Boolean(req.body.isPublic);
+      existingExam.visibility = existingExam.isPublic ? 'public' : 'private';
     }
     if (schedule !== undefined) {
       existingExam.schedule = {

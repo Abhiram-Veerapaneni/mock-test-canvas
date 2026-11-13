@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Clock,
   FileText,
   Award,
   Calendar,
-  Shield
+  Shield,
+  Share2,
+  Check,
+  Globe,
+  Link2,
+  Lock
 } from 'lucide-react';
 import { formatDateTime12h } from '../../utils/dateUtils';
 
@@ -86,6 +91,27 @@ export function ExamCard({
     ? description
     : (exam?.description || '');
   const effectiveStatus = status ?? exam?.status ?? 'published';
+  const effectiveVisibility = (
+    restProps.visibility ||
+    exam?.visibility ||
+    (exam?.isPublic === false ? 'private' : 'public')
+  );
+
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = (e) => {
+    e.stopPropagation();
+    const id = exam?._id || restProps._id;
+    if (!id) return;
+    const url = `${window.location.origin}/test/${id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch((err) => {
+      console.warn('Failed to copy link:', err);
+    });
+  };
+
   const effectiveDuration = durationMinutes || exam?.durationMinutes || 0;
   const effectiveMarking = markingScheme || exam?.markingScheme || { correct: 4, incorrect: -1 };
   const correctMark = effectiveMarking?.correct ?? 4;
@@ -143,6 +169,32 @@ export function ExamCard({
               title={`Created by ${effectiveCreatorName}`}
             >
               By {effectiveCreatorName}
+            </span>
+          ) : null}
+
+          {effectiveVisibility === 'unlisted' ? (
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/40 px-1.5 py-0.5 rounded-md shrink-0"
+              title="Accessible only via shared link"
+            >
+              <Link2 className="w-3 h-3 text-amber-500 shrink-0" />
+              <span>Link Only</span>
+            </span>
+          ) : effectiveVisibility === 'private' ? (
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-medium text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/60 dark:border-rose-900/40 px-1.5 py-0.5 rounded-md shrink-0"
+              title="Private to creator"
+            >
+              <Lock className="w-3 h-3 text-rose-500 shrink-0" />
+              <span>Private</span>
+            </span>
+          ) : effectiveIsCreator ? (
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-900/40 px-1.5 py-0.5 rounded-md shrink-0"
+              title="Visible in public catalog"
+            >
+              <Globe className="w-3 h-3 text-emerald-500 shrink-0" />
+              <span>Public</span>
             </span>
           ) : null}
 
@@ -307,6 +359,26 @@ export function ExamCard({
                   className="text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-md shadow-xs dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                 >
                   Edit
+                </button>
+              )}
+              {!isDraft && (
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-2.5 py-1.5 rounded-md shadow-xs dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700 transition-colors cursor-pointer flex items-center gap-1"
+                  title="Copy shareable test link"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Share</span>
+                    </>
+                  )}
                 </button>
               )}
               <button

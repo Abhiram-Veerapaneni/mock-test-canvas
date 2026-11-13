@@ -8,7 +8,10 @@ import {
   AlertCircle,
   ShieldCheck,
   BookOpen,
-  Database
+  Database,
+  Globe,
+  Link2,
+  Lock
 } from 'lucide-react';
 
 export default function TestSettingsTab({
@@ -18,6 +21,8 @@ export default function TestSettingsTab({
   setDescription,
   category,
   setCategory,
+  visibility = 'public',
+  setVisibility,
   durationMinutes,
   setDurationMinutes,
   correctMark,
@@ -129,6 +134,68 @@ export default function TestSettingsTab({
                 onChange={(e) => setDurationMinutes(e.target.value)}
                 className="input-base text-xs font-mono"
               />
+            </div>
+          </div>
+
+          {/* Assessment Visibility Selector */}
+          <div>
+            <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+              Access & Visibility
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setVisibility?.('public')}
+                className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                  visibility === 'public'
+                    ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-950 dark:text-indigo-200 shadow-xs'
+                    : 'border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 mb-1 font-semibold text-xs">
+                  <Globe className={`w-3.5 h-3.5 ${visibility === 'public' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
+                  <span>Public</span>
+                </div>
+                <span className="text-[11px] leading-tight text-slate-500 dark:text-slate-400">
+                  Listed in catalog for all students
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setVisibility?.('unlisted')}
+                className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                  visibility === 'unlisted'
+                    ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-950 dark:text-indigo-200 shadow-xs'
+                    : 'border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 mb-1 font-semibold text-xs">
+                  <Link2 className={`w-3.5 h-3.5 ${visibility === 'unlisted' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
+                  <span>Only via Link</span>
+                </div>
+                <span className="text-[11px] leading-tight text-slate-500 dark:text-slate-400">
+                  Hidden; accessible only via shared link
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setVisibility?.('private')}
+                className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                  visibility === 'private'
+                    ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-950 dark:text-indigo-200 shadow-xs'
+                    : 'border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 mb-1 font-semibold text-xs">
+                  <Lock className={`w-3.5 h-3.5 ${visibility === 'private' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} />
+                  <span>Private</span>
+                </div>
+                <span className="text-[11px] leading-tight text-slate-500 dark:text-slate-400">
+                  Only visible to you (the creator)
+                </span>
+              </button>
             </div>
           </div>
         </div>

@@ -34,6 +34,7 @@ export default function TestCreationPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('JEE');
+  const [visibility, setVisibility] = useState('public');
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [correctMark, setCorrectMark] = useState(4);
   const [incorrectMark, setIncorrectMark] = useState(-1);
@@ -86,14 +87,14 @@ export default function TestCreationPage() {
   };
 
   const formData = {
-    title, description, category, durationMinutes, correctMark, incorrectMark,
+    title, description, category, visibility, durationMinutes, correctMark, incorrectMark,
     isUnlimitedAttempts, maxAttemptsValue, allowPracticeMode, allowReviewResponses,
     isScheduled, startTime, endTime, faceCheck, audioCheck, fullScreenLock,
     objectCheck, liveNotifications, questions, contributeAllToBank, activeStudioTab
   };
 
   const formSetters = {
-    setTitle, setDescription, setCategory, setDurationMinutes, setCorrectMark,
+    setTitle, setDescription, setCategory, setVisibility, setDurationMinutes, setCorrectMark,
     setIncorrectMark, setIsUnlimitedAttempts, setMaxAttemptsValue, setAllowPracticeMode,
     setAllowReviewResponses, setIsScheduled, setStartTime, setEndTime, setFaceCheck,
     setAudioCheck, setFullScreenLock, setObjectCheck, setLiveNotifications,
@@ -226,6 +227,7 @@ export default function TestCreationPage() {
     setTitle,
     description,
     category,
+    visibility,
     durationMinutes,
     correctMark,
     incorrectMark,
@@ -381,6 +383,8 @@ export default function TestCreationPage() {
             setDescription={setDescription}
             category={category}
             setCategory={setCategory}
+            visibility={visibility}
+            setVisibility={setVisibility}
             durationMinutes={durationMinutes}
             setDurationMinutes={setDurationMinutes}
             correctMark={correctMark}

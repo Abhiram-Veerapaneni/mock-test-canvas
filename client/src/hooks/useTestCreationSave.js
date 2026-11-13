@@ -10,6 +10,7 @@ export default function useTestCreationSave({
   setTitle,
   description,
   category,
+  visibility = 'public',
   durationMinutes,
   correctMark,
   incorrectMark,
@@ -115,6 +116,7 @@ export default function useTestCreationSave({
         title: effectiveTitle,
         description: description.trim(),
         category,
+        visibility: visibility || 'public',
         status: targetStatus,
         durationMinutes: Number(durationMinutes) || 60,
         markingScheme: {

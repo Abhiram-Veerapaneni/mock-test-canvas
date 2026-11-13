@@ -21,6 +21,7 @@ export default function useTestCreationDraft({
     title,
     description,
     category,
+    visibility,
     durationMinutes,
     correctMark,
     incorrectMark,
@@ -45,6 +46,7 @@ export default function useTestCreationDraft({
     setTitle,
     setDescription,
     setCategory,
+    setVisibility,
     setDurationMinutes,
     setCorrectMark,
     setIncorrectMark,
@@ -90,6 +92,7 @@ export default function useTestCreationDraft({
     title,
     description,
     category,
+    visibility,
     durationMinutes,
     correctMark,
     incorrectMark,
@@ -303,6 +306,7 @@ export default function useTestCreationDraft({
     title,
     description,
     category,
+    visibility,
     durationMinutes,
     correctMark,
     incorrectMark,
@@ -423,6 +427,7 @@ export default function useTestCreationDraft({
           if (draft.title !== undefined) setTitle(draft.title);
           if (draft.description !== undefined) setDescription(draft.description);
           if (draft.category !== undefined) setCategory(draft.category);
+          if (draft.visibility !== undefined && setVisibility) setVisibility(draft.visibility);
           if (draft.durationMinutes !== undefined) setDurationMinutes(draft.durationMinutes);
           if (draft.correctMark !== undefined) setCorrectMark(draft.correctMark);
           if (draft.incorrectMark !== undefined) setIncorrectMark(draft.incorrectMark);
@@ -482,6 +487,7 @@ export default function useTestCreationDraft({
       setTitle(ex.title || '');
       setDescription(ex.description || '');
       setCategory(ex.category || 'JEE');
+      if (setVisibility) setVisibility(ex.visibility || (ex.isPublic === false ? 'private' : 'public'));
       setDurationMinutes(ex.durationMinutes || 60);
       setExamStatus(ex.status || 'published');
       if (ex.markingScheme) {
@@ -530,6 +536,7 @@ export default function useTestCreationDraft({
       setTitle('');
       setDescription('');
       setCategory('JEE');
+      if (setVisibility) setVisibility('public');
       setDurationMinutes(60);
       setCorrectMark(4);
       setIncorrectMark(-1);
@@ -595,6 +602,7 @@ export default function useTestCreationDraft({
         setTitle('');
         setDescription('');
         setCategory('JEE');
+        if (setVisibility) setVisibility('public');
         setDurationMinutes(60);
         setCorrectMark(4);
         setIncorrectMark(-1);

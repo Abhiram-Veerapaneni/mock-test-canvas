@@ -36,6 +36,14 @@ export const startAttempt = async (req, res) => {
     );
     const isPrivileged = isOwner || req.user.role === 'examiner' || req.user.role === 'admin';
 
+    const isPrivate = exam.visibility === 'private' || (exam.visibility !== 'unlisted' && exam.isPublic === false);
+    if (isPrivate && !isOwner && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'This assessment is private to its creator and cannot be attempted.'
+      });
+    }
+
     // 1. PRACTICE / PREVIEW MODE VALIDATIONS
     if (isPractice || isPreview) {
       // If privileged creator/admin, bypass practice mode disabled & schedule end lock
@@ -164,6 +172,14 @@ export const submitExam = async (req, res) => {
       )
     );
     const isPrivileged = isOwner || req.user.role === 'examiner' || req.user.role === 'admin';
+
+    const isPrivate = exam.visibility === 'private' || (exam.visibility !== 'unlisted' && exam.isPublic === false);
+    if (isPrivate && !isOwner && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'This assessment is private to its creator and cannot be attempted.'
+      });
+    }
 
     // Check official attempt limit (practice attempts and creator preview attempts do not count against maxAttempts)
     if (!isPractice && !isPreview && !isPrivileged && exam.maxAttempts !== null) {

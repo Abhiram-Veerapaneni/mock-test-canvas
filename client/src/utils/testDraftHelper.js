@@ -116,6 +116,7 @@ export const addQuestionsToTestDraft = (userId, rawQuestions) => {
         title: 'Custom Assessment Draft',
         description: '',
         category: 'CUSTOM',
+        visibility: 'public',
         durationMinutes: 60,
         correctMark: 4,
         incorrectMark: -1,
