@@ -231,11 +231,11 @@ export const createExam = async (req, res) => {
  */
 export const getAllExams = async (req, res) => {
   try {
-    const { category, search, status, page = 1, limit = 24 } = req.query;
+    const { category, filter, search, status, page = 1, limit = 24 } = req.query;
 
     const andConditions = [];
 
-    if (category && category !== 'ALL') {
+    if (category && category !== 'ALL' && category !== 'HOSTED') {
       andConditions.push({ category: category.toUpperCase() });
     }
 
@@ -260,7 +260,16 @@ export const getAllExams = async (req, res) => {
       ]
     };
 
-    if (status) {
+    if (filter === 'hosted' || category === 'HOSTED') {
+      if (req.user?._id) {
+        andConditions.push({ creatorId: req.user._id });
+      } else {
+        andConditions.push({ creatorId: null });
+      }
+      if (status) {
+        andConditions.push({ status });
+      }
+    } else if (status) {
       andConditions.push({ status });
     } else if (req.user?._id) {
       andConditions.push({
@@ -306,7 +315,11 @@ export const getAllExams = async (req, res) => {
       description: exam.description,
       category: exam.category,
       status: exam.status || 'published',
-      isCreator: req.user?._id ? (exam.creatorId?._id?.toString() === req.user._id.toString()) : false,
+      creatorId: exam.creatorId?._id || exam.creatorId || null,
+      isCreator: req.user?._id ? (
+        (exam.creatorId?._id && exam.creatorId._id.toString() === req.user._id.toString()) ||
+        (exam.creatorId && exam.creatorId.toString() === req.user._id.toString())
+      ) : false,
       creatorName: exam.creatorId?.name || 'Academic Administrator',
       durationMinutes: exam.durationMinutes,
       totalMarks: exam.totalMarks,
@@ -383,10 +396,10 @@ export const getExamById = async (req, res) => {
     let exam;
     if (isAuthoringCreator) {
       // Authoring creator in studio gets all question details (including correct answers, explanation, isEdited)
-      exam = await Exam.findById(id).populate('questions');
+      exam = await Exam.findById(id).populate('creatorId', 'name').populate('questions');
     } else {
       // Candidates and ALL generated test takers NEVER receive correctAnswers, explanation, tags, stream, or bankAddedBy
-      exam = await Exam.findById(id).populate({
+      exam = await Exam.findById(id).populate('creatorId', 'name').populate({
         path: 'questions',
         select: '-correctAnswers -explanation -tags -stream -bankAddedBy'
       });
@@ -394,6 +407,9 @@ export const getExamById = async (req, res) => {
 
     const examObj = exam.toObject();
     examObj.questions = (examObj.questions || []).filter(Boolean);
+    if (!examObj.creatorName && exam.creatorId?.name) {
+      examObj.creatorName = exam.creatorId.name;
+    }
 
     return res.status(200).json({
       success: true,

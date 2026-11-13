@@ -4,7 +4,9 @@ import {
   FileText,
   Award,
   Calendar,
-  Shield
+  Shield,
+  User,
+  UserCheck
 } from 'lucide-react';
 import { formatDateTime12h } from '../../utils/dateUtils';
 
@@ -49,6 +51,8 @@ export function ExamCard({
   title = '',
   description = '',
   status = 'published',
+  creatorName = '',
+  isCreator = false,
   durationMinutes = 0,
   totalMarks = 0,
   markingScheme = { correct: 4, incorrect: -1 },
@@ -65,6 +69,7 @@ export function ExamCard({
   onReview,
   onEditDraft,
   onDiscardDraft,
+  onManage,
 
   // Optional container click and styling extensions
   onClick,
@@ -73,6 +78,10 @@ export function ExamCard({
   ...restProps
 }) {
   // Support both individual props and full exam document fallback
+  const effectiveIsCreator = Boolean(
+    isCreator ?? exam?.isCreator
+  );
+  const effectiveCreatorName = creatorName || exam?.creatorName || exam?.creatorId?.name || '';
   const effectiveCategory = (category ?? exam?.category ?? 'CUSTOM').toUpperCase();
   const effectiveTitle = title || exam?.title || 'Untitled Assessment';
   const effectiveDescription = description !== undefined && description !== null && description !== ''
@@ -128,12 +137,29 @@ export function ExamCard({
           )}
         </div>
 
-        {/* Right: Only show Draft tag; Published is default so omitted */}
-        {isDraft && (
-          <span className="text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded shrink-0">
-            Draft
-          </span>
-        )}
+        {/* Right: Creator Badge / Indicator & Draft tag */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {effectiveIsCreator ? (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/80 dark:text-indigo-300 dark:bg-indigo-950/60 dark:border-indigo-800/60 px-2 py-0.5 rounded-full shrink-0">
+              <UserCheck className="w-3 h-3 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span>Created by you</span>
+            </span>
+          ) : effectiveCreatorName ? (
+            <span
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200/80 dark:text-slate-400 dark:bg-slate-800/80 dark:border-slate-700/80 px-2 py-0.5 rounded-full shrink-0 max-w-[150px]"
+              title={`Created by ${effectiveCreatorName}`}
+            >
+              <User className="w-3 h-3 text-slate-400 shrink-0" />
+              <span className="truncate">By {effectiveCreatorName}</span>
+            </span>
+          ) : null}
+
+          {isDraft && (
+            <span className="text-xs font-medium text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded shrink-0">
+              Draft
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Title & Description */}
@@ -204,17 +230,30 @@ export function ExamCard({
 
       {/* Bottom Action Footer */}
       <div className="pt-2 mt-auto flex items-center justify-between gap-2 flex-wrap">
-        {/* Left: Attempts Tracker */}
+        {/* Left: Attempts Tracker (or Host Status for Creator) */}
         <div className="text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center flex-wrap gap-1">
-          <span className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">
-            {isUnlimited
-              ? `${effectiveUserAttempts} / ∞ attempts`
-              : `${effectiveUserAttempts} / ${effectiveMaxAttempts} attempts`}
-          </span>
-          {isMaxReached && (
-            <span className="text-rose-600 dark:text-rose-400 font-medium">
-              (Max reached)
+          {effectiveIsCreator ? (
+            <span className="text-slate-600 dark:text-slate-400 font-medium flex items-center gap-1">
+              <span className="font-semibold text-indigo-600 dark:text-indigo-400">Created by you</span>
+              {effectiveUserAttempts > 0 && (
+                <span className="text-slate-400 dark:text-slate-500">
+                  · {effectiveUserAttempts} preview run{effectiveUserAttempts > 1 ? 's' : ''}
+                </span>
+              )}
             </span>
+          ) : (
+            <>
+              <span className="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">
+                {isUnlimited
+                  ? `${effectiveUserAttempts} / ∞ attempts`
+                  : `${effectiveUserAttempts} / ${effectiveMaxAttempts} attempts`}
+              </span>
+              {isMaxReached && (
+                <span className="text-rose-600 dark:text-rose-400 font-medium">
+                  (Max reached)
+                </span>
+              )}
+            </>
           )}
         </div>
 
@@ -243,7 +282,47 @@ export function ExamCard({
                 Edit Draft
               </button>
             </>
+          ) : effectiveIsCreator ? (
+            /* Creator Actions: Practice and Retake/Start Exam buttons are completely removed! */
+            <>
+              {effectiveUserAttempts > 0 && effectiveAllowReview && onReview && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onReview();
+                  }}
+                  className="text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-md shadow-xs dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                >
+                  Review
+                </button>
+              )}
+              {onEditDraft && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditDraft();
+                  }}
+                  className="text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-md shadow-xs dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                >
+                  Edit
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onManage) onManage();
+                  else onStart?.();
+                }}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium px-3.5 py-1.5 rounded-md shadow-xs transition-colors cursor-pointer"
+              >
+                Manage Exam
+              </button>
+            </>
           ) : (
+            /* Candidate Actions */
             <>
               {effectiveUserAttempts > 0 && effectiveAllowReview && onReview && (
                 <button
