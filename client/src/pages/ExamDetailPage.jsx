@@ -7,6 +7,7 @@ import ExamHeroSection from '../components/exam-detail/ExamHeroSection';
 import ExamDetailTabs from '../components/exam-detail/ExamDetailTabs';
 import ExamPreviewModal from '../components/exam-detail/ExamPreviewModal';
 import RevealQuestionsModal from '../components/exam-detail/RevealQuestionsModal';
+import DeleteExamModal from '../components/common/DeleteExamModal';
 import ImageLightboxModal from '../components/test-builder/ImageLightboxModal';
 import ExamLiveMonitorModal from '../components/proctoring/ExamLiveMonitorModal';
 import api from '../services/api';
@@ -70,6 +71,30 @@ export default function ExamDetailPage() {
   const [showRevealConfirmationModal, setShowRevealConfirmationModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isRevealingQuestions, setIsRevealingQuestions] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeletingExam, setIsDeletingExam] = useState(false);
+
+  const handleDeleteExam = async () => {
+    if (!examId) return;
+    setIsDeletingExam(true);
+    try {
+      await api.delete(`/exams/${examId}`);
+      try {
+        const uId = user?._id || 'guest';
+        localStorage.removeItem(`pmt_draft_exam_${uId}_${examId}`);
+        localStorage.removeItem(`pmt_draft_exam_${examId}`);
+        sessionStorage.removeItem(`exam_revealed_${examId}`);
+      } catch (_) {}
+
+      setShowDeleteModal(false);
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      console.error('Failed to delete assessment:', err);
+      alert(err.response?.data?.message || 'Failed to delete assessment from database.');
+    } finally {
+      setIsDeletingExam(false);
+    }
+  };
 
   // Schedule hook
   const {
@@ -318,6 +343,7 @@ export default function ExamDetailPage() {
           onOpenLiveMonitor={() => setIsLiveMonitorOpen(true)}
           onOpenAudit={() => navigate(`/test/${examId}/audit`)}
           onOpenPreview={() => setShowPreviewModal(true)}
+          onOpenDelete={() => setShowDeleteModal(true)}
           onOpenRevealConfirmation={() => setShowRevealConfirmationModal(true)}
           onStartExam={handleStartExam}
           isScheduleUpcoming={isScheduleUpcoming}
@@ -394,6 +420,17 @@ export default function ExamDetailPage() {
           examId={examId}
           navigate={navigate}
           onStartExam={handleStartExam}
+        />
+
+        {/* Creator Delete Assessment Confirmation Modal */}
+        <DeleteExamModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDeleteExam}
+          examTitle={exam?.title || 'Untitled Assessment'}
+          questionsCount={questions?.length || 0}
+          attemptsCount={attempts?.length || 0}
+          isDeleting={isDeletingExam}
         />
       </main>
     </div>

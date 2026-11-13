@@ -796,11 +796,22 @@ export const deleteExam = async (req, res) => {
     // Clean up any attempts recorded for this exam
     await Attempt.deleteMany({ examId: id });
 
+    // Clean up references in User documents
+    await User.updateMany(
+      { $or: [{ createdTests: id }, { 'attemptedTests.examId': id }] },
+      {
+        $pull: {
+          createdTests: id,
+          attemptedTests: { examId: id }
+        }
+      }
+    );
+
     await Exam.findByIdAndDelete(id);
 
     return res.status(200).json({
       success: true,
-      message: 'Assessment draft discarded and permanently removed.'
+      message: 'Assessment permanently deleted from database.'
     });
   } catch (err) {
     console.error('Delete exam error:', err);

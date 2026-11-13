@@ -32,6 +32,7 @@ export default function DashboardPage() {
   const [draftToDiscard, setDraftToDiscard] = useState(null);
   const [isDiscardingDraft, setIsDiscardingDraft] = useState(false);
 
+
   const handlePromptDiscardDraft = (exam, e) => {
     if (e) e.stopPropagation();
     setDraftToDiscard(exam);
