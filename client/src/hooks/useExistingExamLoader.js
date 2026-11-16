@@ -44,6 +44,7 @@ export default function useExistingExamLoader({
       setMaxAttemptsValue,
       setAllowPracticeMode,
       setAllowReviewResponses,
+      setShuffleQuestions,
       setIsScheduled,
       setStartTime,
       setEndTime,
@@ -91,6 +92,7 @@ export default function useExistingExamLoader({
                 if (draft.maxAttemptsValue !== undefined) setMaxAttemptsValue(draft.maxAttemptsValue);
                 if (draft.allowPracticeMode !== undefined) setAllowPracticeMode(draft.allowPracticeMode);
                 if (draft.allowReviewResponses !== undefined) setAllowReviewResponses(draft.allowReviewResponses);
+                if (draft.shuffleQuestions !== undefined && setShuffleQuestions) setShuffleQuestions(draft.shuffleQuestions);
                 if (draft.isScheduled !== undefined) setIsScheduled(draft.isScheduled);
                 if (draft.startTime !== undefined) setStartTime(draft.startTime);
                 if (draft.endTime !== undefined) setEndTime(draft.endTime);
@@ -147,6 +149,9 @@ export default function useExistingExamLoader({
             }
             if (ex.allowReviewResponses !== undefined) {
               setAllowReviewResponses(Boolean(ex.allowReviewResponses));
+            }
+            if (ex.shuffleQuestions !== undefined && setShuffleQuestions) {
+              setShuffleQuestions(Boolean(ex.shuffleQuestions));
             }
             if (ex.schedule) {
               setIsScheduled(Boolean(ex.schedule.isScheduled));

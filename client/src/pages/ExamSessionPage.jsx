@@ -297,7 +297,8 @@ export default function ExamSessionPage() {
           }
 
           if (isMounted) {
-            initExam(examData);
+            const serverQuestionOrder = startRes.data?.questionOrder || null;
+            initExam(examData, serverQuestionOrder);
             const needsProctor =
               !isPractice &&
               (examData.proctorSettings?.faceCheck !== false ||

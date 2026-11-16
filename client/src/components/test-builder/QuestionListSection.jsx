@@ -113,7 +113,7 @@ export default function QuestionListSection({
             <Plus className="w-4 h-4" />
           </div>
           <p className="font-medium text-slate-600 dark:text-slate-400">No questions composed yet.</p>
-          <p className="text-xs text-slate-400 mt-0.5">Use the Question Authoring form, AI Ingestion, or Question Bank to add items.</p>
+          <p className="text-xs text-slate-400 mt-0.5">Use the Question Authoring form or Question Bank to add items.</p>
           {onOpenQuestionBank && (
             <div className="mt-3">
               <button

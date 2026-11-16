@@ -13,3 +13,7 @@ PLAN_OF_ACTION.md
 README_BLUEPRINT.md
 *.puml
 .vscode
+*.docx
+*.asd
+*.cjs
+screenshots

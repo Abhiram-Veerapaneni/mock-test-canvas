@@ -65,6 +65,10 @@ const examSchema = new mongoose.Schema(
       type: Boolean,
       default: true
     },
+    shuffleQuestions: {
+      type: Boolean,
+      default: false
+    },
     contributeAllToBank: {
       type: Boolean,
       default: false

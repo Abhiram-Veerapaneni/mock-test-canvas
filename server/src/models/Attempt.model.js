@@ -63,6 +63,12 @@ const attemptSchema = new mongoose.Schema(
       required: true,
       index: true
     },
+    questionOrder: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Question'
+      }
+    ],
     responses: [responseItemSchema],
     score: {
       type: Number,

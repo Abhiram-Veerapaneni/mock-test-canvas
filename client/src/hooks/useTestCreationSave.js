@@ -18,6 +18,7 @@ export default function useTestCreationSave({
   maxAttemptsValue,
   allowPracticeMode,
   allowReviewResponses,
+  shuffleQuestions,
   isScheduled,
   startTime,
   endTime,
@@ -126,6 +127,7 @@ export default function useTestCreationSave({
         maxAttempts: isUnlimitedAttempts ? null : Math.max(1, Number(maxAttemptsValue)),
         allowPracticeMode: Boolean(allowPracticeMode),
         allowReviewResponses: Boolean(allowReviewResponses),
+        shuffleQuestions: Boolean(shuffleQuestions),
         contributeAllToBank: Boolean(contributeAllToBank),
         schedule: {
           isScheduled: Boolean(isScheduled),

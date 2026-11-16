@@ -2,6 +2,59 @@ import { create } from 'zustand';
 
 const getStorageKey = (examId) => `mock_test_session_${examId}`;
 
+/**
+ * Shuffles questions while preserving contiguous subject sections.
+ * Within each subject group, questions are shuffled using Fisher-Yates algorithm.
+ */
+function shuffleQuestionsWithinSubjects(questionsList = []) {
+  if (!questionsList || questionsList.length <= 1) return questionsList;
+
+  const subjectGroups = new Map();
+  for (const q of questionsList) {
+    const subj = q.subject || 'General';
+    if (!subjectGroups.has(subj)) {
+      subjectGroups.set(subj, []);
+    }
+    subjectGroups.get(subj).push(q);
+  }
+
+  const result = [];
+  for (const group of subjectGroups.values()) {
+    const shuffled = [...group];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    result.push(...shuffled);
+  }
+  return result;
+}
+
+/**
+ * Reorders a list of questions to match an explicit sequence of question IDs.
+ */
+function applyQuestionOrder(questionsList = [], targetOrderIds = []) {
+  if (!Array.isArray(targetOrderIds) || targetOrderIds.length === 0) return questionsList;
+  const idMap = new Map();
+  questionsList.forEach((q) => {
+    const id = q._id?.toString() || q.id?.toString();
+    if (id) idMap.set(id, q);
+  });
+
+  const ordered = [];
+  targetOrderIds.forEach((id) => {
+    const idStr = id?.toString();
+    if (idMap.has(idStr)) {
+      ordered.push(idMap.get(idStr));
+      idMap.delete(idStr);
+    }
+  });
+
+  // Append any remaining questions not present in targetOrderIds to prevent omission
+  idMap.forEach((q) => ordered.push(q));
+  return ordered;
+}
+
 export const useExamStore = create((set, get) => ({
   exam: null,
   questions: [],
@@ -23,29 +76,28 @@ export const useExamStore = create((set, get) => ({
   },
 
   // Initialize exam session with localStorage persistence
-  initExam: (examData) => {
+  initExam: (examData, serverQuestionOrder = null) => {
     if (!examData) return;
-    const validQuestions = (examData.questions || []).filter(Boolean);
-    if (validQuestions.length === 0) return;
+    const rawQuestions = (examData.questions || []).filter(Boolean);
+    if (rawQuestions.length === 0) return;
 
     const storageKey = getStorageKey(examData._id);
-    const savedSessionRaw = localStorage.getItem(storageKey);
+    const savedSessionRaw = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : null;
 
     let initialAnswers = {};
     let initialStatus = {};
     let initialTimeRemaining = (examData.durationMinutes || 180) * 60;
     let initialIndex = 0;
-
-    // Default status for all questions is NOT_VISITED except the first one which becomes NOT_ANSWERED
-    validQuestions.forEach((q, idx) => {
-      initialStatus[q._id] = idx === 0 ? 'NOT_ANSWERED' : 'NOT_VISITED';
-    });
+    let cachedQuestionOrder = null;
 
     if (savedSessionRaw) {
       try {
         const parsed = JSON.parse(savedSessionRaw);
         if (parsed.answers) initialAnswers = parsed.answers;
         if (parsed.questionStatus) initialStatus = { ...initialStatus, ...parsed.questionStatus };
+        if (Array.isArray(parsed.questionOrder) && parsed.questionOrder.length > 0) {
+          cachedQuestionOrder = parsed.questionOrder;
+        }
         if (typeof parsed.timeRemainingSeconds === 'number' && parsed.timeRemainingSeconds > 0) {
           initialTimeRemaining = parsed.timeRemainingSeconds;
           // Bug fix: subtract actual wall-clock time elapsed since the last sync
@@ -63,6 +115,28 @@ export const useExamStore = create((set, get) => ({
       }
     }
 
+    // Determine final question order:
+    // 1. Cached in localStorage (preserves active candidate attempt across browser refresh)
+    // 2. Server attempt question order (synced from startAttempt)
+    // 3. Exam shuffle setting enabled (fresh client-side shuffle preserving subject groups)
+    // 4. Default original author sequence
+    let finalQuestions = rawQuestions;
+    if (cachedQuestionOrder) {
+      finalQuestions = applyQuestionOrder(rawQuestions, cachedQuestionOrder);
+    } else if (Array.isArray(serverQuestionOrder) && serverQuestionOrder.length > 0) {
+      finalQuestions = applyQuestionOrder(rawQuestions, serverQuestionOrder);
+    } else if (examData.shuffleQuestions) {
+      finalQuestions = shuffleQuestionsWithinSubjects(rawQuestions);
+    }
+
+    // Default status for all questions is NOT_VISITED except the first one which becomes NOT_ANSWERED
+    finalQuestions.forEach((q, idx) => {
+      const qId = q._id || q.id;
+      if (qId && !initialStatus[qId]) {
+        initialStatus[qId] = idx === 0 ? 'NOT_ANSWERED' : 'NOT_VISITED';
+      }
+    });
+
     // Dynamic timer cap: if exam is scheduled, time remaining cannot exceed the window's endTime
     if (examData.schedule?.isScheduled && examData.schedule?.endTime) {
       const scheduleEndMs = new Date(examData.schedule.endTime).getTime();
@@ -72,7 +146,7 @@ export const useExamStore = create((set, get) => ({
 
     set({
       exam: examData,
-      questions: validQuestions,
+      questions: finalQuestions,
       currentIndex: initialIndex,
       answers: initialAnswers,
       questionStatus: initialStatus,
@@ -83,6 +157,9 @@ export const useExamStore = create((set, get) => ({
     if (typeof window !== 'undefined') {
       localStorage.setItem('active_exam_id', examData._id);
     }
+
+    // Immediately persist ordered question sequence into local storage
+    get().syncToLocalStorage();
   },
 
   // Navigate directly to question index
@@ -271,7 +348,7 @@ export const useExamStore = create((set, get) => ({
 
   // Save current test progress into browser localStorage
   syncToLocalStorage: () => {
-    const { exam, answers, questionStatus, currentIndex, timeRemainingSeconds } = get();
+    const { exam, answers, questionStatus, currentIndex, timeRemainingSeconds, questions } = get();
     if (!exam?._id) return;
     try {
       const payload = {
@@ -279,6 +356,7 @@ export const useExamStore = create((set, get) => ({
         questionStatus,
         currentIndex,
         timeRemainingSeconds,
+        questionOrder: (questions || []).map((q) => q._id?.toString() || q.id?.toString()).filter(Boolean),
         updatedAt: Date.now()
       };
       localStorage.setItem(getStorageKey(exam._id), JSON.stringify(payload));

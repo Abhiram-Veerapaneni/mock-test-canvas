@@ -20,7 +20,8 @@ import {
   Check,
   Globe,
   Link2,
-  Lock
+  Lock,
+  Shuffle
 } from 'lucide-react';
 import { formatTime12h, formatDateTime12h } from '../../utils/dateUtils';
 
@@ -113,6 +114,13 @@ export default function ExamHeroSection({
               <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                 <ShieldCheck className="w-3.5 h-3.5 text-slate-500" />
                 <span>AI Proctored</span>
+              </div>
+            )}
+
+            {exam.shuffleQuestions && (
+              <div className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400">
+                <Shuffle className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Shuffled Questions</span>
               </div>
             )}
 

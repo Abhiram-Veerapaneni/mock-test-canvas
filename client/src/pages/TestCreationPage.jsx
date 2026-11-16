@@ -8,7 +8,6 @@ import TestSettingsTab from '../components/test-builder/TestSettingsTab';
 import QuestionsStudioTab from '../components/test-builder/QuestionsStudioTab';
 import TestCreationModals from '../components/test-builder/TestCreationModals';
 import useTestCreationDraft from '../hooks/useTestCreationDraft';
-import useTestCreationIngestion from '../hooks/useTestCreationIngestion';
 import useTestCreationSave from '../hooks/useTestCreationSave';
 import useTestCreationQuestions from '../hooks/useTestCreationQuestions';
 import useExistingExamLoader from '../hooks/useExistingExamLoader';
@@ -44,6 +43,7 @@ export default function TestCreationPage() {
   // Scheduling & Practice / Review preferences
   const [allowPracticeMode, setAllowPracticeMode] = useState(true);
   const [allowReviewResponses, setAllowReviewResponses] = useState(true);
+  const [shuffleQuestions, setShuffleQuestions] = useState(false);
   const [isScheduled, setIsScheduled] = useState(false);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
@@ -70,7 +70,6 @@ export default function TestCreationPage() {
   // Intentional Tab Layout & PDF Preview modal state
   const [activeStudioTab, setActiveStudioTab] = useState('questions'); // 'questions' | 'settings'
   const [isPDFModalOpen, setIsPDFModalOpen] = useState(false);
-  const [isDropzoneExpanded, setIsDropzoneExpanded] = useState(false);
   const [isQuestionBankModalOpen, setIsQuestionBankModalOpen] = useState(false);
 
   const originalExamRef = useRef(null);
@@ -88,7 +87,7 @@ export default function TestCreationPage() {
 
   const formData = {
     title, description, category, visibility, durationMinutes, correctMark, incorrectMark,
-    isUnlimitedAttempts, maxAttemptsValue, allowPracticeMode, allowReviewResponses,
+    isUnlimitedAttempts, maxAttemptsValue, allowPracticeMode, allowReviewResponses, shuffleQuestions,
     isScheduled, startTime, endTime, faceCheck, audioCheck, fullScreenLock,
     objectCheck, liveNotifications, questions, contributeAllToBank, activeStudioTab
   };
@@ -96,7 +95,7 @@ export default function TestCreationPage() {
   const formSetters = {
     setTitle, setDescription, setCategory, setVisibility, setDurationMinutes, setCorrectMark,
     setIncorrectMark, setIsUnlimitedAttempts, setMaxAttemptsValue, setAllowPracticeMode,
-    setAllowReviewResponses, setIsScheduled, setStartTime, setEndTime, setFaceCheck,
+    setAllowReviewResponses, setShuffleQuestions, setIsScheduled, setStartTime, setEndTime, setFaceCheck,
     setAudioCheck, setFullScreenLock, setObjectCheck, setLiveNotifications,
     setQuestions, setContributeAllToBank, setActiveStudioTab
   };
@@ -180,35 +179,6 @@ export default function TestCreationPage() {
     setError,
   });
 
-  // AI Ingestion Hook
-  const {
-    isIngesting,
-    ingestionStep,
-    ingestionError,
-    ingestionModalOpen,
-    setIngestionModalOpen,
-    ingestedQuestions,
-    setIngestedQuestions,
-    uploadedFileName,
-    dragActive,
-    setDragActive,
-    fileInputRef,
-    handleFileUpload,
-    handleFileDrop,
-    handleConfirmIngestedQuestions,
-  } = useTestCreationIngestion({
-    isAuthenticated,
-    openAuthModal,
-    contributeAllToBank,
-    questions,
-    setQuestions,
-    setHasUnsavedChanges,
-    hasUnsavedChangesRef,
-    setSuccessMsg,
-    saveDraftToStorage,
-    draftDataRef,
-  });
-
   // Save / Publish Hook
   const {
     isSaving,
@@ -235,6 +205,7 @@ export default function TestCreationPage() {
     maxAttemptsValue,
     allowPracticeMode,
     allowReviewResponses,
+    shuffleQuestions,
     isScheduled,
     startTime,
     endTime,
@@ -399,6 +370,8 @@ export default function TestCreationPage() {
             setAllowPracticeMode={setAllowPracticeMode}
             allowReviewResponses={allowReviewResponses}
             setAllowReviewResponses={setAllowReviewResponses}
+            shuffleQuestions={shuffleQuestions}
+            setShuffleQuestions={setShuffleQuestions}
             isScheduled={isScheduled}
             setIsScheduled={setIsScheduled}
             startTime={startTime}
@@ -425,16 +398,6 @@ export default function TestCreationPage() {
         {/* TAB 1: Questions & Content */}
         {activeStudioTab === 'questions' && (
           <QuestionsStudioTab
-            isDropzoneExpanded={isDropzoneExpanded}
-            setIsDropzoneExpanded={setIsDropzoneExpanded}
-            isIngesting={isIngesting}
-            ingestionStep={ingestionStep}
-            ingestionError={ingestionError}
-            dragActive={dragActive}
-            setDragActive={setDragActive}
-            fileInputRef={fileInputRef}
-            onFileUpload={handleFileUpload}
-            onFileDrop={handleFileDrop}
             onAddQuestion={handleAddQuestion}
             questions={questions}
             correctMark={correctMark}
@@ -487,14 +450,6 @@ export default function TestCreationPage() {
         onCloseEditModal={() => setEditingQuestionIndex(null)}
         lightboxImage={lightboxImage}
         onCloseLightbox={() => setLightboxImage(null)}
-        ingestionModalOpen={ingestionModalOpen}
-        uploadedFileName={uploadedFileName}
-        ingestedQuestions={ingestedQuestions}
-        onConfirmIngestedQuestions={handleConfirmIngestedQuestions}
-        onCloseIngestionModal={() => {
-          setIngestionModalOpen(false);
-          setIngestedQuestions([]);
-        }}
         showConfirmModal={showConfirmModal}
         onCloseConfirmModal={() => setShowConfirmModal(false)}
         onConfirmPublish={() => {

@@ -37,6 +37,8 @@ export default function TestSettingsTab({
   setAllowPracticeMode,
   allowReviewResponses,
   setAllowReviewResponses,
+  shuffleQuestions = false,
+  setShuffleQuestions,
   isScheduled,
   setIsScheduled,
   startTime,
@@ -584,6 +586,22 @@ export default function TestSettingsTab({
                 <span className="font-medium text-slate-900 dark:text-slate-100 block">Allow View Responses & Solutions</span>
                 <span className="text-xs text-slate-500 dark:text-slate-400 leading-normal mt-0.5 block">
                   Candidates can view their submission responses and comprehensive solutions after completing their test. {isScheduled ? 'For scheduled exams, solutions are released strictly after the scheduled window closes to prevent leaks.' : ''}
+                </span>
+              </div>
+            </label>
+
+            {/* Shuffle Questions Toggle */}
+            <label className="flex items-start gap-3 p-3 rounded-md bg-slate-50 dark:bg-[#162030] border border-slate-200/80 dark:border-slate-800/80 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={Boolean(shuffleQuestions)}
+                onChange={(e) => setShuffleQuestions && setShuffleQuestions(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-slate-900 focus:ring-indigo-500/20 focus:border-indigo-500"
+              />
+              <div className="flex-1 min-w-0">
+                <span className="font-medium text-slate-900 dark:text-slate-100 block">Shuffle Question Order</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 leading-normal mt-0.5 block">
+                  Randomize question order for each candidate to prevent peer collaboration. Questions are shuffled while maintaining subject section continuity.
                 </span>
               </div>
             </label>

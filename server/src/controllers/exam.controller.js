@@ -93,6 +93,7 @@ export const createExam = async (req, res) => {
       proctorSettings,
       allowPracticeMode = true,
       allowReviewResponses = true,
+      shuffleQuestions = false,
       schedule,
       questions
     } = req.body;
@@ -187,6 +188,7 @@ export const createExam = async (req, res) => {
       },
       allowPracticeMode: allowPracticeMode !== undefined ? Boolean(allowPracticeMode) : true,
       allowReviewResponses: allowReviewResponses !== undefined ? Boolean(allowReviewResponses) : true,
+      shuffleQuestions: Boolean(shuffleQuestions),
       contributeAllToBank: req.body.contributeAllToBank !== undefined ? Boolean(req.body.contributeAllToBank) : false,
       schedule: {
         isScheduled: Boolean(schedule?.isScheduled),
@@ -302,7 +304,7 @@ export const getAllExams = async (req, res) => {
 
     const total = await Exam.countDocuments(query);
     const exams = await Exam.find(query)
-      .select('title description category status durationMinutes totalMarks maxAttempts markingScheme proctorSettings allowPracticeMode allowReviewResponses schedule questions createdAt creatorId isGenerated isPublic visibility examType')
+      .select('title description category status durationMinutes totalMarks maxAttempts markingScheme proctorSettings allowPracticeMode allowReviewResponses shuffleQuestions schedule questions createdAt creatorId isGenerated isPublic visibility examType')
       .populate('creatorId', 'name')
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -340,6 +342,7 @@ export const getAllExams = async (req, res) => {
       proctorSettings: exam.proctorSettings,
       allowPracticeMode: exam.allowPracticeMode ?? true,
       allowReviewResponses: exam.allowReviewResponses ?? true,
+      shuffleQuestions: Boolean(exam.shuffleQuestions),
       schedule: exam.schedule || { isScheduled: false },
       questionCount: exam.questions?.length || 0,
       userAttemptCount: userAttemptMap[exam._id.toString()] || 0,
@@ -477,6 +480,7 @@ export const updateExam = async (req, res) => {
       proctorSettings,
       allowPracticeMode,
       allowReviewResponses,
+      shuffleQuestions,
       schedule,
       questions
     } = req.body;
@@ -510,6 +514,9 @@ export const updateExam = async (req, res) => {
     }
     if (allowReviewResponses !== undefined) {
       existingExam.allowReviewResponses = Boolean(allowReviewResponses);
+    }
+    if (shuffleQuestions !== undefined) {
+      existingExam.shuffleQuestions = Boolean(shuffleQuestions);
     }
     if (req.body.contributeAllToBank !== undefined) {
       existingExam.contributeAllToBank = Boolean(req.body.contributeAllToBank);

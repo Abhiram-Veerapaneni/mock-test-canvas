@@ -1,7 +1,6 @@
 import React from 'react';
 import QuestionEditModal from './QuestionEditModal';
 import ImageLightboxModal from './ImageLightboxModal';
-import IngestionReviewModal from './IngestionReviewModal';
 import ConfirmPublishModal from './ConfirmPublishModal';
 import LeaveDraftModal from './LeaveDraftModal';
 import QuestionPaperPDFModal from './QuestionPaperPDFModal';
@@ -38,11 +37,6 @@ export default function TestCreationModals({
   onCloseEditModal,
   lightboxImage,
   onCloseLightbox,
-  ingestionModalOpen,
-  uploadedFileName,
-  ingestedQuestions,
-  onConfirmIngestedQuestions,
-  onCloseIngestionModal,
   showConfirmModal,
   onCloseConfirmModal,
   onConfirmPublish,
@@ -91,18 +85,6 @@ export default function TestCreationModals({
         imageUrl={lightboxImage}
         onClose={onCloseLightbox}
       />
-
-      {/* Ingestion Review Studio Modal */}
-      {ingestionModalOpen && (
-        <IngestionReviewModal
-          isOpen={ingestionModalOpen}
-          fileName={uploadedFileName}
-          initialQuestions={ingestedQuestions}
-          defaultContributeToBank={contributeAllToBank}
-          onConfirm={onConfirmIngestedQuestions}
-          onClose={onCloseIngestionModal}
-        />
-      )}
 
       {/* Confirm Examination Settings Before Publishing Modal */}
       <ConfirmPublishModal

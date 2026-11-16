@@ -40,10 +40,9 @@ Built on **React 19**, **Tailwind CSS v4**, **Node.js/Express (ES Modules)**, an
 - 📷 **On-Device Vision & Audio AI Proctoring**: Client-side MediaPipe vision tracking (face absence, multiple occupants, gaze deviation), Web Audio API decibel monitoring, and automated Cloudinary snapshot evidence capture.
 - ⚖️ **Dynamic Trust Score Engine ($100 \rightarrow 0$)**: Proportional penalty system with 10-second anti-spam cooldowns, persistent cross-refresh violation logging, critical warning overlays, and automated test termination.
 - 🧮 **Deterministic Server-Side Grading Engine**: Strict answer-key projection safeguards preventing client-side network snooping, coupled with authentic marking scheme computation (+4 / -1, partial MSQ scoring, and NAT tolerance bounds).
-- 🤖 **Multimodal AI Question Ingestion**: Document extraction pipeline converting DOCX, PDF, and diagram images into structured LaTeX JSON tests via Google Gemini (with an automatic model fallback cascade).
 - 📚 **Centralized Question Bank & Dynamic Exam Generator**: Filterable shared repository with batch selection, direct draft export, and one-click random test synthesis.
 - 📡 **Live Proctor Supervision Console & Attempt Management**: Real-time WebSocket streaming (`violation:live`), candidate snapshot review, and educator attempt governance (Disqualify, Revoke, or Grant Retake).
-- 📊 **Performance Analytics & BYOK AI Pedagogical Explanations**: Score progression trends, subject mastery heatmaps, decile distribution histograms, global leaderboard with personalized rank pinning, and **Bring Your Own Key (BYOK)** Gemini AI step-by-step solutions with zero server storage.
+- 📊 **Performance Analytics & BYOK AI Pedagogical Explanations**: Category-wise performance analytics, strongest subject and priority revision focus indicators, chronological attempt history, and **Bring Your Own Key (BYOK)** Gemini AI step-by-step solutions with zero server storage.
 
 ---
 
@@ -104,34 +103,28 @@ Built on **React 19**, **Tailwind CSS v4**, **Node.js/Express (ES Modules)**, an
   - Numerical range bounds verification for NAT questions.
 - **Attempt History & Auditing**: Tracks historical attempts, scores, time spent per question, accuracy percentages, and photographic violation logs.
 
-### 6. 🤖 Multimodal AI Question Ingestion (Gemini 2.5 / 3.8 Flash)
-- **Multi-Format Document Parsing**: Upload raw `.docx`, `.pdf`, or scanned question diagram images directly into the Test Creator studio (`/create-test`).
-- **Automated Structuring**: Google Gemini extracts question statements, options, correct keys, and step-by-step solutions into structured JSON schema with LaTeX formulas.
-- **Automatic Model Fallback Cascade**: If a configured model is busy or rate-limited, the backend automatically cascades through fallback models (`gemini-2.5-flash-lite`, `gemini-flash-latest`, `gemini-3.6-flash`, `gemini-2.5-flash`).
-- **Ingestion Review Studio**: Interactive modal preview allowing educators to review, edit, discard, or batch-import AI-extracted questions before publishing.
-
-### 7. 📚 Centralized Question Bank & Dynamic Test Generator
+### 6. 📚 Centralized Question Bank & Dynamic Test Generator
 - **Global Question Repository (`/question-bank`)**: Search and filter thousands of questions across categories, subjects, topics, and difficulty levels.
 - **Batch Selection & Direct Draft Export**: Select multiple questions with checkbox controls to bulk-tag, bulk-delete, or export directly into a new or active Test Creator draft.
 - **Dynamic Exam Synthesis (`/api/questions/generate-exam`)**: Automatically generate balanced, full-length mock tests on the fly matching specified subjects, streams, and question counts.
 - **Cloud Diagram Management**: Direct image uploads to Cloudinary for circuit diagrams, chemical reaction mechanisms, and geometric figures.
 
-### 8. 📡 Live Proctor Workstation & Attempt Governance
+### 7. 📡 Live Proctor Workstation & Attempt Governance
 - **Real-Time WebSocket Streaming**: Dispatches instant `violation:live` socket alerts to exam creators when candidates commit infractions.
 - **Dedicated Live Monitor (`/test/:testId/live`)**: Real-time supervision dashboard displaying connected test takers, live trust score gauges, telemetry KPIs, and camera snapshot feeds.
 - **Attempt Revocation & Retake Engine**: Exam creators can review candidate attempts, revoke disqualified attempts, or grant fresh retakes (`RESET_FOR_RETAKE`, `DISQUALIFY`, or `RESTORE`) with reason tracking and automated candidate notifications.
 - **Comprehensive Audit Dashboard (`/test/:testId/audit`)**: Timestamped violation timelines, photographic evidence gallery, and score reports for post-test integrity verification.
 
-### 9. 📊 Performance Analytics & BYOK AI Pedagogical Explanations
+### 8. 📊 Performance Analytics & BYOK AI Pedagogical Explanations
 - **Bring Your Own Key (BYOK) Architecture**: Candidates can supply their personal Google Gemini API key to unlock on-demand, step-by-step pedagogical solutions directly in post-exam review sheets.
 - **Zero Server Retention Guarantee**: The key is stored locally in the candidate's browser, transmitted via the `X-Gemini-Key` header, instantiated in ephemeral server memory per-request, and instantly garbage-collected without ever being saved to database or logs. Automatically purged on logout.
 - **Model Choice & Fallback**: Defaults to `gemini-3.8-flash` with minimal thinking configuration for instant, low-latency Server-Sent Events (SSE) streaming, cascading gracefully to `gemini-3.5-flash-lite`, `gemini-flash-latest`, and `gemini-2.5-flash-lite`.
-- **Chronological Score Progression**: Interactive Recharts visualization mapping performance trajectories across official and practice attempts.
-- **Subject Mastery & Topic Heatmap**: Dynamic aggregation evaluating subject streams and question tags to highlight weaknesses and track 14-day study streaks.
-- **Decile Score Distribution Histogram**: Exam-level distribution histogram bucketing candidate scores into 10 deciles (0–10% through 91–100%).
-- **Global Official Leaderboard**: Cheat-resilient standings table grouping official attempt performance across all candidates with personalized rank pinning.
+- **Category & Stream Analytics**: Track candidate performance across Engineering (JEE), Medical (NEET), and Aptitude (GATE) streams with net accuracy and attempt metrics.
+- **Subject Mastery & Diagnostic Insights**: Identifies candidate's strongest subject benchmark alongside weak areas flagged for priority revision.
+- **Subject-Wise Question Breakdown**: Granular evaluation of accuracy percentages, answered quotas, and syllabus distribution across core subjects.
+- **Attempt History & Scorecard Log**: Chronological attempt log with direct links to question-by-question review and step-by-step solutions.
 
-### 10. 🔐 Dual Authentication & Access Governance
+### 9. 🔐 Dual Authentication & Access Governance
 - Traditional registration/login with email, **bcrypt** salted password hashing, and email OTP verification.
 - Native **Google OAuth 2.0** integration (`google-auth-library`) for instant one-tap candidate sign-in.
 - Stateless, cryptographically signed JSON Web Tokens (JWT) stored in secure cookies or `Authorization: Bearer` headers.
@@ -147,7 +140,7 @@ Built on **React 19**, **Tailwind CSS v4**, **Node.js/Express (ES Modules)**, an
 ```mermaid
 graph TD
     subgraph Client ["Client (React 19 + Vite 8 + Tailwind CSS v4)"]
-        UI[Exam Canvas, Catalog, Studio & Analytics UI]
+        UI[Exam Canvas, Catalog, Question Bank & Analytics UI]
         Store[Zustand Stores: Auth / Exam / Proctor / Notif]
         Worker[Dedicated Web Worker: Drift-Free Timer]
         Vision[MediaPipe Edge Vision: Face & Gaze Tracking]
@@ -168,8 +161,8 @@ graph TD
         SocketServer[Socket.IO Real-Time Gateway]
         AuthCtrl[Auth Controller: JWT + Google + OTP]
         ExamCtrl[Exam Controller: Catalog, Visibility & Authoring]
+        QuestionCtrl[Question Controller: Bank & Dynamic Generator]
         SubCtrl[Submission Controller: Grader & Revocation Engine]
-        AICtrl[AI Ingestion Controller: Gemini GenAI]
         AnalyticsCtrl[Analytics Controller: Metrics & BYOK SSE Proxy]
         GradingService[Deterministic Grading Service]
     end
@@ -177,7 +170,7 @@ graph TD
     subgraph Cloud ["Cloud & Third-Party Infrastructure"]
         Mongo[(MongoDB Atlas Database)]
         Cloudinary[(Cloudinary Snapshot CDN)]
-        Gemini[Google Gemini 3.8 / 2.5 Flash API]
+        Gemini[Google Gemini 3.8 / 2.5 Flash API - BYOK Solutions]
         Vercel[Vercel Edge CDN - Frontend]
         Render[Render Web Service - API]
     end
@@ -194,8 +187,8 @@ graph TD
     RateLimiter --> Sanitizer
     Router --> AuthCtrl
     Router --> ExamCtrl
-    Router --> AICtrl --> Gemini
-    Router --> AnalyticsCtrl
+    Router --> QuestionCtrl
+    Router --> AnalyticsCtrl --> Gemini
     Router --> SubCtrl --> GradingService
     SubCtrl --> Cloudinary
     Server --> Mongo
@@ -281,11 +274,11 @@ stateDiagram-v2
 | **Math Typography** | **KaTeX 0.18** | High-speed, TeX-compliant math formula rendering for complex STEM equations and notation. |
 | **Edge AI Vision** | **@mediapipe/tasks-vision** | On-device face presence, multiple face detection, and head pose/gaze tracking. |
 | **Real-time WebSockets** | **Socket.io + Client 4.8** | Real-time candidate proctoring alerts (`violation:live`), room synchronization, and notifications. |
-| **Data Visualization** | **Recharts 3.10** | Accuracy trends, subject-wise score matrices, decile distribution histograms, and attempt telemetry charts. |
+| **Data Visualization** | **Recharts 3.10** | Accuracy trends, subject-wise score matrices, and attempt telemetry charts. |
 | **Backend Framework**| **Node.js + Express 4.21** | ES Modules server with async routing, structured JSON middleware, and central error handling. |
 | **Database & ODM** | **MongoDB Atlas + Mongoose 8.9** | Cloud document database with strict schemas (`User`, `Exam`, `Question`, `Attempt`, `Notification`, `Otp`). |
 | **Authentication** | **JWT + Google Auth Library** | Dual stateless auth: 30-day signed tokens + Google OAuth ID Token verification + Email OTP. |
-| **AI Integration** | **@google/genai (Gemini API)** | Multimodal question extraction pipeline and BYOK pedagogical explanation streaming proxy. |
+| **AI Integration** | **@google/genai (Gemini API)** | Bring Your Own Key (BYOK) on-demand pedagogical explanation streaming proxy with zero server storage. |
 | **Cloud Storage** | **Cloudinary v2** | Automated hosting of proctoring violation webcam snapshots and question diagram media. |
 | **Hosting & CI/CD** | **Vercel (Client) + Render (API)** | Production edge routing with HTTPS and CORS parity. |
 
@@ -297,17 +290,15 @@ stateDiagram-v2
 | :--- | :--- | :--- | :--- |
 | **`express`** | `^4.21.2` | Web Framework | Core backend HTTP framework handling routes, controllers, middleware execution, and REST API endpoints. |
 | **`mongoose`** | `^8.9.5` | Database ODM | Connects to MongoDB, manages schemas, validation, relationships, and queries for users, exams, questions, and attempts. |
-| **`@google/genai`** | `latest` | AI / LLM SDK | Official Google Gemini API SDK used for automated question ingestion, test diagnostics, and step-by-step explanations. |
+| **`@google/genai`** | `latest` | AI / LLM SDK | Official Google Gemini API SDK used for BYOK on-demand pedagogical step-by-step solutions and mathematical explanations in exam review. |
 | **`jsonwebtoken`** | `^9.0.3` | Authentication | Issues, signs, and cryptographically verifies stateless JSON Web Tokens (JWT) for secure user sessions. |
 | **`bcryptjs`** | `^3.0.3` | Security | Hashes candidate passwords with cryptographic salts before storage and validates credentials upon sign-in. |
 | **`google-auth-library`** | `^11.0.2` | Authentication | Verifies Google OAuth 2.0 ID tokens sent from the frontend for seamless one-tap Google SSO sign-in. |
 | **`cookie-parser`** | `^1.4.7` | Middleware | Parses incoming HTTP request cookies (`req.cookies`), allowing secure `httpOnly` JWT tokens to be read by the server. |
 | **`cors`** | `^2.8.5` | Security / Networking | Cross-Origin Resource Sharing middleware enabling safe communication between frontend origins and Express backend. |
 | **`express-rate-limit`** | `^7.5.0` | Security | Rate limiting middleware keyed by authenticated user ID (with IP fallback) protecting against brute force and abuse. |
-| **`multer`** | `^2.3.0` | File Handling | Middleware for handling `multipart/form-data` uploads (question paper files, documents, and student profile images). |
+| **`multer`** | `^2.3.0` | File Handling | Middleware for handling `multipart/form-data` uploads (question diagram images and student profile avatars). |
 | **`cloudinary`** | `^2.11.0` | Cloud Storage | Cloud asset management SDK used to upload, host, and serve user profile pictures, question diagrams, and proctoring snapshots. |
-| **`mammoth`** | `^1.12.2` | Document Parsing | Extracts raw text from uploaded `.docx` Word documents so the AI engine can structure them into questions. |
-| **`pdf-parse`** | `^1.1.1` | Document Parsing | Extracts text content from uploaded `.pdf` documents to ingest question banks and past exam papers. |
 | **`nodemailer`** | `^10.0.10` | Email Service | Sends transactional emails over SMTP / API (email verification codes, OTPs, and password reset links). |
 | **`socket.io`** | `^4.8.3` | Real-time WebSockets | Manages bidirectional WebSocket connections for real-time proctoring monitoring, live test synchronization, and instant alerts. |
 | **`dotenv`** | `^16.4.7` | Configuration | Loads environment variables from `.env` into `process.env` (database URIs, secrets, API keys). |
@@ -324,7 +315,7 @@ stateDiagram-v2
 | **`axios`** | `^1.20.0` | HTTP Client | Promise-based HTTP client for making API requests with pre-configured base URLs, credentials, and interceptors. |
 | **`@mediapipe/tasks-vision`** | `^1.0.1` | AI / Computer Vision | Runs on-device vision models in the browser (face detection and head pose tracking) for low-latency automated webcam proctoring. |
 | **`socket.io-client`** | `^4.8.3` | Real-time WebSockets | Connects to the backend WebSocket server for receiving instant proctoring warnings and live session synchronization. |
-| **`recharts`** | `^3.10.1` | Data Visualization | Renders interactive charts (accuracy trends, decile histograms, and performance breakdowns) in analytics views. |
+| **`recharts`** | `^3.10.1` | Data Visualization | Renders interactive performance charts, accuracy trends, and subject breakdowns in analytics views. |
 | **`katex`** | `^0.18.1` | Math Typesetting | High-performance LaTeX rendering engine for formatting mathematical formulas, equations, and Greek symbols. |
 | **`lucide-react`** | `^1.28.0` | UI Icons | Modern SVG icon library providing clean, consistent icons across buttons, inputs, alerts, and navigation. |
 | **`canvas-confetti`** | `^1.9.4` | UI Effects | Renders celebratory confetti particles on completion of an exam or achievement of a high score. |
@@ -462,6 +453,12 @@ client/
     │   │   ├── QuestionCanvas.jsx         # Core question layout, math engine & options
     │   │   └── QuestionPalette.jsx        # Question grid navigation (Answered, Marked, Review)
     │   │
+    │   ├── exam-review/                   # Post-exam question review & pedagogical breakdowns
+    │   │   ├── ResponseQuestionCard.jsx   # Detailed question review card with option validation
+    │   │   ├── ResponseQuestionNavigator.jsx # Question navigation grid palette in review
+    │   │   ├── ResponseScoreBanner.jsx    # Graded score banner with accuracy & time spent
+    │   │   └── SubjectTopicReviewBreakdown.jsx # Subject & topic diagnostic breakdown table
+    │   │
     │   ├── proctoring/                    # Automated AI integrity & webcam monitoring
     │   │   ├── CameraMonitor.jsx          # Live webcam feed, face detection & gaze tracker
     │   │   ├── ExamLiveMonitorModal.jsx   # Proctor live supervisor console view
@@ -489,13 +486,8 @@ client/
     │   │   └── NotificationSnapshotModal.jsx # Incident snapshot preview modal
     │   │
     │   ├── analytics/                     # Performance analytics & AI pedagogical explanations
-    │   │   ├── AccuracyHeatmap.jsx        # Topic mastery matrix & 14-day study activity calendar
     │   │   ├── AIExplainPanel.jsx         # On-demand BYOK Gemini AI pedagogical solution generator
-    │   │   ├── ExamInsightsPanel.jsx      # Per-exam deep dive, decile histogram & subject breakdowns
-    │   │   ├── GeminiKeyModal.jsx         # Bring Your Own Key (BYOK) credential manager & model picker
-    │   │   ├── LeaderboardTable.jsx       # Global official standings table with user rank pinning
-    │   │   ├── ScoreTrendChart.jsx        # Recharts chronological score progression (Official vs Practice)
-    │   │   └── StreamAccuracyChart.jsx    # Horizontal subject/stream accuracy & mastery bars
+    │   │   └── GeminiKeyModal.jsx         # Bring Your Own Key (BYOK) credential manager & model picker
     │   │
     │   ├── question-bank/                 # Centralized question repository & generator
     │   │   ├── AddQuestionModal.jsx       # Modal form to author new questions to the bank
@@ -507,8 +499,7 @@ client/
     │   │   ├── QuestionBankCard.jsx       # Question card with preview, tags & metadata
     │   │   └── QuestionBankSidebar.jsx    # Subject, stream, and difficulty filter sidebar
     │   │
-    │   └── test-builder/                  # Interactive test creation & AI question authoring
-    │       ├── AIDropzoneCard.jsx         # AI drag-and-drop document upload (PDF/Word/Images)
+    │   └── test-builder/                  # Interactive test creation studio
     │       ├── ConfirmPublishModal.jsx    # Final publishing confirmation dialog
     │       ├── DraftRestoredToast.jsx     # Auto-save recovery notification toast
     │       ├── EditQuestionMetaFields.jsx # Edit-mode question metadata fields
@@ -516,7 +507,6 @@ client/
     │       ├── EditQuestionStatementEditor.jsx # Edit-mode statement editor
     │       ├── ImageLightboxModal.jsx     # Zoomable lightbox modal for question diagram images
     │       ├── ImportQuestionBankModal.jsx# Search and import items from Question Bank into draft
-    │       ├── IngestionReviewModal.jsx   # AI-extracted question review, correction & import
     │       ├── LeaveDraftModal.jsx        # Warning modal when leaving test studio with unsaved work
     │       ├── ManualQuestionForm.jsx     # Question builder with live KaTeX preview
     │       ├── QuestionEditModal.jsx      # Modal dialog for editing existing questions
@@ -525,7 +515,7 @@ client/
     │       ├── QuestionMetaFields.jsx     # Question-level subject, difficulty & marks settings
     │       ├── QuestionOptionsEditor.jsx  # Option cards, LaTeX options & correct answer keys
     │       ├── QuestionPaperPDFModal.jsx  # Print / PDF preview modal for authoring review
-    │       ├── QuestionsStudioTab.jsx     # Tab wrapper coordinating AI ingestion & manual builder
+    │       ├── QuestionsStudioTab.jsx     # Tab wrapper coordinating question authoring & bank import
     │       ├── QuestionStatementEditor.jsx# Rich LaTeX statement input with equation toolbar
     │       ├── TestCreationHeader.jsx     # Studio top navigation, draft status & publish button
     │       ├── TestCreationModals.jsx     # Centralized wrapper for test authoring dialogs
@@ -544,7 +534,6 @@ client/
     │   ├── useLiveProctorFeed.js          # Socket.io connection & real-time violation listener
     │   ├── useManualQuestionDraft.js      # Auto-save draft hook for question authoring
     │   ├── useTestCreationDraft.js        # LocalStorage auto-save & draft restoration for exams
-    │   ├── useTestCreationIngestion.js    # Gemini document upload & question parsing hook
     │   ├── useTestCreationQuestions.js    # Question list manipulation (add, reorder, delete)
     │   ├── useTestCreationSave.js         # Exam publish validation & API persistence hook
     │   └── useVisionProctor.js            # MediaPipe face presence & gaze deviation hook
@@ -561,7 +550,7 @@ client/
     │   ├── NotificationsPage.jsx          # User notifications center & system alerts
     │   ├── ProfilePage.jsx                # User account details, avatar, stats & password settings
     │   ├── QuestionBankPage.jsx           # Centralized question repository & search portal
-    │   ├── TestCreationPage.jsx           # Test authoring studio with AI ingestion & live preview
+    │   ├── TestCreationPage.jsx           # Test authoring studio & live KaTeX preview
     │   └── UnderDevelopmentPage.jsx       # Feature placeholder page
     │
     ├── services/
@@ -584,7 +573,9 @@ client/
     ├── utils/
     │   ├── auditConstants.js              # Violation penalty points, trust thresholds & codes
     │   ├── dateUtils.js                   # Date formatting, relative time & countdown helpers
-    │   └── printPreview.js                # Print styling & paper preview generation helpers
+    │   ├── geminiKey.js                   # Client-side BYOK key management, model picker & storage
+    │   ├── printPreview.js                # Print styling & paper preview generation helpers
+    │   └── testDraftHelper.js             # Test creation draft serialization & normalization helpers
     │
     └── workers/
         └── timer.worker.js                # High-precision performance.now() countdown clock
@@ -604,7 +595,6 @@ server/
     │   └── cloudinary.js                  # Cloudinary SDK config for violation snapshots & media
     │
     ├── controllers/
-    │   ├── ai.controller.js               # Gemini AI document parsing & automated question ingestion
     │   ├── analytics.controller.js        # Personal analytics, exam insights, leaderboard & BYOK AI explain proxy
     │   ├── auth.controller.js             # Registration, login, Google OAuth, OTP, profile & tokens
     │   ├── exam.controller.js             # Exam CRUD, catalog listing, visibility & sanitized delivery
@@ -626,7 +616,6 @@ server/
     │   └── User.model.js                  # User profiles, bcrypt credentials & attempt counts
     │
     ├── routes/
-    │   ├── ai.routes.js                   # /api/ai endpoints for Gemini AI ingestion
     │   ├── analytics.routes.js            # /api/analytics endpoints (insights, leaderboard, AI explain)
     │   ├── auth.routes.js                 # /api/auth endpoints (register, login, google, otp, profile)
     │   ├── exam.routes.js                 # /api/exams endpoints (CRUD, media, live-violations)
@@ -642,7 +631,6 @@ server/
     │
     ├── services/
     │   ├── emailService.js                # Nodemailer / Resend / Brevo transactional email delivery
-    │   ├── gemini.service.js              # Google Gemini GenAI SDK wrapper & prompt engineering
     │   └── grading.service.js             # Server-side deterministic grading (+4/-1, NAT, MSQ)
     │
     └── utils/
@@ -682,11 +670,6 @@ GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-
-# Google Gemini API (for AI Question Paper Document/Image/PDF Ingestion)
-# Obtain a free API key at: https://aistudio.google.com/
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash-lite
 
 # Optional: Transactional Email Service for OTP verification & alerts
 # Option A: Resend API (Recommended for production)
@@ -841,15 +824,9 @@ All API endpoints are prefixed with `/api`. Protected routes require an authenti
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/analytics/me` | Protected | Retrieve candidate performance summary, score progression trend, stream accuracy, tag matrix, and daily streak. |
-| `GET` | `/api/analytics/exam/:examId` | Protected | Retrieve per-exam metrics, score distribution histogram (deciles), and topic answer breakdown. |
+| `GET` | `/api/analytics/exam/:examId` | Protected | Retrieve per-exam metrics, candidate percentile rankings, and topic answer breakdown. |
 | `GET` | `/api/analytics/leaderboard` | Public / Optional Auth | Retrieve global official leaderboard rankings (top 50 + authenticated candidate's rank). |
 | `POST` | `/api/analytics/ai-explain` | Protected | BYOK Gemini proxy: generates on-demand pedagogical explanation with LaTeX math using client-supplied API key. Zero server storage. |
-
-### 🤖 AI Document Ingestion (`/api/ai`)
-
-| Method | Endpoint | Access | Description |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/ai/ingest` | Protected | Upload DOCX, PDF, or image file; extracts structured LaTeX questions via Gemini with automatic fallback cascade. |
 
 ### 🔔 Notifications Endpoints (`/api/notifications`)
 
@@ -902,7 +879,7 @@ This populates the database with real questions including LaTeX mathematical for
 2. Connect your GitHub repository and set the **Root Directory** to `server`.
 3. Set **Build Command** to `npm install`.
 4. Set **Start Command** to `npm start`.
-5. Add all environment variables from `server/.env` (`MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `NODE_ENV=production`).
+5. Add all environment variables from `server/.env` (`MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `NODE_ENV=production`).
 6. Deploy and copy your service URL (e.g. `https://mock-test-canvas.onrender.com`).
 
 ---
@@ -916,8 +893,8 @@ This populates the database with real questions including LaTeX mathematical for
 - [x] **Phase 5**: Exam Authoring Studio, customizable marking schemes, attempt quota restrictions.
 - [x] **Phase 6**: Deterministic Server-Side Grading Engine & Historical Attempt Review Breakdown.
 - [x] **Phase 7**: Edge ML Computer Vision Proctoring (MediaPipe Face & Gaze Tracking, Audio Anomaly Hook, Cloudinary Snapshot Evidence).
-- [x] **Phase 8**: Automated AI Question Paper Ingestion (DOCX, PDF & image OCR to structured LaTeX JSON via Gemini with model fallback).
-- [x] **Phase 9**: Performance Analytics & AI-Powered Solutions (BYOK Gemini API key proxy, score progression trends, subject mastery, decile score distribution histogram, global official leaderboard, and on-demand AI pedagogical explanations in exam review).
+- [x] **Phase 8**: Centralized Question Bank & Dynamic Exam Synthesis (Subject stream filtering, random test assembly, KaTeX formula authoring).
+- [x] **Phase 9**: Performance Analytics & AI-Powered Solutions (BYOK Gemini API key proxy, score progression trends, subject mastery, global official leaderboard, and on-demand AI pedagogical explanations in exam review).
 - [x] **Phase 10**: Attempt Governance & Visibility Controls (Shared-link unlisted access, creator attempt revocation & retake resets, user-scoped rate limiting, and question bank batch export).
 - [ ] **Phase 11**: Dynamic Question & Option Shuffling Engine (Per-candidate order jumbling, option randomization & attempt seed persistence for anti-collusion).
 

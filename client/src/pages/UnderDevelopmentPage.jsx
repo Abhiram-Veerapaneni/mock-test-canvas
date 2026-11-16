@@ -238,7 +238,7 @@ export default function UnderDevelopmentPage({ featureKey }) {
               Ready to test the live examination features right now?
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              You can immediately compose KaTeX papers with AI ingestion or run candidate proctored sessions.
+              You can immediately compose KaTeX papers with Question Bank or run candidate proctored sessions.
             </p>
           </div>
           <div className="flex items-center gap-2.5">

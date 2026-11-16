@@ -1,15 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Layers,
-  Tag,
+  BarChart3,
   ChevronDown,
   ChevronUp,
   Filter,
-  RotateCcw,
-  Clock,
-  TrendingDown,
-  CheckCircle2,
-  AlertTriangle
+  RotateCcw
 } from 'lucide-react';
 
 export default function SubjectTopicReviewBreakdown({
@@ -20,26 +15,13 @@ export default function SubjectTopicReviewBreakdown({
   onSelectTopic,
   onScrollToQuestion
 }) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  // Format seconds to readable mm:ss
-  const formatSeconds = (sec) => {
-    if (!sec || sec <= 0) return '0s';
-    const m = Math.floor(sec / 60);
-    const s = Math.round(sec % 60);
-    if (m === 0) return `${s}s`;
-    return `${m}m ${s}s`;
-  };
-
-  // 1. Group by Subject with Testbook/Allen-style Diagnostic Metrics
+  // 1. Group by Subject with Diagnostic Metrics
   const { subjectStats, overallDiagnostics } = useMemo(() => {
     const map = new Map();
     let totalPositiveMarks = 0;
     let totalNegativeMarks = 0;
-    let correctTimeSec = 0;
-    let incorrectTimeSec = 0;
-    let totalCorrectCount = 0;
-    let totalIncorrectCount = 0;
 
     questions.forEach((q) => {
       const subj = q.subject || 'General';
@@ -53,14 +35,11 @@ export default function SubjectTopicReviewBreakdown({
           unanswered: 0,
           positiveMarks: 0,
           negativeMarks: 0,
-          netMarks: 0,
-          timeSpentSeconds: 0
+          netMarks: 0
         });
       }
       const entry = map.get(subj);
       entry.total += 1;
-      const timeSpent = Number(q.timeSpentSeconds) || 0;
-      entry.timeSpentSeconds += timeSpent;
 
       const marksAwarded = Number(q.marksAwarded) || 0;
       if (q.isAnswered) {
@@ -69,15 +48,11 @@ export default function SubjectTopicReviewBreakdown({
           entry.correct += 1;
           entry.positiveMarks += Math.max(0, marksAwarded);
           totalPositiveMarks += Math.max(0, marksAwarded);
-          correctTimeSec += timeSpent;
-          totalCorrectCount += 1;
         } else {
           entry.incorrect += 1;
           const penalty = Math.abs(Math.min(0, marksAwarded));
           entry.negativeMarks += penalty;
           totalNegativeMarks += penalty;
-          incorrectTimeSec += timeSpent;
-          totalIncorrectCount += 1;
         }
       } else {
         entry.unanswered += 1;
@@ -94,9 +69,7 @@ export default function SubjectTopicReviewBreakdown({
       subjectStats: stats,
       overallDiagnostics: {
         totalPositiveMarks,
-        totalNegativeMarks,
-        avgTimeOnCorrect: totalCorrectCount > 0 ? Math.round(correctTimeSec / totalCorrectCount) : 0,
-        avgTimeOnIncorrect: totalIncorrectCount > 0 ? Math.round(incorrectTimeSec / totalIncorrectCount) : 0
+        totalNegativeMarks
       }
     };
   }, [questions]);
@@ -135,107 +108,107 @@ export default function SubjectTopicReviewBreakdown({
 
     return Array.from(map.values()).map((t) => ({
       ...t,
-      // Allen/Testbook status: Mastered (100% correct), Needs Revision (any incorrect), Unexplored
       status: t.correct === t.total ? 'MASTERED' : t.incorrect > 0 ? 'NEEDS_REVISION' : 'UNEXPLORED'
     }));
   }, [questions]);
 
   if (!questions || questions.length === 0) return null;
 
+  const isFiltered = selectedSubject !== 'ALL' || selectedTopic !== 'ALL';
+  const needsRevisionCount = topicStats.filter((t) => t.status === 'NEEDS_REVISION').length;
+
   return (
-    <div className="rounded-lg bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none p-5 sm:p-6 space-y-5">
-      {/* Header bar aligned with ResponseScoreBanner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
-        <div>
-          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 block mb-0.5">
-            Diagnostic Breakdown
-          </span>
-          <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-            Subject Performance & Topic Insights
+    <div className="rounded-xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_16px_rgba(0,0,0,0.02)] dark:bg-[#131926] dark:border-slate-800/80 dark:shadow-none overflow-hidden transition-all duration-200">
+      {/* Sleek Low-Profile Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-4 py-2.5 sm:px-5 sm:py-3 bg-white dark:bg-[#131926]">
+        {/* Left: Section Icon, Title & Live Micro-Stats */}
+        <div className="flex items-center gap-2.5 flex-wrap min-w-0">
+          <div className="w-6 h-6 rounded-md bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/40 flex items-center justify-center shrink-0">
+            <BarChart3 className="w-3.5 h-3.5" />
+          </div>
+
+          <h2 className="text-xs sm:text-sm font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            Subject & Topic Diagnostics
           </h2>
+
+          {/* Quick-Glance Summary Preview Strip */}
+          <div className="hidden md:flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 font-mono pl-1">
+            <span className="text-slate-300 dark:text-slate-700">•</span>
+            <span>{subjectStats.length} Subject{subjectStats.length !== 1 ? 's' : ''}</span>
+            <span className="text-slate-300 dark:text-slate-700">•</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">+{overallDiagnostics.totalPositiveMarks} Gross</span>
+            <span className="text-slate-300 dark:text-slate-700">•</span>
+            <span className="text-rose-600 dark:text-rose-400 font-semibold">-{overallDiagnostics.totalNegativeMarks} Penalty</span>
+          </div>
+
+          {/* Active Filter Pill */}
+          {isFiltered && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+              <Filter className="w-2.5 h-2.5" />
+              <span>{selectedTopic !== 'ALL' ? selectedTopic : selectedSubject}</span>
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          {(selectedSubject !== 'ALL' || selectedTopic !== 'ALL') && (
+        {/* Right: Actions & Expand/Collapse Toggle */}
+        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+          {isFiltered && (
             <button
               type="button"
               onClick={() => {
                 onSelectSubject?.('ALL');
                 onSelectTopic?.('ALL');
               }}
-              className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline px-2 py-1 rounded transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 px-2 py-1 rounded transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Reset Filters</span>
+              <span>Reset</span>
             </button>
           )}
+
           <button
             type="button"
             onClick={() => setIsExpanded((prev) => !prev)}
-            className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            title={isExpanded ? 'Collapse Analysis' : 'Expand Analysis'}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100/80 hover:bg-slate-200/80 dark:bg-slate-800/80 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80 transition-all cursor-pointer shadow-2xs"
+            title={isExpanded ? 'Collapse Diagnostics' : 'Expand Diagnostics'}
           >
-            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            <span>{isExpanded ? 'Hide Details' : 'View Breakdown'}</span>
+            {isExpanded ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
           </button>
         </div>
       </div>
 
+      {/* Expanded Diagnostic Details */}
       {isExpanded && (
-        <div className="space-y-6">
-          {/* 1. Testbook-style Diagnostic Insight Pill Rows */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-200/80 dark:divide-slate-800/80 border border-slate-200/80 dark:border-slate-800/80 rounded-lg bg-slate-50/50 dark:bg-[#162030]/50 text-center">
-            <div className="p-3">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block">Gross Marks</span>
-              <span className="text-lg font-semibold tracking-tight text-emerald-600 dark:text-emerald-400 font-mono mt-0.5 block">
-                +{overallDiagnostics.totalPositiveMarks}
+        <div className="border-t border-slate-100 dark:border-slate-800/80 p-4 sm:p-5 space-y-4 bg-slate-50/30 dark:bg-transparent">
+          {/* 1. Compact Subject Scorecard Table */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Subject-wise Scorecard
               </span>
-            </div>
-            <div className="p-3">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block">Negative Penalty</span>
-              <span className="text-lg font-semibold tracking-tight text-rose-600 dark:text-rose-400 font-mono mt-0.5 block">
-                -{overallDiagnostics.totalNegativeMarks}
-              </span>
-            </div>
-            <div className="p-3">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block">Avg Time on Correct</span>
-              <span className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100 font-mono mt-0.5 block">
-                {formatSeconds(overallDiagnostics.avgTimeOnCorrect)}
-              </span>
-            </div>
-            <div className="p-3">
-              <span className="text-[10px] font-medium uppercase tracking-wider text-slate-400 block">Avg Time on Incorrect</span>
-              <span className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100 font-mono mt-0.5 block">
-                {formatSeconds(overallDiagnostics.avgTimeOnIncorrect)}
-              </span>
-            </div>
-          </div>
-
-          {/* 2. Subject Scorecard Table */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Subject-wise Scorecard (Click to filter questions)
-              </span>
-              <span className="text-slate-400 font-mono">
-                {subjectStats.length} subject{subjectStats.length !== 1 ? 's' : ''}
+              <span className="text-slate-400 font-normal text-[11px]">
+                (click row to filter)
               </span>
             </div>
 
-            <div className="overflow-x-auto border border-slate-200/80 dark:border-slate-800/80 rounded-lg">
+            <div className="overflow-x-auto border border-slate-200/80 dark:border-slate-800/80 rounded-lg bg-white dark:bg-[#131926]">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50/80 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300 font-semibold border-b border-slate-200/80 dark:border-slate-800/80">
                   <tr>
-                    <th className="py-2.5 px-3">Subject</th>
-                    <th className="py-2.5 px-3 text-center">Questions</th>
-                    <th className="py-2.5 px-3 text-center">Attempted</th>
-                    <th className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400">Correct</th>
-                    <th className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400">Incorrect</th>
-                    <th className="py-2.5 px-3 text-center text-slate-400">Skipped</th>
-                    <th className="py-2.5 px-3 text-right">Net Marks</th>
-                    <th className="py-2.5 px-3 text-right">Accuracy</th>
+                    <th className="py-2 px-3">Subject</th>
+                    <th className="py-2 px-3 text-center">Questions</th>
+                    <th className="py-2 px-3 text-center">Attempted</th>
+                    <th className="py-2 px-3 text-center text-emerald-600 dark:text-emerald-400">Correct</th>
+                    <th className="py-2 px-3 text-center text-rose-600 dark:text-rose-400">Incorrect</th>
+                    <th className="py-2 px-3 text-center text-slate-400">Skipped</th>
+                    <th className="py-2 px-3 text-right text-emerald-600 dark:text-emerald-400">Gross</th>
+                    <th className="py-2 px-3 text-right text-rose-600 dark:text-rose-400">Penalty</th>
+                    <th className="py-2 px-3 text-right">Net Marks</th>
+                    <th className="py-2 px-3 text-right">Accuracy</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 font-mono text-xs">
                   {subjectStats.map((s) => {
                     const isSelected = selectedSubject === s.subject;
 
@@ -249,23 +222,25 @@ export default function SubjectTopicReviewBreakdown({
                         }}
                         className={`cursor-pointer transition-colors ${
                           isSelected
-                            ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-semibold'
-                            : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/30'
+                            ? 'bg-indigo-50/80 dark:bg-indigo-950/40 font-semibold'
+                            : 'hover:bg-slate-50/80 dark:hover:bg-slate-800/40'
                         }`}
                       >
-                        <td className="py-2.5 px-3 font-sans font-medium text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                        <td className="py-2 px-3 font-sans font-medium text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                           {isSelected && <Filter className="w-3 h-3 text-indigo-600 dark:text-indigo-400 shrink-0" />}
                           <span>{s.subject}</span>
                         </td>
-                        <td className="py-2.5 px-3 text-center text-slate-600 dark:text-slate-300">{s.total}</td>
-                        <td className="py-2.5 px-3 text-center text-slate-600 dark:text-slate-300">{s.attempted}</td>
-                        <td className="py-2.5 px-3 text-center text-emerald-600 dark:text-emerald-400 font-semibold">{s.correct}</td>
-                        <td className="py-2.5 px-3 text-center text-rose-600 dark:text-rose-400 font-semibold">{s.incorrect}</td>
-                        <td className="py-2.5 px-3 text-center text-slate-400">{s.unanswered}</td>
-                        <td className="py-2.5 px-3 text-right font-semibold text-slate-900 dark:text-slate-100">
+                        <td className="py-2 px-3 text-center text-slate-600 dark:text-slate-300">{s.total}</td>
+                        <td className="py-2 px-3 text-center text-slate-600 dark:text-slate-300">{s.attempted}</td>
+                        <td className="py-2 px-3 text-center text-emerald-600 dark:text-emerald-400 font-semibold">{s.correct}</td>
+                        <td className="py-2 px-3 text-center text-rose-600 dark:text-rose-400 font-semibold">{s.incorrect}</td>
+                        <td className="py-2 px-3 text-center text-slate-400">{s.unanswered}</td>
+                        <td className="py-2 px-3 text-right text-emerald-600 dark:text-emerald-400 font-semibold">+{s.positiveMarks}</td>
+                        <td className="py-2 px-3 text-right text-rose-600 dark:text-rose-400 font-semibold">-{s.negativeMarks}</td>
+                        <td className="py-2 px-3 text-right font-semibold text-slate-900 dark:text-slate-100">
                           {s.netMarks >= 0 ? `+${s.netMarks}` : s.netMarks}
                         </td>
-                        <td className="py-2.5 px-3 text-right font-bold text-slate-900 dark:text-slate-100">
+                        <td className="py-2 px-3 text-right font-bold text-slate-900 dark:text-slate-100">
                           {s.attempted > 0 ? `${s.accuracy}%` : '—'}
                         </td>
                       </tr>
@@ -276,33 +251,28 @@ export default function SubjectTopicReviewBreakdown({
             </div>
           </div>
 
-          {/* 3. Actionable Topic Mastery Breakdown (Allen/Testbook Inspired) */}
-          <div className="space-y-2.5">
+          {/* 2. Compact Topic Revision Diagnostics */}
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Topic Revision Diagnostics (Click to filter & jump)
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Topic Revision Diagnostics <span className="font-normal lowercase text-slate-400">(click to filter questions)</span>
               </span>
               <span className="text-slate-400 text-[11px]">
-                {topicStats.filter((t) => t.status === 'NEEDS_REVISION').length} topic(s) need revision
+                {needsRevisionCount} topic{needsRevisionCount !== 1 ? 's' : ''} need revision
               </span>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5">
               {topicStats
                 .filter((t) => selectedSubject === 'ALL' || t.subject === selectedSubject)
                 .map((t) => {
                   const isSelected = selectedTopic === t.topic;
 
-                  // Clear, standard badges without neon colors
-                  let statusTag = (
-                    <span className="text-[10px] text-slate-400">({t.correct}/{t.total})</span>
-                  );
-                  let borderStyle = 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300';
-
+                  let borderStyle = 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/60 text-slate-700 dark:text-slate-300';
                   if (t.status === 'MASTERED') {
-                    borderStyle = 'border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300';
+                    borderStyle = 'border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300';
                   } else if (t.status === 'NEEDS_REVISION') {
-                    borderStyle = 'border-rose-200 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 text-rose-800 dark:text-rose-300';
+                    borderStyle = 'border-rose-200 dark:border-rose-900/40 bg-rose-50/60 dark:bg-rose-950/20 text-rose-800 dark:text-rose-300';
                   }
 
                   return (
@@ -316,12 +286,12 @@ export default function SubjectTopicReviewBreakdown({
                           onScrollToQuestion?.(t.questionIndices[0]);
                         }
                       }}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium transition-all cursor-pointer ${borderStyle} ${
-                        isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 dark:ring-offset-[#131926]' : 'hover:opacity-90'
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium transition-all cursor-pointer ${borderStyle} ${
+                        isSelected ? 'ring-2 ring-indigo-500 ring-offset-1 dark:ring-offset-[#131926] shadow-xs' : 'hover:opacity-90'
                       }`}
                     >
                       <span>{t.topic}</span>
-                      {statusTag}
+                      <span className="text-[10px] opacity-75 font-mono">({t.correct}/{t.total})</span>
                     </button>
                   );
                 })}

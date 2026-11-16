@@ -2,10 +2,48 @@ import jwt from 'jsonwebtoken';
 import { Exam } from '../models/Exam.model.js';
 import { Attempt } from '../models/Attempt.model.js';
 import { User } from '../models/User.model.js';
+import { Question } from '../models/Question.model.js';
 import { Notification } from '../models/Notification.model.js';
 import { gradeAttempt } from '../services/grading.service.js';
 import cloudinary, { isCloudinaryConfigured } from '../config/cloudinary.js';
 import { getCookieOptions } from './auth.controller.js';
+
+/**
+ * Shuffles questions while preserving contiguous subject sections.
+ * Within each subject group, questions are shuffled using Fisher-Yates algorithm.
+ */
+export const generateShuffledQuestionOrder = async (questionIds = []) => {
+  if (!questionIds || questionIds.length === 0) return [];
+
+  const validIds = questionIds.filter(Boolean);
+  const qDocs = await Question.find({ _id: { $in: validIds } }).select('_id subject').lean();
+  const qMap = new Map(qDocs.map((q) => [q._id.toString(), q]));
+
+  // Group question IDs by subject in order of their first appearance
+  const subjectGroups = new Map();
+  for (const id of validIds) {
+    const idStr = id.toString();
+    const doc = qMap.get(idStr);
+    const subj = doc?.subject || 'General';
+    if (!subjectGroups.has(subj)) {
+      subjectGroups.set(subj, []);
+    }
+    subjectGroups.get(subj).push(id);
+  }
+
+  // Shuffle within each subject group using Fisher-Yates
+  const shuffledOrder = [];
+  for (const group of subjectGroups.values()) {
+    const shuffledGroup = [...group];
+    for (let i = shuffledGroup.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledGroup[i], shuffledGroup[j]] = [shuffledGroup[j], shuffledGroup[i]];
+    }
+    shuffledOrder.push(...shuffledGroup);
+  }
+
+  return shuffledOrder;
+};
 
 /**
  * @desc   Initialize or retrieve an active exam attempt
@@ -109,9 +147,15 @@ export const startAttempt = async (req, res) => {
     }).sort({ createdAt: -1 });
 
     if (!attempt) {
+      let initialQuestionOrder = exam.questions || [];
+      if (exam.shuffleQuestions && initialQuestionOrder.length > 0) {
+        initialQuestionOrder = await generateShuffledQuestionOrder(initialQuestionOrder);
+      }
+
       attempt = await Attempt.create({
         examId,
         userId,
+        questionOrder: initialQuestionOrder,
         status: 'IN_PROGRESS',
         startedAt: new Date(),
         isPractice: Boolean(isPractice || isPreview),
@@ -119,6 +163,9 @@ export const startAttempt = async (req, res) => {
         trustScore: 100,
         violations: []
       });
+    } else if (exam.shuffleQuestions && (!attempt.questionOrder || attempt.questionOrder.length === 0)) {
+      attempt.questionOrder = await generateShuffledQuestionOrder(exam.questions || []);
+      await attempt.save();
     }
 
     // Refresh JWT session on exam start so candidate session cannot expire mid-test
@@ -133,6 +180,7 @@ export const startAttempt = async (req, res) => {
       success: true,
       token: freshToken,
       attemptId: attempt._id,
+      questionOrder: attempt.questionOrder || [],
       isPractice: attempt.isPractice,
       isPreview: Boolean(attempt.isPreview),
       trustScore: attempt.trustScore,
@@ -260,6 +308,7 @@ export const submitExam = async (req, res) => {
       attempt = await Attempt.create({
         examId,
         userId,
+        questionOrder: exam.questions || [],
         responses,
         score: result.score,
         accuracy: result.accuracy,
@@ -386,7 +435,7 @@ export const getUserAttempts = async (req, res) => {
       userId,
       status: { $in: ['SUBMITTED', 'DISQUALIFIED', 'REVOKED'] }
     })
-      .select('score accuracy correct incorrect unanswered responses submittedAt startedAt timeTakenSeconds isPractice createdAt violations status revocation')
+      .select('score accuracy correct incorrect unanswered responses questionOrder submittedAt startedAt timeTakenSeconds isPractice createdAt violations status revocation')
       .sort({ createdAt: -1 });
 
     return res.status(200).json({ success: true, attempts });
