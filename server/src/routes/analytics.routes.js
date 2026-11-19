@@ -3,7 +3,8 @@ import {
   getPersonalAnalytics,
   getExamInsights,
   getLeaderboard,
-  aiExplain
+  aiExplain,
+  aiFollowUp
 } from '../controllers/analytics.controller.js';
 import { protect, optionalAuth } from '../middleware/auth.middleware.js';
 
@@ -36,5 +37,12 @@ router.get('/leaderboard', optionalAuth, getLeaderboard);
  * @access  Private
  */
 router.post('/ai-explain', protect, aiExplain);
+
+/**
+ * @route   POST /api/analytics/ai-followup
+ * @desc    BYOK AI follow-up doubt streaming proxy
+ * @access  Private
+ */
+router.post('/ai-followup', protect, aiFollowUp);
 
 export default router;

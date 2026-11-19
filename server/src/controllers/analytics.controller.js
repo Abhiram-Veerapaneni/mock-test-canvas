@@ -1158,3 +1158,295 @@ Analyze what mistake, miscalculation, or distractor option likely led to the wro
     geminiKey = null;
   }
 };
+
+/**
+ * @route   POST /api/analytics/ai-followup
+ * @desc    BYOK AI follow-up doubt streaming proxy
+ * @access  Private
+ *
+ * SECURITY:
+ * - Reads API key from X-Gemini-Key header.
+ * - Ephemeral client instantiation, zero DB/file logging of keys.
+ */
+export const aiFollowUp = async (req, res) => {
+  let geminiKey = req.headers['x-gemini-key'];
+  if (!geminiKey || typeof geminiKey !== 'string' || !geminiKey.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: 'A Gemini API key is required. Please provide your key in the X-Gemini-Key header.'
+    });
+  }
+
+  geminiKey = geminiKey.trim();
+
+  const {
+    questionId,
+    userAnswer,
+    correctAnswer,
+    baseExplanation,
+    history = [],
+    message,
+    model
+  } = req.body;
+
+  if (!questionId) {
+    return res.status(400).json({
+      success: false,
+      message: 'Question ID is required.'
+    });
+  }
+
+  if (!message || typeof message !== 'string' || !message.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: 'A follow-up question or doubt message is required.'
+    });
+  }
+
+  const requestedModel =
+    model || req.headers['x-gemini-model'] || 'gemini-3.5-flash-lite';
+
+  const selectedModel = ALLOWED_MODELS.includes(requestedModel)
+    ? requestedModel
+    : 'gemini-3.5-flash-lite';
+
+  try {
+    const question = await Question.findById(questionId);
+    if (!question) {
+      return res.status(404).json({
+        success: false,
+        message: 'Question not found.'
+      });
+    }
+
+    // Format options for prompt
+    const formattedOptions = (question.options || [])
+      .map((opt, i) => {
+        const letter = String.fromCharCode(65 + i);
+        const text =
+          typeof opt === 'object' && opt !== null
+            ? opt.text || ''
+            : String(opt || '');
+        return `(${letter}) ${text}`;
+      })
+      .join('\n');
+
+    // Format student's answer
+    let studentAnswerText = 'Not answered / Skipped';
+    if (userAnswer !== undefined && userAnswer !== null) {
+      if (Array.isArray(userAnswer)) {
+        studentAnswerText =
+          userAnswer.length > 0
+            ? userAnswer
+                .map((idx) =>
+                  typeof idx === 'number'
+                    ? `Option (${String.fromCharCode(65 + idx)})`
+                    : String(idx)
+                )
+                .join(', ')
+            : 'Not answered / Skipped';
+      } else if (typeof userAnswer === 'number') {
+        studentAnswerText = `Option (${String.fromCharCode(65 + userAnswer)})`;
+      } else {
+        studentAnswerText = String(userAnswer);
+      }
+    }
+
+    // Format correct answers
+    const correctAnswers = question.correctAnswers || [];
+    const correctAnswerText =
+      correctAnswers.length > 0
+        ? correctAnswers
+            .map((idx) => `Option (${String.fromCharCode(65 + idx)})`)
+            .join(', ')
+        : correctAnswer
+        ? String(correctAnswer)
+        : 'Consult question key';
+
+    // Construct multi-turn contents for Gemini API
+    const initialPrompt = `You are a world-class academic tutor helping a student understand their result on an assessment.
+
+Subject/Stream: ${question.stream || question.subject || 'General'}
+Topic: ${question.topic || 'General'}${question.tags?.length ? ` (Tags: ${question.tags.join(', ')})` : ''}
+
+Question:
+${question.questionText || '[Image-based question]'}
+
+Options:
+${formattedOptions || 'No options provided'}
+
+Student's Submitted Answer: ${studentAnswerText}
+Verified Correct Answer: ${correctAnswerText}
+Existing Solution Hint: ${question.explanation || 'None provided'}
+
+Provide a comprehensive, pedagogical explanation in standard Markdown with LaTeX formulas ($...$ for inline, $$...$$ for block).`;
+
+    const contents = [
+      {
+        role: 'user',
+        parts: [{ text: initialPrompt }]
+      },
+      {
+        role: 'model',
+        parts: [{ text: baseExplanation || 'Explanation provided.' }]
+      }
+    ];
+
+    // Append prior conversational turns
+    if (Array.isArray(history)) {
+      for (const turn of history) {
+        if (!turn || typeof turn.content !== 'string' || !turn.content.trim()) continue;
+        const role = turn.role === 'assistant' || turn.role === 'model' ? 'model' : 'user';
+        contents.push({
+          role,
+          parts: [{ text: turn.content.trim() }]
+        });
+      }
+    }
+
+    // Append the student's current doubt
+    contents.push({
+      role: 'user',
+      parts: [
+        {
+          text: `Student follow-up doubt / question:
+"${message.trim()}"
+
+Instructions:
+- Address the student's question directly, clearly, and concisely.
+- Be encouraging, patient, and pedagogical.
+- If asking about a step, explain the math or intuition behind it in detail.
+- If asking why an alternative option or approach fails, explain the exact flaw.
+- Use standard LaTeX notation for ALL mathematical symbols, variables, and formulas:
+  - Inline math: $...$
+  - Block math: $$...$$
+- Use clean Markdown with bullet points or bold text where appropriate.`
+        }
+      ]
+    });
+
+    // Set SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    if (res.flushHeaders) res.flushHeaders();
+
+    res.write(`data: ${JSON.stringify({ status: 'connected', model: selectedModel })}\n\n`);
+
+    const ai = new GoogleGenAI({ apiKey: geminiKey });
+
+    const candidateModels = [
+      selectedModel,
+      'gemini-3.5-flash-lite',
+      'gemini-3.8-flash',
+      'gemini-flash-latest',
+      'gemini-2.5-flash-lite'
+    ].filter((m, idx, arr) => Boolean(m) && arr.indexOf(m) === idx);
+
+    let streamStarted = false;
+    let actualModelUsed = selectedModel;
+    let lastError = null;
+
+    for (const modelToTry of candidateModels) {
+      try {
+        console.log(`[BYOK AI FollowUp] Streaming with model: ${modelToTry}`);
+
+        const streamConfig = {
+          systemInstruction: 'You are an expert academic tutor answering a student\'s doubts and follow-up questions regarding an exam problem. Always use LaTeX ($...$ and $$...$$) for formulas.'
+        };
+        if (modelToTry.includes('3.8')) {
+          streamConfig.thinkingConfig = {
+            thinkingLevel: 'minimal'
+          };
+        }
+
+        const stream = await ai.models.generateContentStream({
+          model: modelToTry,
+          contents,
+          config: streamConfig
+        });
+
+        for await (const chunk of stream) {
+          const text = chunk.text;
+          if (text) {
+            streamStarted = true;
+            actualModelUsed = modelToTry;
+            res.write(`data: ${JSON.stringify({ chunk: text, model: modelToTry })}\n\n`);
+            if (res.flush) res.flush();
+          }
+        }
+
+        if (streamStarted) {
+          break;
+        }
+      } catch (err) {
+        if (streamStarted) {
+          console.error(`[BYOK AI FollowUp] Stream interrupted mid-generation:`, err.message);
+          break;
+        }
+
+        lastError = err;
+        const errMsg = err?.message || String(err);
+        console.warn(`[BYOK AI FollowUp] Model "${modelToTry}" failed: ${errMsg.slice(0, 160)}`);
+
+        if (
+          errMsg.includes('API_KEY_INVALID') ||
+          errMsg.includes('API key not valid')
+        ) {
+          res.write(
+            `data: ${JSON.stringify({
+              error: 'Invalid Gemini API key. Please verify your key at Google AI Studio (aistudio.google.com).'
+            })}\n\n`
+          );
+          return res.end();
+        }
+
+        if (errMsg.includes('PERMISSION_DENIED') || err?.status === 403) {
+          res.write(
+            `data: ${JSON.stringify({
+              error: 'Permission denied. Please ensure your Gemini API key has Generative Language API access enabled.'
+            })}\n\n`
+          );
+          return res.end();
+        }
+
+        continue;
+      }
+    }
+
+    if (!streamStarted) {
+      const finalErr = lastError?.message || '';
+      let userFriendlyErr =
+        'Failed to answer follow-up. All attempted models were unavailable or busy. Please check your Google AI Studio quota.';
+      if (finalErr.includes('RESOURCE_EXHAUSTED') || finalErr.includes('quota')) {
+        userFriendlyErr =
+          'Gemini API quota exceeded for this key. Please check your Google AI Studio quota.';
+      }
+      res.write(`data: ${JSON.stringify({ error: userFriendlyErr })}\n\n`);
+      return res.end();
+    }
+
+    res.write(`data: ${JSON.stringify({ done: true, model: actualModelUsed })}\n\n`);
+    res.end();
+  } catch (error) {
+    const errorMsg = error?.message || '';
+    console.error('[AI FollowUp] Fatal Error:', errorMsg);
+
+    if (!res.headersSent) {
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to initiate AI follow-up stream.'
+      });
+    }
+
+    res.write(
+      `data: ${JSON.stringify({
+        error: 'Connection interrupted while answering your doubt.'
+      })}\n\n`
+    );
+    res.end();
+  } finally {
+    geminiKey = null;
+  }
+};

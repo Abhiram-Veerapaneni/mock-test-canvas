@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { OAuth2Client } from 'google-auth-library';
 import { User } from '../models/User.model.js';
 import { Otp } from '../models/Otp.model.js';
-import { sendOtpEmail } from '../utils/sendEmail.js';
+import { sendOTPEmail } from '../services/emailService.js';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -90,18 +90,14 @@ export const sendOtp = async (req, res) => {
     // Save new OTP
     await Otp.create({ email: normalizedEmail, otp: generatedOtp });
 
-    // Send real verification email via Nodemailer
+    // Send verification email via emailService (Brevo HTTP API -> IPv4 Nodemailer SMTP -> Console fallback)
     try {
-      await sendOtpEmail({ to: normalizedEmail, otp: generatedOtp });
+      await sendOTPEmail(normalizedEmail, generatedOtp, 'Candidate');
     } catch (emailErr) {
       console.error('[EMAIL OTP FAIL] Could not dispatch email to:', normalizedEmail, emailErr.message);
-      return res.status(400).json({
-        success: false,
-        message: 'Failed to deliver verification code. Please check that your email address is valid.'
-      });
     }
 
-    console.log(`[EMAIL OTP VERIFICATION] Verification email dispatched to: ${normalizedEmail}`);
+    console.log(`[EMAIL OTP VERIFICATION] Verification OTP code generated for: ${normalizedEmail}`);
 
     return res.status(200).json({
       success: true,

@@ -77,8 +77,8 @@ const sendViaHttpApi = async (toEmail, subject, htmlContent) => {
         },
         body: JSON.stringify({
           sender: {
-            name: 'AI-Proctored Mock Tests',
-            email: process.env.EMAIL_USER || 'no-reply@proctored-mock-tests.com'
+            name: 'Mock Test Canvas',
+            email: process.env.EMAIL_USER || 'user01230806@gmail.com'
           },
           to: [{ email: toEmail }],
           subject,
@@ -148,29 +148,29 @@ export const sendOTPEmail = async (toEmail, otpCode, candidateName = 'Candidate'
   // Always log OTP to server console as backup (Viewable in Render dashboard logs)
   logOTPToConsole(toEmail, otpCode);
 
-  const subject = `${otpCode} is your AI-Proctored Mock Tests Verification OTP`;
+  const subject = `${otpCode} is your Mock Test Canvas Verification OTP`;
 
   // HTML Email Template
   const htmlContent = `
-    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #ffffff;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h2 style="color: #2563eb; margin: 0;">AI-Proctored Mock Tests</h2>
+        <h2 style="color: #2563eb; margin: 0; font-size: 22px;">Mock Test Canvas</h2>
         <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Candidate Verification Code</p>
       </div>
 
-      <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
+      <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px; border: 1px solid #e2e8f0;">
         <p style="color: #334155; font-size: 15px; margin-bottom: 12px;">Hello <strong>${candidateName}</strong>,</p>
         <p style="color: #475569; font-size: 14px; margin-bottom: 16px;">Your 6-digit confirmation OTP for account registration is:</p>
         
-        <div style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #2563eb; background-color: #eff6ff; padding: 12px 24px; border-radius: 8px; display: inline-block; border: 1px border-dashed #93c5fd;">
+        <div style="font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #1e40af; background-color: #eff6ff; padding: 12px 24px; border-radius: 8px; display: inline-block; border: 1px dashed #93c5fd;">
           ${otpCode}
         </div>
 
-        <p style="color: #94a3b8; font-size: 12px; margin-top: 16px;">This OTP is valid for 10 minutes. Do not share this code with anyone.</p>
+        <p style="color: #94a3b8; font-size: 12px; margin-top: 16px;">This OTP is valid for <strong>5 minutes</strong>. Do not share this code with anyone.</p>
       </div>
 
       <div style="text-align: center; border-top: 1px solid #f1f5f9; padding-top: 12px;">
-        <p style="color: #94a3b8; font-size: 11px; margin: 0;">AI-Proctored Mock Tests Platform • MongoDB pmt_db</p>
+        <p style="color: #94a3b8; font-size: 11px; margin: 0;">&copy; ${new Date().getFullYear()} Mock Test Canvas. All rights reserved.</p>
       </div>
     </div>
   `;
@@ -223,6 +223,6 @@ const logOTPToConsole = (toEmail, otpCode) => {
   console.log(`\n=================================================`);
   console.log(`📩 Verification Email dispatched to: ${toEmail}`);
   console.log(`🔑 OTP CODE: [ ${otpCode} ]`);
-  console.log(`⏱️ VALID FOR: 10 MINUTES`);
+  console.log(`⏱️ VALID FOR: 5 MINUTES`);
   console.log(`=================================================\n`);
 };
