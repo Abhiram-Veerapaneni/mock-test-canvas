@@ -17,3 +17,6 @@ README_BLUEPRINT.md
 *.asd
 *.cjs
 screenshots
+scratch
+*.pptx
+*.tmp

@@ -9,7 +9,7 @@ import { persist } from 'zustand/middleware';
  * page refreshes — a student can't reset their record by pressing F5.
  *
  * S2: Tiered trust score deductions by violation severity.
- * S1: Per-type cooldown (10 s) prevents rapid stacking from a single incident.
+ * S1: Per-type cooldown (2 s) prevents rapid stacking from a single incident.
  *
  * Phase 4: Added NO_FACE, MULTI_FACE, NOISE_SPIKE violation types
  * and strikeCount tracking for the penalty engine.
@@ -27,7 +27,7 @@ const VIOLATION_DEDUCTIONS = {
 };
 
 // S1: Minimum milliseconds between successive violations of the same type
-const VIOLATION_COOLDOWN_MS = 10_000; // 10 seconds
+const VIOLATION_COOLDOWN_MS = 2_000; // 2 seconds
 
 // Types that bypass the cooldown (fired once per discrete event, not continuously)
 // Vision/audio violations use their own 3-second debounce in the hooks,

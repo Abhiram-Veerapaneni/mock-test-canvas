@@ -37,8 +37,8 @@
 Built on **React 19**, **Tailwind CSS v4**, **Node.js/Express (ES Modules)**, and **MongoDB Atlas**, Mock Test Canvas seamlessly bridges real-world high-stakes testing conditions with modern web intelligence:
 - 🖥️ **Authentic Exam Canvas**: Pixel-perfect national exam player with KaTeX LaTeX math rendering, section navigation, interactive question palette, and multi-format answer inputs (MCQ, MSQ, and NAT).
 - 🛡️ **Active Anti-Cheat Perimeter**: Fullscreen enforcement with gesture gates, Page Visibility traps, Alt+Tab blur interceptors, input suppression, and a zero-drift Web Worker countdown clock with wall-clock drift correction.
-- 📷 **On-Device Vision & Audio AI Proctoring**: Client-side MediaPipe vision tracking (face absence, multiple occupants, gaze deviation), Web Audio API decibel monitoring, and automated Cloudinary snapshot evidence capture.
-- ⚖️ **Dynamic Trust Score Engine ($100 \rightarrow 0$)**: Proportional penalty system with 10-second anti-spam cooldowns, persistent cross-refresh violation logging, critical warning overlays, and automated test termination.
+- 📷 **On-Device Vision & Audio AI Proctoring**: Client-side MediaPipe vision tracking (face absence, multiple occupants, prohibited objects), Web Audio API decibel monitoring, and automated Cloudinary snapshot evidence capture.
+- ⚖️ **Dynamic Trust Score Engine ($100 \rightarrow 0$)**: Proportional penalty system with 2-second anti-spam cooldowns, persistent cross-refresh violation logging, critical warning overlays, and automated test termination.
 - 🧮 **Deterministic Server-Side Grading Engine**: Strict answer-key projection safeguards preventing client-side network snooping, coupled with authentic marking scheme computation (+4 / -1, partial MSQ scoring, and NAT tolerance bounds).
 - 📚 **Centralized Question Bank & Dynamic Exam Generator**: Filterable shared repository with batch selection, direct draft export, and one-click random test synthesis.
 - 📡 **Live Proctor Supervision Console & Attempt Management**: Real-time WebSocket streaming (`violation:live`), candidate snapshot review, and educator attempt governance (Disqualify, Revoke, or Grant Retake).
@@ -89,7 +89,7 @@ Built on **React 19**, **Tailwind CSS v4**, **Node.js/Express (ES Modules)**, an
   - **Extended Absence (>30s)**: `-10` to `-20 pts` (scaled by duration)
   - **Window Focus Lost**: `-10 pts` (background app switch)
   - **Noise Anomaly**: `-10 pts` (coaching or conversation spike)
-- **10-Second Cooldown Anti-Spam**: Prevents multiple penalties from stacking on a single accidental window flicker.
+- **2-Second Cooldown Anti-Spam**: Prevents multiple penalties from stacking on a single accidental window flicker.
 - **Critical Early Warning**: An alert modal triggers when trust drops to $\le 30$.
 - **Automated Termination & Eviction**: If trust reaches $0$, a 5-second countdown modal activates, locking the canvas and automatically submitting the paper with disqualification flags.
 - **Cross-Session Storage**: Violations and trust scores persist across browser refreshes for the active test session, preventing candidates from clearing penalties with F5.
@@ -351,7 +351,7 @@ stateDiagram-v2
 
 | Spec ID | Requirement & Threat Addressed | Implementation Detail | Primary Code Reference |
 | :---: | :--- | :--- | :--- |
-| **`S1`** | **Per-Type Violation Cooldown (Anti-Spam)** | Enforces a minimum 10-second cooldown between consecutive infractions of the same type. Prevents an accidental window flicker from triggering multiple rapid penalties. | [`useProctorStore.js`](file:///client/src/store/useProctorStore.js) |
+| **`S1`** | **Per-Type Violation Cooldown (Anti-Spam)** | Enforces a minimum 2-second cooldown between consecutive infractions of the same type. Prevents an accidental window flicker from triggering multiple rapid penalties. | [`useProctorStore.js`](file:///client/src/store/useProctorStore.js) |
 | **`S2`** | **Tiered Trust Score Deductions** | Assigns weighted penalties based on deliberate intent: Fullscreen Exit (`-20`), Tab Switch (`-15`), Window Blur (`-10`), No Face (`-15`), Multi-Face (`-20`), Noise Spike (`-10`). | [`auditConstants.js`](file:///client/src/utils/auditConstants.js) |
 | **`S3`** | **Live Violation Broadcast & Toast Notification** | Dispatches real-time WebSocket alerts via Socket.IO (`violation:live`) to the exam creator and displays immediate feedback toasts to the candidate. | [`App.jsx`](file:///client/src/App.jsx) / [`submission.controller.js`](file:///server/src/controllers/submission.controller.js) |
 | **`S4`** | **Critical Final Warning Modal** | Intercepts testing with an unmissable modal dialog when candidate reaches the penultimate strike limit or when Trust Score drops $\le 30$. | [`ExamLockdownOverlays.jsx`](file:///client/src/components/exam-player/ExamLockdownOverlays.jsx) |
